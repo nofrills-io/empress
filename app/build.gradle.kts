@@ -6,6 +6,7 @@ plugins {
 
 android {
     compileSdkVersion(28)
+
     defaultConfig {
         applicationId = "io.nofrills.empress.sample"
         minSdkVersion(21)
@@ -14,12 +15,20 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
+
+    sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
+    sourceSets["main"].java.srcDir("src/main/kotlin")
+    sourceSets["test"].java.srcDir("src/test/kotlin")
 }
 
 dependencies {
