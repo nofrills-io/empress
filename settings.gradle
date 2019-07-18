@@ -1,1 +1,1 @@
-include ':app', ':empress_core'
+include ':app', ':empress_core', ':empress_android'
