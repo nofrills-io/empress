@@ -11,8 +11,10 @@ java {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk7"))
+    api(Deps.coroutinesCore)
+    api(Deps.kotlinStdLib)
 }
+
 repositories {
     mavenCentral()
 }

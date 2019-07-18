@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Empress Sample</string>
+    <string name="counter_sent">Counter has been sent</string>
+    <string name="decrement">Decrement</string>
+    <string name="increment">Increment</string>
+    <string name="send">Send</string>
 </resources>
