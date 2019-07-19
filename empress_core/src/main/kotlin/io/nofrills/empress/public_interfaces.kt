@@ -18,6 +18,7 @@ interface EmpressApi<Event, Patch : Any> {
 interface EmpressBackend<Event, Patch : Any> {
     var model: Model<Patch>
 
+    fun halt()
     fun onCreate()
     fun onDestroy()
 

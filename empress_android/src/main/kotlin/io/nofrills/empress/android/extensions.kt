@@ -7,6 +7,7 @@ import io.nofrills.empress.DefaultEmpressApi
 import io.nofrills.empress.DefaultEmpressBackend
 import io.nofrills.empress.Empress
 import io.nofrills.empress.EmpressApi
+import kotlinx.coroutines.Dispatchers
 
 private const val DEFAULT_EMPRESS_ID = "default"
 
@@ -35,6 +36,6 @@ private fun <Event, Patch : Any, Request> getEmpressInstance(
             ?: EmpressFragment<Event, Patch>().also {
                 fragmentManager.beginTransaction().add(it, fragmentTag).commitNow()
             }
-    fragment.initialize { storedModel -> DefaultEmpressBackend(empress, storedModel) }
+    fragment.initialize { storedModel -> DefaultEmpressBackend(Dispatchers.Main, empress, storedModel) }
     return DefaultEmpressApi(fragment.empressBackend)
 }

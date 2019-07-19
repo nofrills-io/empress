@@ -7,7 +7,7 @@ data class Effect<Patch : Any, Request> constructor(
     constructor(updatedPatch: Patch, request: Request? = null) : this(listOf(updatedPatch), request)
 }
 
-sealed class Update<Event, Patch : Any>(val model: Model<Patch>) {
+sealed class Update<Event, Patch : Any>(val model: Model<Patch>) { // TODO maybe change to nullable sourceEvent
     class Initial<Event, Patch : Any> internal constructor(model: Model<Patch>) :
         Update<Event, Patch>(model)
 

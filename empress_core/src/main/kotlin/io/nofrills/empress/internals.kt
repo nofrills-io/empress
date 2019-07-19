@@ -3,10 +3,13 @@ package io.nofrills.empress
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.selects.whileSelect
 import kotlin.coroutines.CoroutineContext
 
 class DefaultEmpressApi<Event, Patch : Any>(private val inoBackend: EmpressBackend<Event, Patch>) :
@@ -25,12 +28,13 @@ class DefaultEmpressApi<Event, Patch : Any>(private val inoBackend: EmpressBacke
     }
 }
 
-class DefaultEmpressBackend<Event, Patch : Any, Request>(
+class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
+    dispatcher: CoroutineDispatcher,
     private val empress: Empress<Event, Patch, Request>,
-    storedPatches: Collection<Patch>?
+    storedPatches: Collection<Patch>? = null
 ) : EmpressBackend<Event, Patch>, CoroutineScope {
     private val supervisorJob = SupervisorJob()
-    override val coroutineContext: CoroutineContext = Dispatchers.Main + supervisorJob
+    override val coroutineContext: CoroutineContext = dispatcher + supervisorJob
     override var model: Model<Patch> = if (storedPatches == null) {
         Model(empress.initializer())
     } else {
@@ -38,32 +42,42 @@ class DefaultEmpressBackend<Event, Patch : Any, Request>(
     }
 
     private val events: Channel<Event> = Channel(capacity = Channel.UNLIMITED)
+    private val halt: Channel<Unit> = Channel()
     private val requests: Channel<Request> = Channel(capacity = Channel.UNLIMITED)
     private val updates =
         BroadcastChannel<Update<Event, Patch>>(capacity = UPDATES_CHANNEL_CAPACITY)
 
+    override fun halt() {
+        if (!halt.isClosedForSend) {
+            halt.sendBlocking(Unit)
+            halt.close()
+        }
+    }
+
     override fun onCreate() {
         launch {
-            coroutineScope {
-                launch {
-                    for (request in requests) {
-                        processRequest(request)
-                    }
+            var isRunning = true
+            whileSelect {
+                events.onReceive { event ->
+                    val hasPendingRequest = processEvent(event)
+                    isRunning || hasPendingRequest
                 }
-                launch {
-                    for (event in events) {
-                        processEvent(event)
-                    }
+                requests.onReceive { request ->
+                    processRequest(request)
+                    true
+                }
+                halt.onReceive {
+                    isRunning = false
+                    events.poll() != null || requests.poll() != null
                 }
             }
+            closeChannels()
         }
     }
 
     override fun onDestroy() {
+        closeChannels()
         supervisorJob.cancel()
-        requests.cancel()
-        events.cancel()
-        updates.cancel()
     }
 
     override fun updates(): Flow<Update<Event, Patch>> {
@@ -71,22 +85,31 @@ class DefaultEmpressBackend<Event, Patch : Any, Request>(
     }
 
     override fun sendEvent(event: Event) {
-        check(events.offer(event))
+        events.sendBlocking(event)
     }
 
-    private suspend fun processRequest(request: Request) {
-        val event = empress.onRequest(request)
-        sendEvent(event)
+    private fun closeChannels() {
+        events.close()
+        requests.close()
+        updates.close()
+        halt.close()
     }
 
-    private suspend fun processEvent(incomingEvent: Event) {
+    private suspend fun processEvent(incomingEvent: Event): Boolean {
         val effect = empress.onEvent(incomingEvent, model)
         model = Model(model, effect.updatedPatches)
         updates.send(Update.FromEvent(incomingEvent, model))
 
         if (effect.request != null) {
             requests.send(effect.request)
+            return true
         }
+        return false
+    }
+
+    private suspend fun processRequest(request: Request) {
+        val event = empress.onRequest(request)
+        sendEvent(event)
     }
 
     companion object {
