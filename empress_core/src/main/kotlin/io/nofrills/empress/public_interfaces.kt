@@ -22,5 +22,5 @@ interface EmpressBackend<Event, Patch : Any> {
     fun onDestroy()
 
     fun sendEvent(event: Event)
-    suspend fun updates(): Flow<Update<Event, Patch>>
+    fun updates(): Flow<Update<Event, Patch>>
 }

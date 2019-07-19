@@ -66,7 +66,7 @@ class DefaultEmpressBackend<Event, Patch : Any, Request>(
         updates.cancel()
     }
 
-    override suspend fun updates(): Flow<Update<Event, Patch>> {
+    override fun updates(): Flow<Update<Event, Patch>> {
         return updates.asFlow()
     }
 
