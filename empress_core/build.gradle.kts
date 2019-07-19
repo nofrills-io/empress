@@ -13,10 +13,7 @@ java {
 dependencies {
     api(Deps.coroutinesCore)
     api(Deps.kotlinStdLib)
-}
-
-repositories {
-    mavenCentral()
+    testImplementation(Deps.junit)
 }
 
 val compileKotlin: KotlinCompile by tasks

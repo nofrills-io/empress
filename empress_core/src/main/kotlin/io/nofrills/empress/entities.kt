@@ -40,7 +40,7 @@ class Model<Patch : Any> : Iterable<Patch> {
         updates = emptySet()
     }
 
-    internal constructor(model: Model<Patch>, updatedPatches: Collection<Patch>) {
+    internal constructor(model: Model<Patch>, updatedPatches: Collection<Patch> = emptyList()) {
         val updatedPatchesMap = mutableMapOf<Class<out Patch>, Patch>()
         for (patch in updatedPatches) {
             if (updatedPatchesMap.contains(patch::class.java)) {
@@ -54,23 +54,41 @@ class Model<Patch : Any> : Iterable<Patch> {
         updates = updatedPatches.map { it::class.java }.toSet()
     }
 
-    override fun iterator(): Iterator<Patch> {
-        return patchMap.values.iterator()
-    }
-
-    operator fun get(key: Class<out Patch>): Patch {
-        return patchMap.getValue(key)
+    fun all(): Collection<Patch> {
+        return patchMap.values
     }
 
     inline fun <reified P : Patch> get(): P {
         return get(P::class.java) as P
     }
 
-    fun all(): Collection<Patch> {
-        return patchMap.values
+    operator fun get(key: Class<out Patch>): Patch {
+        return patchMap.getValue(key)
+    }
+
+    override fun iterator(): Iterator<Patch> {
+        return patchMap.values.iterator()
     }
 
     fun updated(): Collection<Patch> {
         return patchMap.filter { updates.contains(it.key) }.values
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Model<*>
+
+        if (patchMap != other.patchMap) return false
+        if (updates != other.updates) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = patchMap.hashCode()
+        result = 31 * result + updates.hashCode()
+        return result
     }
 }
