@@ -7,15 +7,7 @@ data class Effect<Patch : Any, Request> constructor(
     constructor(updatedPatch: Patch, request: Request? = null) : this(listOf(updatedPatch), request)
 }
 
-sealed class Update<Event, Patch : Any>(val model: Model<Patch>) { // TODO maybe change to nullable sourceEvent
-    class Initial<Event, Patch : Any> internal constructor(model: Model<Patch>) :
-        Update<Event, Patch>(model)
-
-    class FromEvent<Event, Patch : Any> internal constructor(
-        val event: Event,
-        model: Model<Patch>
-    ) : Update<Event, Patch>(model)
-}
+data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event? = null)
 
 class Model<Patch : Any> : Iterable<Patch> {
     private val patchMap: Map<Class<out Patch>, Patch>
@@ -90,5 +82,9 @@ class Model<Patch : Any> : Iterable<Patch> {
         var result = patchMap.hashCode()
         result = 31 * result + updates.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "Model(patchMap=$patchMap, updates=$updates)"
     }
 }

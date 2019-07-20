@@ -2,6 +2,8 @@ package io.nofrills.empress
 
 import kotlinx.coroutines.flow.Flow
 
+// TODO need a way to cancel a request
+
 interface Empress<Event, Patch : Any, Request> {
     fun initializer(): Collection<Patch>
     fun onEvent(event: Event, model: Model<Patch>): Effect<Patch, Request>
@@ -18,7 +20,7 @@ interface EmpressApi<Event, Patch : Any> {
 interface EmpressBackend<Event, Patch : Any> {
     var model: Model<Patch>
 
-    fun halt()
+    fun interrupt()
     fun onCreate()
     fun onDestroy()
 

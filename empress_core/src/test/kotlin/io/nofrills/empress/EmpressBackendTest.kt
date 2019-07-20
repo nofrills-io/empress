@@ -31,7 +31,7 @@ class EmpressBackendTest {
             }
             launch {
                 tested.sendEvent(Event.Increment)
-                tested.halt()
+                tested.interrupt()
             }
             deferredUpdates.await()
         }
@@ -42,15 +42,13 @@ class EmpressBackendTest {
 
     @Test
     fun simpleUsageWithRequest() {
-        assertEquals(Model<Patch>(listOf(Patch.Counter(0))), tested.model)
-
         val updates = runBlocking {
             val deferredUpdates = async {
                 tested.updates().toList()
             }
             launch {
                 tested.sendEvent(Event.Send)
-                tested.halt()
+                tested.interrupt()
             }
             deferredUpdates.await()
         }
@@ -61,9 +59,34 @@ class EmpressBackendTest {
     }
 
     @Test
-    fun twoObservers() {
-        assertEquals(Model<Patch>(listOf(Patch.Counter(0))), tested.model)
+    fun delayedFirstObserver() = runBlocking {
+        launch {
+            tested.sendEvent(Event.Increment)
+            tested.sendEvent(Event.Increment)
+        }
+        val deferredUpdates = async {
+            tested.updates().toList()
+        }
+        launch {
+            tested.sendEvent(Event.Decrement)
+            tested.interrupt()
+        }
+        val updates = deferredUpdates.await()
 
+        assertEquals(1, updates.size)
+
+        val modelBase = Model<Patch>(listOf(Patch.Counter(0)))
+        val expectedModel = Model(modelBase, listOf(Patch.Counter(1)))
+        assertEquals(
+            Update<Event, Patch>(expectedModel, Event.Decrement),
+            updates[0]
+        )
+
+        assertEquals(1, tested.model.get<Patch.Counter>().count)
+    }
+
+    @Test
+    fun twoObservers() {
         val updates = runBlocking {
             val deferredUpdates1 = async {
                 tested.updates().toList()
@@ -74,7 +97,7 @@ class EmpressBackendTest {
             launch {
                 tested.sendEvent(Event.Decrement)
                 tested.sendEvent(Event.Decrement)
-                tested.halt()
+                tested.interrupt()
             }
             val updates1 = deferredUpdates1.await()
             val updates2 = deferredUpdates2.await()
@@ -85,6 +108,42 @@ class EmpressBackendTest {
         assertEquals(2, updates.size)
         assertEquals(-1, updates[0].model.get<Patch.Counter>().count)
         assertEquals(-2, updates[1].model.get<Patch.Counter>().count)
+    }
+
+    @Test
+    fun delayedSecondObserver() = runBlocking {
+        val deferredUpdates1 = async {
+            tested.updates().toList()
+        }
+
+        launch {
+            tested.sendEvent(Event.Increment)
+            tested.sendEvent(Event.Increment)
+        }
+
+        val deferredUpdates2 = async {
+            tested.updates().toList()
+        }
+
+        launch {
+            tested.sendEvent(Event.Decrement)
+            tested.interrupt()
+        }
+
+        val updates1 = deferredUpdates1.await()
+        val updates2 = deferredUpdates2.await()
+
+        assertEquals(3, updates1.size)
+        assertEquals(Event.Increment, updates1[0].event)
+        assertEquals(1, updates1[0].model.get<Patch.Counter>().count)
+        assertEquals(Event.Increment, updates1[1].event)
+        assertEquals(2, updates1[1].model.get<Patch.Counter>().count)
+
+        assertEquals(1, updates2.size)
+        assertEquals(Event.Decrement, updates2[0].event)
+        assertEquals(1, updates2[0].model.get<Patch.Counter>().count)
+
+        assertEquals(1, tested.model.get<Patch.Counter>().count)
     }
 
     private val empress = object : Empress<Event, Patch, Request> {
