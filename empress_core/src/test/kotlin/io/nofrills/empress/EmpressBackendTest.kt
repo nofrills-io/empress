@@ -13,7 +13,6 @@ class EmpressBackendTest {
     @Before
     fun setUp() {
         tested = DefaultEmpressBackend(Dispatchers.Unconfined, empress)
-        tested.onCreate()
     }
 
     @After
@@ -30,8 +29,7 @@ class EmpressBackendTest {
                 tested.updates().toList()
             }
             launch {
-                tested.sendEvent(Event.Increment)
-                tested.interrupt()
+                tested.sendEvent(Event.Increment, closeUpdates = true)
             }
             deferredUpdates.await()
         }
@@ -47,8 +45,7 @@ class EmpressBackendTest {
                 tested.updates().toList()
             }
             launch {
-                tested.sendEvent(Event.Send)
-                tested.interrupt()
+                tested.sendEvent(Event.Send, closeUpdates = true)
             }
             deferredUpdates.await()
         }
@@ -68,8 +65,7 @@ class EmpressBackendTest {
             tested.updates().toList()
         }
         launch {
-            tested.sendEvent(Event.Decrement)
-            tested.interrupt()
+            tested.sendEvent(Event.Decrement, closeUpdates = true)
         }
         val updates = deferredUpdates.await()
 
@@ -96,8 +92,7 @@ class EmpressBackendTest {
             }
             launch {
                 tested.sendEvent(Event.Decrement)
-                tested.sendEvent(Event.Decrement)
-                tested.interrupt()
+                tested.sendEvent(Event.Decrement, closeUpdates = true)
             }
             val updates1 = deferredUpdates1.await()
             val updates2 = deferredUpdates2.await()
@@ -126,8 +121,7 @@ class EmpressBackendTest {
         }
 
         launch {
-            tested.sendEvent(Event.Decrement)
-            tested.interrupt()
+            tested.sendEvent(Event.Decrement, closeUpdates = true)
         }
 
         val updates1 = deferredUpdates1.await()
