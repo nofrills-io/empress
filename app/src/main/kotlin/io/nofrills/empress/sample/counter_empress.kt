@@ -1,9 +1,7 @@
 package io.nofrills.empress.sample
 
 import android.os.Parcelable
-import io.nofrills.empress.Effect
-import io.nofrills.empress.Empress
-import io.nofrills.empress.Model
+import io.nofrills.empress.*
 import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.delay
 import kotlin.math.abs
@@ -12,6 +10,7 @@ sealed class Event {
     object Decrement : Event()
     object Increment : Event()
     object SendCounter : Event()
+    object CancelSendingCounter : Event()
     object CounterSent : Event()
 }
 
@@ -19,7 +18,7 @@ sealed class Patch {
     @Parcelize
     data class Counter(val count: Int) : Patch(), Parcelable
 
-    data class Sender(val isSending: Boolean) : Patch()
+    data class Sender(val isSending: RequestId?) : Patch()
 }
 
 sealed class Request {
@@ -27,13 +26,18 @@ sealed class Request {
 }
 
 class CounterEmpress : Empress<Event, Patch, Request> {
-    override fun initializer(): Collection<Patch> = listOf(Patch.Counter(0), Patch.Sender(false))
+    override fun initializer(): Collection<Patch> = listOf(Patch.Counter(0), Patch.Sender(null))
 
-    override fun onEvent(event: Event, model: Model<Patch>): Effect<Patch, Request> {
+    override fun onEvent(
+        event: Event,
+        model: Model<Patch>,
+        requests: Requests<Event, Request>
+    ): Collection<Patch> {
         return when (event) {
             Event.Decrement -> changeCount(-1, model)
             Event.Increment -> changeCount(1, model)
-            Event.SendCounter -> sendCurrentCount(model)
+            Event.SendCounter -> sendCurrentCount(model, requests)
+            Event.CancelSendingCounter -> cancelSendingCounter(model, requests)
             Event.CounterSent -> onSent(model)
         }
     }
@@ -47,27 +51,36 @@ class CounterEmpress : Empress<Event, Patch, Request> {
         }
     }
 
-    private fun changeCount(d: Int, model: Model<Patch>): Effect<Patch, Request> {
+    private fun changeCount(d: Int, model: Model<Patch>): Collection<Patch> {
         val counter = model.get<Patch.Counter>()
-        return Effect(counter.copy(count = counter.count + d))
+        return listOf(counter.copy(count = counter.count + d))
     }
 
-    private fun sendCurrentCount(model: Model<Patch>): Effect<Patch, Request> {
+    private fun sendCurrentCount(
+        model: Model<Patch>,
+        requests: Requests<Event, Request>
+    ): Collection<Patch> {
         val sender = model.get<Patch.Sender>()
-        if (sender.isSending) {
-            return Effect()
+        if (sender.isSending != null) {
+            return listOf()
         }
 
         val counter = model.get<Patch.Counter>()
-        return Effect(
-            sender.copy(isSending = true),
-            Request.SendCounter(counter.count)
-        )
+        val requestId = requests.post(Request.SendCounter(counter.count))
+        return listOf(sender.copy(isSending = requestId))
     }
 
-    private fun onSent(model: Model<Patch>): Effect<Patch, Request> {
-        return Effect(
-            model.get<Patch.Sender>().copy(isSending = false)
-        )
+    private fun cancelSendingCounter(
+        model: Model<Patch>,
+        requests: Requests<Event, Request>
+    ): Collection<Patch> {
+        val sender = model.get<Patch.Sender>()
+        val requestId = sender.isSending ?: return listOf()
+        requests.cancel(requestId)
+        return listOf(sender.copy(isSending = null))
+    }
+
+    private fun onSent(model: Model<Patch>): Collection<Patch> {
+        return listOf(model.get<Patch.Sender>().copy(isSending = null))
     }
 }

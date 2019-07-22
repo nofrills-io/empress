@@ -3,10 +3,18 @@ package io.nofrills.empress.android
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
-import io.nofrills.empress.EmpressBackend
+import io.nofrills.empress.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 
-internal class EmpressFragment<Event, Patch : Any> : Fragment() {
-    internal lateinit var empressBackend: EmpressBackend<Event, Patch>
+internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
+    private val job = Job()
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main + job)
+
+    internal lateinit var empressBackend: DefaultEmpressBackend<Event, Patch, Request>
+    private val requestIdProducer by lazy { DefaultRequestIdProducer() }
+    private val requestStorage by lazy { DefaultRequestHolder() }
     private var storedPatches: ArrayList<Patch>? = null
 
     init {
@@ -22,7 +30,7 @@ internal class EmpressFragment<Event, Patch : Any> : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         val parcelablePatches = arrayListOf<Parcelable>()
-        for (patch in empressBackend.model) {
+        for (patch in empressBackend.model.all()) {
             if (patch is Parcelable) {
                 parcelablePatches.add(patch)
             }
@@ -31,18 +39,23 @@ internal class EmpressFragment<Event, Patch : Any> : Fragment() {
     }
 
     override fun onDestroy() {
-        empressBackend.onDestroy()
+        job.cancel()
         super.onDestroy()
     }
 
-    internal fun initialize(fn: (Collection<Patch>?) -> EmpressBackend<Event, Patch>) {
+    internal fun initialize(empress: Empress<Event, Patch, Request>) {
         if (!this::empressBackend.isInitialized) {
-            empressBackend = fn(storedPatches)
-            empressBackend.onCreate()
+            empressBackend = DefaultEmpressBackend(
+                scope.coroutineContext,
+                empress,
+                requestIdProducer,
+                requestStorage,
+                storedPatches
+            )
         }
     }
 
     companion object {
-        private const val PATCHES_KEY = "io.nofrills.patches"
+        private const val PATCHES_KEY = "io.nofrills.updated"
     }
 }

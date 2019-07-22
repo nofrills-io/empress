@@ -3,11 +3,8 @@ package io.nofrills.empress.android
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import io.nofrills.empress.DefaultEmpressApi
-import io.nofrills.empress.DefaultEmpressBackend
 import io.nofrills.empress.Empress
 import io.nofrills.empress.EmpressApi
-import kotlinx.coroutines.Dispatchers
 
 private const val DEFAULT_EMPRESS_ID = "default"
 
@@ -31,11 +28,11 @@ private fun <Event, Patch : Any, Request> getEmpressInstance(
     fragmentManager: FragmentManager
 ): EmpressApi<Event, Patch> {
     val fragmentTag = "io.nofrills.empress.fragment-$id"
-    val fragment: EmpressFragment<Event, Patch> =
-        fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<Event, Patch>?
-            ?: EmpressFragment<Event, Patch>().also {
+    val fragment: EmpressFragment<Event, Patch, Request> =
+        fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<Event, Patch, Request>?
+            ?: EmpressFragment<Event, Patch, Request>().also {
                 fragmentManager.beginTransaction().add(it, fragmentTag).commitNow()
             }
-    fragment.initialize { storedModel -> DefaultEmpressBackend(Dispatchers.Main, empress, storedModel) }
-    return DefaultEmpressApi(fragment.empressBackend)
+    fragment.initialize(empress)
+    return fragment.empressBackend
 }

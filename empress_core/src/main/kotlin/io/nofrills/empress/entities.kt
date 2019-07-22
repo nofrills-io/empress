@@ -1,26 +1,19 @@
 package io.nofrills.empress
 
-data class Effect<Patch : Any, Request> constructor(
-    val updatedPatches: Collection<Patch> = emptyList(),
-    val request: Request? = null
-) {
-    constructor(updatedPatch: Patch, request: Request? = null) : this(listOf(updatedPatch), request)
-}
-
-data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event? = null)
-
-class Model<Patch : Any> : Iterable<Patch> {
+class Model<Patch : Any> {
     private val patchMap: Map<Class<out Patch>, Patch>
-    private val updates: Set<Class<out Patch>>
+    private val updatedPatches: Set<Class<out Patch>>
 
     /** Constructs a model from a collection of patches.
-     * @param patches Collection of patches from which to create the model.
-     * @param skipDuplicates If `true`, any duplicates in [patches] will be skipped;
+     * All patches will be marked as updated.
+     * @param updatedPatches Collection of patches from which to create the model.
+     * @param skipDuplicates If `true`, any duplicates in [updatedPatches] will be skipped;
      *  if `false` and duplicates are detected, an exception will be thrown.
+     *  @throws IllegalStateException In case [skipDuplicates] is `false` and [updatedPatches] contains two or more instances of the same class.
      */
-    internal constructor(patches: Collection<Patch>, skipDuplicates: Boolean = false) {
+    constructor(updatedPatches: Collection<Patch>, skipDuplicates: Boolean = false) {
         val map = mutableMapOf<Class<out Patch>, Patch>()
-        for (p in patches) {
+        for (p in updatedPatches) {
             val alreadyExists = map.contains(p::class.java)
             if (!alreadyExists) {
                 map[p::class.java] = p
@@ -29,10 +22,14 @@ class Model<Patch : Any> : Iterable<Patch> {
             }
         }
         patchMap = map
-        updates = emptySet()
+        this.updatedPatches = updatedPatches.map { it::class.java }.toSet()
     }
 
-    internal constructor(model: Model<Patch>, updatedPatches: Collection<Patch> = emptyList()) {
+    /** Constructs a model from an existing one, but applying a collection of updated patches.
+     * Only patches from [updatedPatches] will be marked as updated.
+     * @throws IllegalStateException In case [updatedPatches] contains two or more instances of the same class.
+     */
+    constructor(model: Model<Patch>, updatedPatches: Collection<Patch> = emptyList()) {
         val updatedPatchesMap = mutableMapOf<Class<out Patch>, Patch>()
         for (patch in updatedPatches) {
             if (updatedPatchesMap.contains(patch::class.java)) {
@@ -43,27 +40,27 @@ class Model<Patch : Any> : Iterable<Patch> {
         }
 
         patchMap = model.patchMap.toMutableMap().apply { putAll(updatedPatchesMap) }
-        updates = updatedPatches.map { it::class.java }.toSet()
+        this.updatedPatches = updatedPatches.map { it::class.java }.toSet()
     }
 
+    /** Returns all patches (even the ones that were not recently updated). */
     fun all(): Collection<Patch> {
         return patchMap.values
     }
 
+    /** Returns a patch instance. */
     inline fun <reified P : Patch> get(): P {
         return get(P::class.java) as P
     }
 
+    /** Returns a patch instance for the given class. */
     operator fun get(key: Class<out Patch>): Patch {
         return patchMap.getValue(key)
     }
 
-    override fun iterator(): Iterator<Patch> {
-        return patchMap.values.iterator()
-    }
-
+    /** Returns collection of recently updated patches. */
     fun updated(): Collection<Patch> {
-        return patchMap.filter { updates.contains(it.key) }.values
+        return patchMap.filter { updatedPatches.contains(it.key) }.values
     }
 
     override fun equals(other: Any?): Boolean {
@@ -73,18 +70,22 @@ class Model<Patch : Any> : Iterable<Patch> {
         other as Model<*>
 
         if (patchMap != other.patchMap) return false
-        if (updates != other.updates) return false
+        if (updatedPatches != other.updatedPatches) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = patchMap.hashCode()
-        result = 31 * result + updates.hashCode()
+        result = 31 * result + updatedPatches.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "Model(patchMap=$patchMap, updates=$updates)"
+        return "Model(patchMap=$patchMap, updatedPatches=$updatedPatches)"
     }
 }
+
+typealias RequestId = Int
+
+data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event? = null)

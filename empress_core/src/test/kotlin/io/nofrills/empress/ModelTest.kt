@@ -1,6 +1,7 @@
 package io.nofrills.empress
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import java.lang.IllegalStateException
 
@@ -12,8 +13,7 @@ class ModelTest {
         val model: Model<Patch> = Model(patches)
 
         assertEquals(patches, model.all().toList())
-        assertEquals(patches, model.iterator().asSequence().toList())
-        assertEquals(0, model.updated().size)
+        assertEquals(patches, model.updated().toList())
 
         assertEquals(patch, model[Patch.Info::class.java])
         assertEquals(patch, model.get<Patch.Info>())
@@ -27,8 +27,7 @@ class ModelTest {
         val model = Model(patches)
 
         assertEquals(patches, model.all().toList())
-        assertEquals(patches, model.iterator().asSequence().toList())
-        assertEquals(0, model.updated().size)
+        assertEquals(patches, model.updated().toList())
 
         assertEquals(network, model[Patch.Network::class.java])
         assertEquals(network, model.get<Patch.Network>())
@@ -61,10 +60,12 @@ class ModelTest {
     @Test
     fun fromExistingModel() {
         val model: Model<Patch> = Model(listOf(Patch.Info("A")))
-        assertEquals(model, Model(model))
-        assertEquals(1, model.all().size)
-        assertEquals(0, model.updated().size)
-        assertEquals(Patch.Info("A"), model.get<Patch.Info>())
+        val newModel = Model(model)
+        assertNotEquals(model, newModel)
+        assertEquals(1, model.updated().size)
+        assertEquals(0, newModel.updated().size)
+        assertEquals(listOf(Patch.Info("A")), newModel.all().toList())
+        assertEquals(Patch.Info("A"), newModel.get<Patch.Info>())
     }
 
     @Test
@@ -74,6 +75,7 @@ class ModelTest {
         val model = Model(source, listOf(update))
         assertEquals(2, model.all().size)
         assertEquals(1, model.updated().size)
+        assertEquals(Patch.Network(true), model.get<Patch.Network>())
         assertEquals(Patch.Info("B"), model.get<Patch.Info>())
     }
 

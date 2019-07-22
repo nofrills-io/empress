@@ -58,6 +58,18 @@
         app:layout_constraintEnd_toStartOf="@id/increment_button"
         app:layout_constraintStart_toEndOf="@id/decrement_button" />
 
+    <Button
+        android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="?android:selectableItemBackground"
+        android:padding="16dp"
+        android:text="@string/cancel"
+        app:layout_constraintBottom_toTopOf="@id/send_button"
+        app:layout_constraintEnd_toStartOf="@id/increment_button"
+        app:layout_constraintStart_toEndOf="@id/decrement_button" />
+
     <androidx.core.widget.ContentLoadingProgressBar
         android:id="@+id/progress_bar"
         style="?android:progressBarStyleLarge"

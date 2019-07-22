@@ -1,10 +1,16 @@
 package io.nofrills.empress
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 
 interface Empress<Event, Patch : Any, Request> {
     fun initializer(): Collection<Patch>
-    fun onEvent(event: Event, model: Model<Patch>): Effect<Patch, Request>
+    fun onEvent(
+        event: Event,
+        model: Model<Patch>,
+        requests: Requests<Event, Request>
+    ): Collection<Patch>
+
     suspend fun onRequest(request: Request): Event
 }
 
@@ -15,15 +21,22 @@ interface EmpressApi<Event, Patch : Any> {
     fun updates(): Flow<Update<Event, Patch>>
 }
 
-interface EmpressBackend<Event, Patch : Any> {
+interface EmpressBackend<Patch : Any> {
     var model: Model<Patch>
-
-    fun onDestroy()
-
-    fun sendEvent(event: Event, closeUpdates: Boolean = false): RequestHandle?
-    fun updates(): Flow<Update<Event, Patch>>
 }
 
-interface RequestHandle {
-    fun cancel()
+interface Requests<Event, Request> {
+    fun cancel(requestId: RequestId?): Boolean
+    fun post(request: Request): RequestId
+}
+
+interface RequestHolder {
+    fun isEmpty(): Boolean
+    fun pop(requestId: RequestId): Job?
+    fun push(requestId: RequestId, requestJob: Job)
+    fun snapshot(): Collection<Job>
+}
+
+interface RequestIdProducer {
+    fun getNextRequestId(): RequestId
 }
