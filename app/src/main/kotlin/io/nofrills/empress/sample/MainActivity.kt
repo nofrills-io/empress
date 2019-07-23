@@ -8,15 +8,15 @@ import io.nofrills.empress.android.empress
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
-    private val supervisorJob = SupervisorJob()
+    private val job = Job()
 
-    override val coroutineContext: CoroutineContext = Dispatchers.Main + supervisorJob
+    override val coroutineContext: CoroutineContext = Dispatchers.Main + job
 
     private val empressApi by lazy { empress(CounterEmpress()) }
 
@@ -25,12 +25,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         setContentView(R.layout.activity_main)
 
         launch {
+            render(empressApi.modelSnapshot().all())
             empressApi.updates().collect { update ->
-                if (update.event == null) {
-                    render(update.model.all())
-                } else {
-                    render(update.model.updated(), update.event)
-                }
+                render(update.model.updated(), update.event)
             }
         }
 
@@ -38,7 +35,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     override fun onDestroy() {
-        supervisorJob.cancel()
+        job.cancel()
         super.onDestroy()
     }
 

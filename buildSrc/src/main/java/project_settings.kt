@@ -14,8 +14,9 @@ object Ver {
 object Deps {
     const val appCompat = "androidx.appcompat:appcompat:1.0.2"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
-    const val coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Ver.coroutines}"
     const val coroutinesAndroid = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Ver.coroutines}"
+    const val coroutinesCore = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Ver.coroutines}"
+    const val coroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.0-RC"
     const val espressoCore = "androidx.test.espresso:espresso-core:3.2.0"
     const val fragment = "androidx.fragment:fragment:1.0.0"
     const val junit = "junit:junit:4.12"

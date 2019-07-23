@@ -14,6 +14,7 @@ dependencies {
     api(Deps.coroutinesCore)
     api(Deps.kotlinStdLib)
     testImplementation(Deps.junit)
+    testImplementation(Deps.coroutinesTest)
 }
 
 val compileKotlin: KotlinCompile by tasks

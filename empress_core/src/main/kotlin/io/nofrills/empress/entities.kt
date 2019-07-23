@@ -88,4 +88,4 @@ class Model<Patch : Any> {
 
 typealias RequestId = Int
 
-data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event? = null)
+data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event)

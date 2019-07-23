@@ -17,12 +17,10 @@ interface Empress<Event, Patch : Any, Request> {
 // Event - denotes something that took place, based on an event, we synchronously change our model (patches)
 // Patch - represents an update in the model
 interface EmpressApi<Event, Patch : Any> {
-    fun send(event: Event, closeUpdates: Boolean = false)
+    fun interrupt()
+    suspend fun modelSnapshot(): Model<Patch>
+    fun send(event: Event)
     fun updates(): Flow<Update<Event, Patch>>
-}
-
-interface EmpressBackend<Patch : Any> {
-    var model: Model<Patch>
 }
 
 interface Requests<Event, Request> {
@@ -34,7 +32,7 @@ interface RequestHolder {
     fun isEmpty(): Boolean
     fun pop(requestId: RequestId): Job?
     fun push(requestId: RequestId, requestJob: Job)
-    fun snapshot(): Collection<Job>
+    fun snapshot(): Sequence<Job>
 }
 
 interface RequestIdProducer {

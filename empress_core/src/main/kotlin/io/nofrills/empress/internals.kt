@@ -2,76 +2,117 @@ package io.nofrills.empress
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.coroutines.CoroutineContext
 
 class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
-    coroutineContext: CoroutineContext,
     private val empress: Empress<Event, Patch, Request>,
     private val idProducer: RequestIdProducer,
     private val requestHolder: RequestHolder,
+    private val scope: CoroutineScope,
     storedPatches: Collection<Patch>?
-) : EmpressApi<Event, Patch>, EmpressBackend<Patch> {
+) : EmpressApi<Event, Patch> {
 
-    override var model: Model<Patch> = if (storedPatches == null) {
+    private var model: Model<Patch> = if (storedPatches == null) {
         Model(empress.initializer())
     } else {
         Model(storedPatches + empress.initializer(), skipDuplicates = true)
     }
+    private val modelChannel =
+        BroadcastChannel<Model<Patch>>(capacity = Channel.CONFLATED).apply { offer(model) }
 
-    private val scope: CoroutineScope
-    private val updates = BroadcastChannel<Update<Event, Patch>>(UPDATES_CHANNEL_CAPACITY)
-    private val updatesFlow: Flow<Update<Event, Patch>> = updates.asFlow()
-
-    init {
-        val job = coroutineContext[Job]
-            ?: error("Coroutine context does not contain a Job element ($coroutineContext)")
-        job.invokeOnCompletion { updates.close() }
-        scope = CoroutineScope(coroutineContext)
-    }
-
-    override fun updates(): Flow<Update<Event, Patch>> {
-        return flow {
-            emit(Update<Event, Patch>(model))
-            updatesFlow.collect {
-                emit(it)
-            }
-        }
-    }
-
-    override fun send(event: Event, closeUpdates: Boolean) {
-        val requestExecutor = DefaultRequests(
-            closeUpdates,
+    private val requests: Requests<Event, Request> by lazy {
+        DefaultRequests(
             idProducer,
             empress::onRequest,
             requestHolder,
             scope,
-            this::send
+            this::sendSuspending
         )
-        val updatedPatches = empress.onEvent(event, model, requestExecutor)
-        val hasNoRequests = requestHolder.isEmpty()
-        model = Model(model, updatedPatches)
+    }
 
-        scope.launch {
-            updates.send(Update(model, event))
-            yield()
-            if (closeUpdates && hasNoRequests) {
+    private val updates = BroadcastChannel<Update<Event, Patch>>(UPDATES_CHANNEL_CAPACITY)
+    private val updatesFlow: Flow<Update<Event, Patch>> = updates.asFlow()
+
+    init {
+        val job =
+            scope.coroutineContext[Job] ?: error("Coroutine context does not contain a Job element")
+        job.invokeOnCompletion {
+            modelChannel.close()
+            updates.close()
+        }
+    }
+
+    private val empressActor = scope.actor<Msg<Event>>(start = CoroutineStart.LAZY) {
+        var isRunning = true
+        for (msg in channel) {
+            @Suppress("UNUSED_VARIABLE")
+            val unused: Any = when (msg) {
+                is Msg.Interrupt -> isRunning = false
+                is Msg.WithEvent -> processEvent(msg.event)
+            }
+            if ((!isRunning && channel.isEmpty && requestHolder.isEmpty()) || channel.isClosedForReceive) {
+                modelChannel.close()
                 updates.close()
+                break
             }
         }
+    }
+
+    override fun interrupt() {
+        scope.launch {
+            empressActor.send(Msg.Interrupt())
+        }
+    }
+
+    override suspend fun modelSnapshot(): Model<Patch> {
+        val channel = modelChannel.openSubscription()
+        val model = channel.receive()
+        channel.cancel()
+        return model
+    }
+
+    override fun send(event: Event) {
+        scope.launch {
+            empressActor.send(Msg.WithEvent(event))
+        }
+    }
+
+    override fun updates(): Flow<Update<Event, Patch>> {
+        return updatesFlow
+    }
+
+    internal fun areChannelsClosed(): Boolean {
+        return empressActor.isClosedForSend && modelChannel.isClosedForSend && updates.isClosedForSend
+    }
+
+    private suspend fun processEvent(event: Event) {
+        val updatedPatches = empress.onEvent(event, model, requests)
+        model = Model(model, updatedPatches)
+
+        modelChannel.send(model)
+        updates.send(Update(model, event))
 
         requestHolder.snapshot()
             .filter { !it.isActive && !it.isCompleted }
             .forEach { it.start() }
     }
 
+    private suspend fun sendSuspending(event: Event) {
+        empressActor.send(Msg.WithEvent(event))
+    }
+
     companion object {
         private const val UPDATES_CHANNEL_CAPACITY = 16
     }
+}
+
+private sealed class Msg<Event> {
+    class Interrupt<Event> : Msg<Event>()
+    data class WithEvent<Event>(val event: Event) : Msg<Event>()
 }
 
 class DefaultRequestHolder : RequestHolder {
@@ -89,18 +130,17 @@ class DefaultRequestHolder : RequestHolder {
         requestMap[requestId] = requestJob
     }
 
-    override fun snapshot(): Collection<Job> {
-        return requestMap.values.toList()
+    override fun snapshot(): Sequence<Job> {
+        return requestMap.values.asSequence()
     }
 }
 
-internal class DefaultRequests<Event, Request>(
-    private val closeUpdates: Boolean,
+internal class DefaultRequests<Event, Request> constructor(
     private val idProducer: RequestIdProducer,
     private val onRequest: suspend (Request) -> Event,
     private val requestHolder: RequestHolder,
     private val scope: CoroutineScope,
-    private val send: (Event, Boolean) -> Unit
+    private val sendEvent: suspend (Event) -> Unit
 ) : Requests<Event, Request> {
     override fun cancel(requestId: RequestId?): Boolean {
         requestId ?: return false
@@ -116,7 +156,7 @@ internal class DefaultRequests<Event, Request>(
         val job = scope.launch(start = CoroutineStart.LAZY) {
             val eventFromRequest = onRequest(request)
             if (requestHolder.pop(requestId) != null) {
-                send(eventFromRequest, closeUpdates)
+                sendEvent(eventFromRequest)
             }
         }
         job.invokeOnCompletion {
