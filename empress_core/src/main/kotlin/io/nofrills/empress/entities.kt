@@ -87,6 +87,6 @@ class Model<Patch : Any> {
 }
 
 /** Represents a running request. */
-inline class RequestId(val id: Int)
+data class RequestId constructor(private val id: Int)
 
 data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event)
