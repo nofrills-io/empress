@@ -10,7 +10,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DefaultEmpressBackendTest {
-    private val baseModel = Model(listOf(Patch.Counter(0), Patch.Sender(null)))
+    private val baseModel = Model(
+        listOf(
+            Patch.Counter(0),
+            Patch.Loader(null),
+            Patch.Sender(null)
+        )
+    )
     private val empress = TestEmpress()
     private var testScope: TestCoroutineScope? = null
 
@@ -58,7 +64,10 @@ class DefaultEmpressBackendTest {
 
         assertEquals(2, updates.size)
         assertEquals(
-            Update<Event, Patch>(Model(baseModel, listOf(Patch.Sender(1))), Event.Send(1)),
+            Update<Event, Patch>(
+                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
+                Event.Send(1)
+            ),
             updates[0]
         )
         assertEquals(
@@ -174,7 +183,7 @@ class DefaultEmpressBackendTest {
         assertEquals(2, updates.size)
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(1))),
+                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
                 Event.Send(1000)
             ), updates[0]
         )
@@ -202,7 +211,7 @@ class DefaultEmpressBackendTest {
         assertEquals(3, updates.size)
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(1))),
+                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
                 Event.Send(1)
             ), updates[0]
         )
@@ -217,6 +226,55 @@ class DefaultEmpressBackendTest {
                 Model(baseModel),
                 Event.CancelSending
             ), updates[2]
+        )
+    }
+
+    @Test
+    fun cancellingOneOfTwoRequests() = usingTestScope { tested ->
+        val deferredUpdates = async {
+            tested.updates().toList()
+        }
+        launch {
+            tested.send(Event.Load(1000))
+            tested.send(Event.Send(1000))
+            delay(10)
+            tested.send(Event.CancelSending)
+            tested.interrupt()
+        }
+        val updates = deferredUpdates.await()
+
+        assertEquals(4, updates.size)
+
+        val model0 = Model(baseModel, listOf(Patch.Loader(RequestId(1))))
+        assertEquals(
+            Update<Event, Patch>(
+                model0,
+                Event.Load(1000)
+            ), updates[0]
+        )
+
+        val model1 = Model(model0, listOf(Patch.Sender(RequestId(2))))
+        assertEquals(
+            Update<Event, Patch>(
+                model1,
+                Event.Send(1000)
+            ), updates[1]
+        )
+
+        val model2 = Model(model1, listOf(Patch.Sender(null)))
+        assertEquals(
+            Update<Event, Patch>(
+                model2,
+                Event.CancelSending
+            ), updates[2]
+        )
+
+        val model3 = Model(model2, listOf(Patch.Loader(null)))
+        assertEquals(
+            Update<Event, Patch>(
+                model3,
+                Event.Loaded
+            ), updates[3]
         )
     }
 
@@ -237,7 +295,7 @@ class DefaultEmpressBackendTest {
         assertEquals(1, updates.size)
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(1))),
+                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
                 Event.Send(1000)
             ), updates[0]
         )
@@ -251,7 +309,10 @@ class DefaultEmpressBackendTest {
             CoroutineScope(Dispatchers.Unconfined),
             storedPatches = storedPatches
         )
-        assertEquals(Model(listOf(Patch.Counter(3), Patch.Sender(null))), tested.modelSnapshot())
+        assertEquals(
+            Model(listOf(Patch.Counter(3), Patch.Loader(null), Patch.Sender(null))),
+            tested.modelSnapshot()
+        )
         tested.interrupt()
     }
 

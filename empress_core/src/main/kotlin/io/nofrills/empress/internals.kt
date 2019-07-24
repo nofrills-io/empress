@@ -172,10 +172,10 @@ internal class DefaultRequests<Event, Request> constructor(
 }
 
 class DefaultRequestIdProducer : RequestIdProducer {
-    private var nextRequestId: RequestId = 0
+    private var nextRequestId: Int = 0
 
     override fun getNextRequestId(): RequestId {
         nextRequestId += 1
-        return nextRequestId
+        return RequestId(nextRequestId)
     }
 }

@@ -64,14 +64,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun renderProgress(patch: Patch.Sender, sourceEvent: Event? = null) {
-        if (patch.isSending == null) {
+        if (patch.requestId == null) {
             if (sourceEvent is Event.CounterSent) {
                 Toast.makeText(this, R.string.counter_sent, Toast.LENGTH_LONG).show()
             } else if (sourceEvent is Event.CancelSendingCounter) {
                 Toast.makeText(this, R.string.send_counter_cancelled, Toast.LENGTH_LONG).show()
             }
         }
-        progress_bar.visibility = if (patch.isSending != null) {
+        progress_bar.visibility = if (patch.requestId != null) {
             View.VISIBLE
         } else {
             View.GONE

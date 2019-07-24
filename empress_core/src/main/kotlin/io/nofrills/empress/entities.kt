@@ -86,6 +86,7 @@ class Model<Patch : Any> {
     }
 }
 
-typealias RequestId = Int
+/** Represents a running request. */
+inline class RequestId(val id: Int)
 
 data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event)

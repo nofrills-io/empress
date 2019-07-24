@@ -3,6 +3,7 @@ package io.nofrills.empress.sample
 import android.os.Parcelable
 import io.nofrills.empress.*
 import kotlinx.android.parcel.Parcelize
+import kotlinx.android.parcel.RawValue
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -18,7 +19,7 @@ sealed class Patch {
     @Parcelize
     data class Counter(val count: Int) : Patch(), Parcelable
 
-    data class Sender(val isSending: RequestId?) : Patch()
+    data class Sender(val requestId: RequestId?) : Patch()
 }
 
 sealed class Request {
@@ -61,13 +62,13 @@ class CounterEmpress : Empress<Event, Patch, Request> {
         requests: Requests<Event, Request>
     ): Collection<Patch> {
         val sender = model.get<Patch.Sender>()
-        if (sender.isSending != null) {
+        if (sender.requestId != null) {
             return listOf()
         }
 
         val counter = model.get<Patch.Counter>()
         val requestId = requests.post(Request.SendCounter(counter.count))
-        return listOf(sender.copy(isSending = requestId))
+        return listOf(sender.copy(requestId = requestId))
     }
 
     private fun cancelSendingCounter(
@@ -75,12 +76,12 @@ class CounterEmpress : Empress<Event, Patch, Request> {
         requests: Requests<Event, Request>
     ): Collection<Patch> {
         val sender = model.get<Patch.Sender>()
-        val requestId = sender.isSending ?: return listOf()
+        val requestId = sender.requestId ?: return listOf()
         requests.cancel(requestId)
-        return listOf(sender.copy(isSending = null))
+        return listOf(sender.copy(requestId = null))
     }
 
     private fun onSent(model: Model<Patch>): Collection<Patch> {
-        return listOf(model.get<Patch.Sender>().copy(isSending = null))
+        return listOf(model.get<Patch.Sender>().copy(requestId = null))
     }
 }
