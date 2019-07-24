@@ -7,39 +7,23 @@ import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
-import java.lang.IllegalStateException
 
 class DefaultEmpressBackendTest {
     private val baseModel = Model(listOf(Patch.Counter(0), Patch.Sender(null)))
-
-    private lateinit var job: Job
-    private lateinit var requestIdProducer: RequestIdProducer
-    private lateinit var requestHolder: RequestHolder
-    private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: DefaultEmpressBackend<Event, Patch, Request>
-
-    @Before
-    fun setUp() {
-        requestIdProducer = DefaultRequestIdProducer()
-        requestHolder = DefaultRequestHolder()
-        scope = TestCoroutineScope()
-        job = Job()
-        tested = makeEmpressBackend(job)
-    }
+    private val empress = TestEmpress()
+    private var testScope: TestCoroutineScope? = null
 
     @After
     fun tearDown() {
-        job.cancel()
-        scope.cleanupTestCoroutines()
+        testScope?.cleanupTestCoroutines()
     }
 
     @Test
-    fun simpleUsage() = scope.runBlockingTest {
+    fun simpleUsage() = usingTestScope { tested ->
         assertEquals(baseModel, tested.modelSnapshot())
 
-        val deferredUpdates = async(start = CoroutineStart.UNDISPATCHED) {
+        val deferredUpdates = async {
             tested.updates().toList()
         }
 
@@ -62,7 +46,7 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun simpleUsageWithRequest() = scope.runBlockingTest {
+    fun simpleUsageWithRequest() = usingTestScope { tested ->
         val deferredUpdates = async {
             tested.updates().toList()
         }
@@ -86,11 +70,11 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun delayedFirstObserver() = scope.runBlockingTest {
+    fun delayedFirstObserver() = usingTestScope { tested ->
         tested.send(Event.Increment)
         tested.send(Event.Increment)
 
-        val deferredUpdates = async(start = CoroutineStart.UNDISPATCHED) {
+        val deferredUpdates = async {
             tested.updates().toList()
         }
 
@@ -107,11 +91,11 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun twoObservers() = scope.runBlockingTest {
-        val deferredUpdates1 = async(start = CoroutineStart.UNDISPATCHED) {
+    fun twoObservers() = usingTestScope { tested ->
+        val deferredUpdates1 = async {
             tested.updates().toList()
         }
-        val deferredUpdates2 = async(start = CoroutineStart.UNDISPATCHED) {
+        val deferredUpdates2 = async {
             tested.updates().toList()
         }
 
@@ -135,7 +119,7 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun delayedSecondObserver() = scope.runBlockingTest {
+    fun delayedSecondObserver() = usingTestScope { tested ->
         val deferredUpdates1 = async {
             tested.updates().toList()
         }
@@ -175,8 +159,8 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun cancellingRequest() = scope.runBlockingTest {
-        val deferredUpdates = async(start = CoroutineStart.UNDISPATCHED) {
+    fun cancellingRequest() = usingTestScope { tested ->
+        val deferredUpdates = async {
             tested.updates().toList()
         }
         launch {
@@ -203,8 +187,8 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun cancellingCompletedRequest() = scope.runBlockingTest {
-        val deferredUpdates = async(start = CoroutineStart.UNDISPATCHED) {
+    fun cancellingCompletedRequest() = usingTestScope { tested ->
+        val deferredUpdates = async {
             tested.updates().toList()
         }
         launch {
@@ -237,7 +221,10 @@ class DefaultEmpressBackendTest {
     }
 
     @Test
-    fun cancellingParentJob() = scope.runBlockingTest {
+    fun cancellingParentJob() = runBlockingTest {
+        val job = Job()
+        val tested = makeEmpressBackend(CoroutineScope(Dispatchers.Unconfined + job))
+
         val deferredUpdates = async(start = CoroutineStart.UNDISPATCHED) {
             tested.updates().toList()
         }
@@ -247,7 +234,6 @@ class DefaultEmpressBackendTest {
             job.cancel()
         }
         val updates = deferredUpdates.await()
-
         assertEquals(1, updates.size)
         assertEquals(
             Update<Event, Patch>(
@@ -258,27 +244,32 @@ class DefaultEmpressBackendTest {
         assertTrue(tested.areChannelsClosed())
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun creatingWithoutJob() {
-        tested = makeEmpressBackend(job = null)
+    @Test
+    fun storedPatches() = runBlockingTest {
+        val storedPatches = listOf(Patch.Counter(3))
+        val tested = makeEmpressBackend(
+            CoroutineScope(Dispatchers.Unconfined),
+            storedPatches = storedPatches
+        )
+        assertEquals(Model(listOf(Patch.Counter(3), Patch.Sender(null))), tested.modelSnapshot())
+        tested.interrupt()
     }
 
-    @Test
-    fun storedPatches() = scope.runBlockingTest {
-        val storedPatches = listOf(Patch.Counter(3))
-        tested = makeEmpressBackend(job, storedPatches = storedPatches)
-        assertEquals(Model(listOf(Patch.Counter(3), Patch.Sender(null))), tested.modelSnapshot())
+    private fun usingTestScope(block: suspend TestCoroutineScope.(DefaultEmpressBackend<Event, Patch, Request>) -> Unit) {
+        val scope = TestCoroutineScope()
+        testScope = scope
+        val empressBackend = makeEmpressBackend(scope)
+        scope.runBlockingTest {
+            block.invoke(scope, empressBackend)
+        }
     }
 
     private fun makeEmpressBackend(
-        job: Job?,
+        coroutineScope: CoroutineScope,
         storedPatches: Collection<Patch>? = null
     ): DefaultEmpressBackend<Event, Patch, Request> {
-        val coroutineScope = when (job) {
-            null -> scope
-            else -> scope + job
-        }
-
+        val requestIdProducer = DefaultRequestIdProducer()
+        val requestHolder = DefaultRequestHolder()
         return DefaultEmpressBackend(
             empress,
             requestIdProducer,
@@ -286,62 +277,5 @@ class DefaultEmpressBackendTest {
             coroutineScope,
             storedPatches
         )
-    }
-
-    private val empress = object : Empress<Event, Patch, Request> {
-        override fun initializer(): Collection<Patch> = listOf(
-            Patch.Counter(0),
-            Patch.Sender(null)
-        )
-
-        override fun onEvent(
-            event: Event,
-            model: Model<Patch>,
-            requests: Requests<Event, Request>
-        ): Collection<Patch> {
-            return when (event) {
-                Event.Decrement -> listOf(model.get<Patch.Counter>().let { it.copy(count = it.count - 1) })
-                Event.Increment -> listOf(model.get<Patch.Counter>().let { it.copy(count = it.count + 1) })
-                is Event.Send -> run<Collection<Patch>> {
-                    val requestId = requests.post(Request.Send(event.delayMillis))
-                    listOf(Patch.Sender(requestId))
-                }
-                Event.CancelSending -> run {
-                    val sender = model.get<Patch.Sender>()
-                    if (requests.cancel(sender.requestId)) {
-                        listOf(Patch.Sender(null))
-                    } else {
-                        emptyList()
-                    }
-                }
-                Event.CounterSent -> listOf(Patch.Sender(null))
-            }
-        }
-
-        override suspend fun onRequest(request: Request): Event {
-            return when (request) {
-                is Request.Send -> run {
-                    delay(request.delayMillis)
-                    Event.CounterSent
-                }
-            }
-        }
-    }
-
-    internal sealed class Event {
-        object Decrement : Event()
-        object Increment : Event()
-        data class Send(val delayMillis: Long) : Event()
-        object CancelSending : Event()
-        object CounterSent : Event()
-    }
-
-    internal sealed class Patch {
-        data class Counter(val count: Int) : Patch()
-        data class Sender(val requestId: RequestId? = null) : Patch()
-    }
-
-    internal sealed class Request {
-        data class Send(val delayMillis: Long) : Request()
     }
 }

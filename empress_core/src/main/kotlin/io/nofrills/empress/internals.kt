@@ -3,7 +3,6 @@ package io.nofrills.empress
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import java.util.concurrent.ConcurrentHashMap
@@ -16,13 +15,13 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     storedPatches: Collection<Patch>?
 ) : EmpressApi<Event, Patch> {
 
+    private val empressApiChannel = Channel<Msg<Event, Patch>>()
+
     private var model: Model<Patch> = if (storedPatches == null) {
         Model(empress.initializer())
     } else {
         Model(storedPatches + empress.initializer(), skipDuplicates = true)
     }
-    private val modelChannel =
-        BroadcastChannel<Model<Patch>>(capacity = Channel.CONFLATED).apply { offer(model) }
 
     private val requests: Requests<Event, Request> by lazy {
         DefaultRequests(
@@ -38,38 +37,37 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     private val updatesFlow: Flow<Update<Event, Patch>> = updates.asFlow()
 
     init {
-        val job =
-            scope.coroutineContext[Job] ?: error("Coroutine context does not contain a Job element")
-        job.invokeOnCompletion {
-            modelChannel.close()
-            updates.close()
-        }
-    }
-
-    private val empressActor = scope.actor<Msg<Event>>(start = CoroutineStart.LAZY) {
-        var isRunning = true
-        for (msg in channel) {
-            @Suppress("UNUSED_VARIABLE")
-            val unused: Any = when (msg) {
-                is Msg.Interrupt -> isRunning = false
-                is Msg.WithEvent -> processEvent(msg.event)
+        scope.launch {
+            var isRunning = true
+            for (msg in empressApiChannel) {
+                @Suppress("UNUSED_VARIABLE")
+                val unused: Any = when (msg) {
+                    is Msg.Interrupt -> isRunning = false
+                    is Msg.WithEvent -> processEvent(msg.event)
+                    is Msg.GetModel -> run {
+                        msg.channel.send(model)
+                        msg.channel.close()
+                    }
+                }
+                if ((!isRunning && empressApiChannel.isEmpty && requestHolder.isEmpty()) || empressApiChannel.isClosedForReceive) {
+                    closeChannels()
+                    break
+                }
             }
-            if ((!isRunning && channel.isEmpty && requestHolder.isEmpty()) || channel.isClosedForReceive) {
-                modelChannel.close()
-                updates.close()
-                break
-            }
+        }.invokeOnCompletion {
+            closeChannels()
         }
     }
 
     override fun interrupt() {
         scope.launch {
-            empressActor.send(Msg.Interrupt())
+            empressApiChannel.send(Msg.Interrupt())
         }
     }
 
     override suspend fun modelSnapshot(): Model<Patch> {
-        val channel = modelChannel.openSubscription()
+        val channel = Channel<Model<Patch>>()
+        empressApiChannel.send(Msg.GetModel(channel))
         val model = channel.receive()
         channel.cancel()
         return model
@@ -77,7 +75,7 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
 
     override fun send(event: Event) {
         scope.launch {
-            empressActor.send(Msg.WithEvent(event))
+            sendSuspending(event)
         }
     }
 
@@ -86,14 +84,18 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     }
 
     internal fun areChannelsClosed(): Boolean {
-        return empressActor.isClosedForSend && modelChannel.isClosedForSend && updates.isClosedForSend
+        return empressApiChannel.isClosedForSend && updates.isClosedForSend
+    }
+
+    private fun closeChannels() {
+        empressApiChannel.close()
+        updates.close()
     }
 
     private suspend fun processEvent(event: Event) {
         val updatedPatches = empress.onEvent(event, model, requests)
         model = Model(model, updatedPatches)
 
-        modelChannel.send(model)
         updates.send(Update(model, event))
 
         requestHolder.snapshot()
@@ -102,7 +104,7 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     }
 
     private suspend fun sendSuspending(event: Event) {
-        empressActor.send(Msg.WithEvent(event))
+        empressApiChannel.send(Msg.WithEvent(event))
     }
 
     companion object {
@@ -110,9 +112,10 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     }
 }
 
-private sealed class Msg<Event> {
-    class Interrupt<Event> : Msg<Event>()
-    data class WithEvent<Event>(val event: Event) : Msg<Event>()
+private sealed class Msg<Event, Patch : Any> {
+    class Interrupt<Event, Patch : Any> : Msg<Event, Patch>()
+    data class WithEvent<Event, Patch : Any>(val event: Event) : Msg<Event, Patch>()
+    class GetModel<Event, Patch : Any>(val channel: Channel<Model<Patch>>) : Msg<Event, Patch>()
 }
 
 class DefaultRequestHolder : RequestHolder {

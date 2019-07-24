@@ -28,6 +28,7 @@ private fun <Event, Patch : Any, Request> getEmpressInstance(
     fragmentManager: FragmentManager
 ): EmpressApi<Event, Patch> {
     val fragmentTag = "io.nofrills.empress.fragment-$id"
+    @Suppress("UNCHECKED_CAST")
     val fragment: EmpressFragment<Event, Patch, Request> =
         fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<Event, Patch, Request>?
             ?: EmpressFragment<Event, Patch, Request>().also {
