@@ -33,10 +33,6 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
             }
         }
         outState.putParcelableArrayList(PATCHES_KEY, parcelablePatches)
-        // TODO being here, empress should pause processing
-        // and resume at some point later;
-        // this is because if we really will terminate, any further changes
-        // to the model won't be persisted
     }
 
     override fun onDestroy() {
