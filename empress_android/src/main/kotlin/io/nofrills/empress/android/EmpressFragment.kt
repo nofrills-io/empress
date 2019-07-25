@@ -7,21 +7,13 @@ import io.nofrills.empress.DefaultEmpressBackend
 import io.nofrills.empress.DefaultRequestHolder
 import io.nofrills.empress.DefaultRequestIdProducer
 import io.nofrills.empress.Empress
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 
 internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
     private val job = Job()
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + job)
 
     internal lateinit var empressBackend: DefaultEmpressBackend<Event, Patch, Request>
     private var storedPatches: ArrayList<Patch>? = null
-
-    init {
-        retainInstance = true
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,8 +44,16 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
         super.onDestroy()
     }
 
-    internal fun initialize(empress: Empress<Event, Patch, Request>) {
+    internal fun initialize(
+        dispatcher: CoroutineDispatcher,
+        empress: Empress<Event, Patch, Request>
+    ) {
+        if (dispatcher == Dispatchers.Main) {
+            error("Using `Dispatchers.Main` for empress is not supported.")
+        }
+
         if (!this::empressBackend.isInitialized) {
+            val scope = CoroutineScope(dispatcher + job)
             val requestIdProducer = DefaultRequestIdProducer()
             val requestStorage = DefaultRequestHolder()
             empressBackend = DefaultEmpressBackend(

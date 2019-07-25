@@ -32,38 +32,16 @@ android {
         }
     }
 
-    testOptions {
-        unitTests.isIncludeAndroidResources = true
-    }
-
-    sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
     sourceSets["main"].java.srcDir("src/main/kotlin")
-    sourceSets["test"].java.srcDir("src/test/kotlin")
+}
+
+androidExtensions {
+    isExperimental = true // for `@Parcelize` annotation
 }
 
 dependencies {
-    api(project(":empress_core"))
-
-    implementation(Deps.coroutinesAndroid)
+    implementation(project(":empress_android"))
     implementation(Deps.fragment)
-
-    debugImplementation(Deps.fragmentTesting)
-
-    testImplementation(project(":test_support"))
-    testImplementation(Deps.junit)
-    testImplementation(Deps.robolectric)
-
-    androidTestImplementation(Deps.espressoCore)
-    androidTestImplementation(Deps.testRunner)
-}
-
-configurations.configureEach{
-    resolutionStrategy.dependencySubstitution.all {
-        val requested = requested
-        if (requested is ModuleComponentSelector && requested.group == "androidx.test" && requested.module == "core") {
-            useTarget("androidx.test:core:1.2.0", "${Deps.fragmentTesting} uses old version")
-        }
-    }
 }
 
 tasks.withType(KotlinCompile::class).all {

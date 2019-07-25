@@ -27,5 +27,9 @@ compileKotlin.kotlinOptions {
 }
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
+    freeCompilerArgs = freeCompilerArgs + listOf(
+        "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
+        "-Xuse-experimental=kotlinx.coroutines.FlowPreview"
+    )
     jvmTarget = "1.8"
 }

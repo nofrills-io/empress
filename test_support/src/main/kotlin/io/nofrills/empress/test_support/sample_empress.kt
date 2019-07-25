@@ -1,4 +1,4 @@
-package io.nofrills.empress.sample
+package io.nofrills.empress.test_support
 
 import android.os.Parcelable
 import io.nofrills.empress.*
@@ -25,7 +25,7 @@ sealed class Request {
     class SendCounter(val counterValue: Int) : Request()
 }
 
-class CounterEmpress : Empress<Event, Patch, Request> {
+class SampleEmpress : Empress<Event, Patch, Request> {
     override fun initializer(): Collection<Patch> = listOf(Patch.Counter(0), Patch.Sender(null))
 
     override fun onEvent(
