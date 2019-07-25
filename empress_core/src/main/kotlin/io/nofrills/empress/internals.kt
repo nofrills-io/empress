@@ -67,10 +67,14 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
 
     override suspend fun modelSnapshot(): Model<Patch> {
         val channel = Channel<Model<Patch>>()
-        empressApiChannel.send(Msg.GetModel(channel))
-        val model = channel.receive()
-        channel.cancel()
-        return model
+        val deferred = scope.async {
+            empressApiChannel.send(Msg.GetModel(channel))
+            channel.receive()
+        }
+        deferred.invokeOnCompletion {
+            channel.cancel()
+        }
+        return deferred.await()
     }
 
     override fun send(event: Event) {
