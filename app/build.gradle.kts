@@ -44,6 +44,7 @@ androidExtensions {
 
 dependencies {
     implementation(project(":empress_android"))
+    implementation(project(":test_support"))
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)
     implementation(Deps.kotlinStdLib)

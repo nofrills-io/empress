@@ -5,6 +5,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import io.nofrills.empress.android.empress
+import io.nofrills.empress.test_support.Event
+import io.nofrills.empress.test_support.Patch
+import io.nofrills.empress.test_support.SampleEmpress
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +21,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext = Dispatchers.Main + job
 
-    private val empressApi by lazy { empress(CounterEmpress()) }
+    private val empressApi by lazy { empress(SampleEmpress()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
