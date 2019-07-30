@@ -12,6 +12,9 @@ internal sealed class Event {
     data class Send(val delayMillis: Long) : Event()
     object CancelSending : Event()
     object CounterSent : Event()
+
+    object Trouble : Event()
+    object TroubleWithRequest : Event()
 }
 
 internal sealed class Patch {
@@ -23,6 +26,7 @@ internal sealed class Patch {
 internal sealed class Request {
     data class Load(val delayMillis: Long) : Request()
     data class Send(val delayMillis: Long) : Request()
+    object Trouble : Request()
 }
 
 internal class TestEmpress : Empress<Event, Patch, Request> {
@@ -58,6 +62,11 @@ internal class TestEmpress : Empress<Event, Patch, Request> {
                 }
             }
             Event.CounterSent -> listOf(Patch.Sender(null))
+            Event.Trouble -> throw EventTrouble()
+            Event.TroubleWithRequest -> run {
+                requests.post(Request.Trouble)
+                emptyList<Patch>()
+            }
         }
     }
 
@@ -71,6 +80,10 @@ internal class TestEmpress : Empress<Event, Patch, Request> {
                 delay(request.delayMillis)
                 Event.CounterSent
             }
+            Request.Trouble -> throw RequestTrouble()
         }
     }
 }
+
+class EventTrouble : Throwable()
+class RequestTrouble : Throwable()
