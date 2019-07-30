@@ -2,6 +2,7 @@ package io.nofrills.empress.android
 
 import android.os.Bundle
 import android.os.Parcelable
+import android.util.Log
 import androidx.fragment.app.Fragment
 import io.nofrills.empress.DefaultEmpressBackend
 import io.nofrills.empress.DefaultRequestHolder
@@ -44,8 +45,12 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
         dispatcher: CoroutineDispatcher,
         empress: Empress<Event, Patch, Request>
     ) {
-        if (dispatcher == Dispatchers.Main) {
-            error("Using `Dispatchers.Main` for empress is not supported.")
+        if (dispatcher is MainCoroutineDispatcher) {
+            // Using the main dispatcher is not possible, because in
+            // `onSaveInstanceState` we use a `runBlocking` function,
+            // which locks current thread (main thread), and prevents
+            // from executing anything else.
+            error("Cannot use an instance of MainCoroutineDispatcher for empress.")
         }
 
         if (!this::empressBackend.isInitialized) {

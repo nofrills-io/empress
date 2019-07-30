@@ -1,5 +1,8 @@
 package io.nofrills.empress
 
+/** Represents state of your application.
+ * A model consists of a set of [patches][Patch].
+ */
 class Model<Patch : Any> {
     private val patchMap: Map<Class<out Patch>, Patch>
     private val updatedPatches: Set<Class<out Patch>>
@@ -89,4 +92,7 @@ class Model<Patch : Any> {
 /** Represents a running request. */
 data class RequestId constructor(private val id: Int)
 
+/** Represents an update in the [model], that resulted from processing an [event].
+ * @see Model.updated
+ */
 data class Update<Event, Patch : Any> constructor(val model: Model<Patch>, val event: Event)

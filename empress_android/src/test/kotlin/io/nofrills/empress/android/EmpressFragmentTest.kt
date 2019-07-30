@@ -10,14 +10,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.nofrills.empress.Model
 import io.nofrills.empress.RequestId
 import io.nofrills.empress.test_support.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.lang.IllegalStateException
 
 @RunWith(RobolectricTestRunner::class)
 class EmpressFragmentTest {
@@ -110,6 +107,7 @@ class EmpressFragmentTest {
         }
     }
 
+    /** Generic scenario that can be used with Activities and Fragments. */
     internal sealed class Scenario<T> {
         abstract fun moveToState(newState: Lifecycle.State)
         abstract fun onScenario(fn: (T) -> Unit)
