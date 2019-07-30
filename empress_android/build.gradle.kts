@@ -43,8 +43,8 @@ android {
 
 dependencies {
     api(project(":empress_core"))
+    api(Deps.coroutinesAndroid)
 
-    implementation(Deps.coroutinesAndroid)
     implementation(Deps.fragment)
 
     debugImplementation(Deps.fragmentTesting)

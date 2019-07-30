@@ -1,6 +1,7 @@
 package io.nofrills.empress.sample
 
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -9,17 +10,17 @@ import io.nofrills.empress.test_support.Event
 import io.nofrills.empress.test_support.Patch
 import io.nofrills.empress.test_support.SampleEmpress
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
+import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
     private val job = Job()
 
-    override val coroutineContext: CoroutineContext = Dispatchers.Main + job
+    private val mainDispatcher: CoroutineDispatcher by lazy { Handler().asCoroutineDispatcher() }
+
+    override val coroutineContext: CoroutineContext = mainDispatcher + job
 
     private val empressApi by lazy { empress(SampleEmpress()) }
 
