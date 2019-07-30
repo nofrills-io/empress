@@ -279,24 +279,34 @@ class DefaultEmpressBackendTest {
     }
 
     @Test(expected = EventTrouble::class)
-    fun throwingErrorInEventHandler() = usingTestScope { tested ->
-        //        val tested = makeEmpressBackend(CoroutineScope(Dispatchers.Unconfined))
-        val deferredUpdates = async {
-            tested.updates().toList()
-        }
+    fun throwingErrorInEventHandler() {
+        val scope = CoroutineScope(Dispatchers.Unconfined) + Job()
+        val tested = makeEmpressBackend(scope)
 
-        launch {
+        runBlocking(scope.coroutineContext) {
+            val deferredUpdates = async {
+                tested.updates().toList()
+            }
+
             tested.send(Event.Trouble)
             tested.interrupt()
-        }
 
-        deferredUpdates.await()
-        Unit
+            deferredUpdates.await()
+        }
     }
 
     @Test(expected = RequestTrouble::class)
-    fun throwingErrorInRequestHandler() = usingTestScope { tested ->
-        tested.send(Event.TroubleWithRequest)
+    fun throwingErrorInRequestHandler() {
+        val scope = CoroutineScope(Dispatchers.Unconfined) + Job()
+        val tested = makeEmpressBackend(scope)
+
+        runBlocking(scope.coroutineContext) {
+            val deferredUpdates = async {
+                tested.updates().toList()
+            }
+            tested.send(Event.TroubleWithRequest)
+            deferredUpdates.await()
+        }
     }
 
     @Test
