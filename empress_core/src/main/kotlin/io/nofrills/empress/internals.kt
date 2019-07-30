@@ -55,7 +55,11 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
                 }
             }
         }.invokeOnCompletion {
-            closeChannels()
+            if (it is CancellationException) {
+                closeChannels()
+            } else {
+                closeChannels(it)
+            }
         }
     }
 
@@ -91,9 +95,9 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
         return empressApiChannel.isClosedForSend && updates.isClosedForSend
     }
 
-    private fun closeChannels() {
-        empressApiChannel.close()
-        updates.close()
+    private fun closeChannels(throwable: Throwable? = null) {
+        empressApiChannel.close(throwable)
+        updates.close(throwable)
     }
 
     private suspend fun processEvent(event: Event) {

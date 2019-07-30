@@ -9,8 +9,12 @@ import io.nofrills.empress.DefaultRequestHolder
 import io.nofrills.empress.DefaultRequestIdProducer
 import io.nofrills.empress.Empress
 import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
-internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
+internal class EmpressFragment<Event, Patch : Any, Request> : Fragment(), CoroutineScope {
+    override lateinit var coroutineContext: CoroutineContext
+        private set
+
     private val job = Job()
 
     internal lateinit var empressBackend: DefaultEmpressBackend<Event, Patch, Request>
@@ -54,14 +58,14 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment() {
         }
 
         if (!this::empressBackend.isInitialized) {
-            val scope = CoroutineScope(dispatcher + job)
+            coroutineContext = dispatcher + job
             val requestIdProducer = DefaultRequestIdProducer()
             val requestStorage = DefaultRequestHolder()
             empressBackend = DefaultEmpressBackend(
                 empress,
                 requestIdProducer,
                 requestStorage,
-                scope,
+                this@EmpressFragment,
                 storedPatches
             )
         }

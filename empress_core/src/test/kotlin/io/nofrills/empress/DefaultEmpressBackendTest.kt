@@ -288,7 +288,7 @@ class DefaultEmpressBackendTest {
                 tested.updates().toList()
             }
 
-            tested.send(Event.Trouble)
+            tested.send(Event.GetEventFailure)
             tested.interrupt()
 
             deferredUpdates.await()
@@ -304,7 +304,7 @@ class DefaultEmpressBackendTest {
             val deferredUpdates = async {
                 tested.updates().toList()
             }
-            tested.send(Event.TroubleWithRequest)
+            tested.send(Event.GetEventFailureWithRequest)
             deferredUpdates.await()
         }
     }

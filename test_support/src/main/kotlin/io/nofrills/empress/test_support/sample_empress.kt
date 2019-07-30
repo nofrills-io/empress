@@ -12,6 +12,8 @@ sealed class Event {
     object SendCounter : Event()
     object CancelSendingCounter : Event()
     object CounterSent : Event()
+    object GetFailure : Event()
+    object GetFailureWithRequest : Event()
 }
 
 sealed class Patch {
@@ -23,6 +25,7 @@ sealed class Patch {
 
 sealed class Request {
     class SendCounter(val counterValue: Int) : Request()
+    object GetFailure : Request()
 }
 
 class SampleEmpress : Empress<Event, Patch, Request> {
@@ -39,6 +42,11 @@ class SampleEmpress : Empress<Event, Patch, Request> {
             Event.SendCounter -> sendCurrentCount(model, requests)
             Event.CancelSendingCounter -> cancelSendingCounter(model, requests)
             Event.CounterSent -> onSent(model)
+            Event.GetFailure -> throw OnEventFailure()
+            Event.GetFailureWithRequest -> run {
+                requests.post(Request.GetFailure)
+                emptyList<Patch>()
+            }
         }
     }
 
@@ -48,6 +56,7 @@ class SampleEmpress : Empress<Event, Patch, Request> {
                 delay(abs(request.counterValue) * 1000L)
                 Event.CounterSent
             }
+            Request.GetFailure -> throw OnRequestFailure()
         }
     }
 
@@ -84,3 +93,7 @@ class SampleEmpress : Empress<Event, Patch, Request> {
         return listOf(model.get<Patch.Sender>().copy(requestId = null))
     }
 }
+
+class OnEventFailure : Throwable()
+
+class OnRequestFailure : Throwable()

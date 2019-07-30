@@ -10,6 +10,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.nofrills.empress.Model
 import io.nofrills.empress.RequestId
 import io.nofrills.empress.test_support.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -52,6 +54,54 @@ class EmpressFragmentTest {
     fun fragmentUsageNotRetained() {
         val finalModel: Model<Patch> = Model(listOf(Patch.Counter(1), Patch.Sender(null)))
         testWithFragment(false, finalModel)
+    }
+
+    @Test(expected = OnEventFailure::class)
+    fun onEventExceptionInFragment() {
+        val fragmentScenario =
+            launchFragment<SampleFragment>(SampleFragment.argsBundle(false))
+        val scenario = Scenario.FromFragment(fragmentScenario)
+
+        scenario.onScenario {
+            val api = it.api
+
+            runBlocking {
+                val deferredUpdates = async {
+                    api.updates().toList()
+                }
+
+                api.send(Event.GetFailure)
+                api.interrupt()
+
+                deferredUpdates.await()
+            }
+        }
+    }
+
+    @Test(expected = OnRequestFailure::class)
+    fun onRequestExceptionInActivity() {
+        val intent = SampleActivity.newIntent(
+            InstrumentationRegistry.getInstrumentation().context,
+            false,
+            SampleActivity.DispatcherType.SINGLE
+        )
+        val activityScenario: ActivityScenario<SampleActivity> = ActivityScenario.launch(intent)
+        val scenario = Scenario.FromActivity(activityScenario)
+
+        scenario.onScenario {
+            val api = it.api
+
+            runBlocking {
+                val deferredUpdates = async {
+                    api.updates().toList()
+                }
+
+                api.send(Event.GetFailureWithRequest)
+                api.interrupt()
+
+                deferredUpdates.await()
+            }
+        }
     }
 
     private fun testWithActivity(retainEmpressInstance: Boolean, finalModel: Model<Patch>) {
