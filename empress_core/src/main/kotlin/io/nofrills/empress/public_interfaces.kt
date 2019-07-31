@@ -37,7 +37,10 @@ interface Empress<Event, Patch : Any, Request> {
 
 /** Interface for interacting with a running empress system. */
 interface EmpressApi<Event, Patch : Any> {
-    /** Interrupts the empress loop. Usually only needed in tests. */
+    /** Interrupts processing of events.
+     * Calling this will cause the completion of the [flow][Flow] returned by [updates].
+     * Usually only needed in tests.
+     */
     fun interrupt()
 
     /** Return current snapshot of the model.

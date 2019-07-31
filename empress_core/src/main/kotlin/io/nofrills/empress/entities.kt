@@ -1,7 +1,8 @@
 package io.nofrills.empress
 
 /** Represents state of your application.
- * A model consists of a set of [patches][Patch].
+ * A model consists of a set of [patches][Patch], where a [Patch] is usually
+ * defined as a sealed class, and each subclass of [Patch] is related to a single aspect of the state.
  */
 class Model<Patch : Any> {
     private val patchMap: Map<Class<out Patch>, Patch>

@@ -1,17 +1,20 @@
+import java.net.URL
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("android.extensions")
+    id("org.jetbrains.dokka-android") version "0.9.18"
 }
 
 android {
     compileSdkVersion(EmpressLib.compileSdkVersion)
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = EmpressLib.javaCompat
+        targetCompatibility = EmpressLib.javaCompat
     }
 
     defaultConfig {
@@ -57,7 +60,7 @@ dependencies {
     androidTestImplementation(Deps.testRunner)
 }
 
-configurations.configureEach{
+configurations.configureEach {
     resolutionStrategy.dependencySubstitution.all {
         val requested = requested
         if (requested is ModuleComponentSelector && requested.group == "androidx.test" && requested.module == "core") {
@@ -66,8 +69,29 @@ configurations.configureEach{
     }
 }
 
-tasks.withType(KotlinCompile::class).all {
+tasks.withType(DokkaTask::class) {
+    externalDocumentationLink {
+        url = URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
+    }
+    jdkVersion = EmpressLib.jdkVersionNum
+    kotlinTasks {
+        defaultKotlinTasks() + project(":empress_core").tasks.withType(KotlinCompile::class)
+            .filter { !it.path.contains("test", ignoreCase = true) }
+    }
+    moduleName = "empress"
+}
+
+gradle.taskGraph.beforeTask {
+    if (name.contains("ReleaseUnitTest")) {
+        enabled = false
+    }
+}
+
+tasks.withType(KotlinCompile::class).whenTaskAdded {
     kotlinOptions {
-        jvmTarget = "1.8"
+        allWarningsAsErrors = true
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xuse-experimental=kotlinx.coroutines.FlowPreview"
+        )
     }
 }

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("com.android.library")
     kotlin("android")
@@ -10,8 +8,8 @@ android {
     compileSdkVersion(EmpressLib.compileSdkVersion)
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = EmpressLib.javaCompat
+        targetCompatibility = EmpressLib.javaCompat
     }
 
     defaultConfig {
@@ -42,10 +40,4 @@ androidExtensions {
 dependencies {
     implementation(project(":empress_android"))
     implementation(Deps.fragment)
-}
-
-tasks.withType(KotlinCompile::class).all {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
 }
