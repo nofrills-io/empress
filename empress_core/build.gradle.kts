@@ -26,3 +26,9 @@ tasks.withType(KotlinCompile::class).all {
         )
     }
 }
+
+tasks.withType(Test::class) {
+    testLogging {
+        showStandardStreams = false
+    }
+}

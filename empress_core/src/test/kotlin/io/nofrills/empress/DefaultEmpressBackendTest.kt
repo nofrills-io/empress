@@ -1,6 +1,7 @@
 package io.nofrills.empress
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -280,57 +281,50 @@ class DefaultEmpressBackendTest {
 
     @Test(expected = EventTrouble::class)
     fun throwingErrorInEventHandler() {
-        val scope = CoroutineScope(Dispatchers.Unconfined) + Job()
+        val scope = CoroutineScope(Dispatchers.Unconfined)
         val tested = makeEmpressBackend(scope)
 
-        runBlocking(scope.coroutineContext) {
+        runBlocking {
             val deferredUpdates = async {
                 tested.updates().toList()
             }
-
             tested.send(Event.GetEventFailure)
-            tested.interrupt()
-
             deferredUpdates.await()
         }
     }
 
-    @Test(expected = RequestTrouble::class)
+    @Test(expected = CancellationException::class)
     fun throwingErrorInRequestHandler() {
-        val scope = CoroutineScope(Dispatchers.Unconfined) + Job()
-        val tested = makeEmpressBackend(scope)
-
-        runBlocking(scope.coroutineContext) {
-            val deferredUpdates = async {
-                tested.updates().toList()
-            }
+        runBlocking {
+            val scope = CoroutineScope(Dispatchers.Unconfined)
+            val tested = makeEmpressBackend(scope)
+            val deferred = async { tested.updates().toList() }
             tested.send(Event.GetEventFailureWithRequest)
-            deferredUpdates.await()
+            deferred.await()
         }
     }
 
-    @Test
-    fun cancellingParentJob() = runBlockingTest {
+    @Test(expected = CancellationException::class)
+    fun cancellingParentJob() {
         val job = Job()
         val tested = makeEmpressBackend(CoroutineScope(Dispatchers.Unconfined + job))
 
-        val deferredUpdates = async(start = CoroutineStart.UNDISPATCHED) {
-            tested.updates().toList()
+        try {
+            runBlockingTest {
+                launch {
+                    tested.send(Event.Send(1000))
+                    delay(10)
+                    job.cancel()
+                }
+                assertEquals(
+                    Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
+                    tested.modelSnapshot()
+                )
+                tested.updates().toList()
+            }
+        } finally {
+            assertTrue(tested.areChannelsClosed())
         }
-        launch {
-            tested.send(Event.Send(1000))
-            delay(10)
-            job.cancel()
-        }
-        val updates = deferredUpdates.await()
-        assertEquals(1, updates.size)
-        assertEquals(
-            Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
-                Event.Send(1000)
-            ), updates[0]
-        )
-        assertTrue(tested.areChannelsClosed())
     }
 
     @Test

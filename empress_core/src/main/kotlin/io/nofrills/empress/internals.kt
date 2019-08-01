@@ -55,11 +55,7 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
                 }
             }
         }.invokeOnCompletion {
-            if (it is CancellationException) {
-                closeChannels()
-            } else {
-                closeChannels(it)
-            }
+            closeChannels(it)
         }
     }
 
