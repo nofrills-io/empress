@@ -105,6 +105,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
         empress.send(Event.Decrement)
     }
     
+    // we're using activity/fragment coroutine scope
     launch {
         // first, we can render the whole UI
         render(empressApi.modelSnapshot().all())
@@ -117,8 +118,13 @@ override fun onCreate(savedInstanceState: Bundle?) {
 }
 
 private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
-    counter_value.text = patch.count.toString()
     // ...
+    for (patch in patches) {
+        when (patch) {
+            is Patch.Counter -> text_view.text = patch.count.toString()
+            is Patch.Sender -> showProgress(patch.requestId != null)
+        }
+    }
 }
 ``` 
 
