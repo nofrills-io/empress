@@ -89,7 +89,7 @@ class SampleEmpress : Empress<Event, Patch, Request> {
 3. In your `Activity` or `Fragment`, attach your empress, send events and listen for updates:
 
 ```kotlin
-lateinit var empress: EmpressApi<Event, Patch>
+private lateinit var empress: EmpressApi<Event, Patch>
 
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -121,3 +121,8 @@ private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
     // ...
 }
 ``` 
+
+
+## License
+
+This project is published under Apache License, Version 2.0 (see the [LICENSE](LICENSE) file for details).
