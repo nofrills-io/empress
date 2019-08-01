@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import io.nofrills.empress.EmpressApi
-import io.nofrills.empress.android.empress
+import io.nofrills.empress.android.enthrone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
@@ -21,7 +21,7 @@ class SampleActivity : FragmentActivity(), WithEmpress {
                 DispatcherType.SINGLE -> Executors.newSingleThreadExecutor().asCoroutineDispatcher()
             }
         val retainEmpressInstance = intent.getBooleanExtra(RETAIN_EMPRESS_EXTRA, false)
-        api = empress(
+        api = enthrone(
             SampleEmpress(),
             retainInstance = retainEmpressInstance,
             dispatcher = coroutineDispatcher

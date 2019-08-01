@@ -3,7 +3,7 @@ package io.nofrills.empress.test_support
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import io.nofrills.empress.EmpressApi
-import io.nofrills.empress.android.empress
+import io.nofrills.empress.android.enthrone
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
 
@@ -13,7 +13,7 @@ class SampleFragment : Fragment(), WithEmpress {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val retainEmpressInstance = arguments?.getBoolean(RETAIN_EMPRESS_ARG) ?: false
-        api = empress(
+        api = enthrone(
             SampleEmpress(),
             retainInstance = retainEmpressInstance,
             dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()

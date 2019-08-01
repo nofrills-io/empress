@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 
 private const val DEFAULT_EMPRESS_ID = "default"
 
-fun <Event, Patch : Any, Request> FragmentActivity.empress(
+fun <Event, Patch : Any, Request> FragmentActivity.enthrone(
     empress: Empress<Event, Patch, Request>,
     id: String = DEFAULT_EMPRESS_ID,
     retainInstance: Boolean = true,
@@ -19,7 +19,7 @@ fun <Event, Patch : Any, Request> FragmentActivity.empress(
     return getEmpressInstance(id, empress, supportFragmentManager, retainInstance, dispatcher)
 }
 
-fun <Event, Patch : Any, Request> Fragment.empress(
+fun <Event, Patch : Any, Request> Fragment.enthrone(
     empress: Empress<Event, Patch, Request>,
     id: String = DEFAULT_EMPRESS_ID,
     retainInstance: Boolean = true,
