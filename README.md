@@ -104,25 +104,23 @@ override fun onCreate(savedInstanceState: Bundle?) {
     increment_button.setOnClickListener {
         empress.send(Event.Decrement)
     }
-    
-    // we're using activity/fragment coroutine scope
+
     launch {
         // first, we can render the whole UI
-        render(empressApi.modelSnapshot().all())
+        render(empress.modelSnapshot().all())
 
         // then we listen for updates and render only the updated patches
-        empressApi.updates().collect { update ->
+        empress.updates().collect { update ->
             render(update.model.updated(), update.event)
         }
     }
 }
 
 private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
-    // ...
     for (patch in patches) {
         when (patch) {
             is Patch.Counter -> text_view.text = patch.count.toString()
-            is Patch.Sender -> showProgress(patch.requestId != null)
+            is Patch.Sender -> updateProgress(showLoader = patch.requestId != null)
         }
     }
 }
