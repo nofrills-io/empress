@@ -52,7 +52,7 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
             empress::onRequest,
             requestHolder,
             scope,
-            this::sendSuspending
+            this::send
         )
     }
 
@@ -65,12 +65,15 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
             for (msg in empressApiChannel) {
                 @Suppress("UNUSED_VARIABLE")
                 val unused: Any = when (msg) {
-                    is Msg.Interrupt -> isRunning = false
-                    is Msg.WithEvent -> processEvent(msg.event)
-                    is Msg.GetModel -> run {
-                        msg.channel.send(model)
-                        msg.channel.close()
+                    is Msg.Interrupt -> run {
+                        isRunning = false
+                        msg.response.complete(Unit)
                     }
+                    is Msg.WithEvent -> run {
+                        processEvent(msg.event)
+                        msg.response.complete(Unit)
+                    }
+                    is Msg.GetModel -> msg.response.complete(model)
                 }
                 if ((!isRunning && empressApiChannel.isEmpty && requestHolder.isEmpty()) || empressApiChannel.isClosedForReceive) {
                     closeChannels()
@@ -82,28 +85,22 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
         }
     }
 
-    override fun interrupt() {
-        scope.launch {
-            empressApiChannel.send(Msg.Interrupt())
-        }
+    override suspend fun interrupt() {
+        val response = CompletableDeferred<Unit>()
+        empressApiChannel.send(Msg.Interrupt(response))
+        response.await()
     }
 
     override suspend fun modelSnapshot(): Model<Patch> {
-        val channel = Channel<Model<Patch>>()
-        val deferred = scope.async {
-            empressApiChannel.send(Msg.GetModel(channel))
-            channel.receive()
-        }
-        deferred.invokeOnCompletion {
-            channel.cancel()
-        }
-        return deferred.await()
+        val response = CompletableDeferred<Model<Patch>>()
+        empressApiChannel.send(Msg.GetModel(response))
+        return response.await()
     }
 
-    override fun send(event: Event) {
-        scope.launch {
-            sendSuspending(event)
-        }
+    override suspend fun send(event: Event) {
+        val response = CompletableDeferred<Unit>()
+        empressApiChannel.send(Msg.WithEvent(event, response))
+        response.await()
     }
 
     override fun updates(): Flow<Update<Event, Patch>> {
@@ -130,19 +127,22 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
             .forEach { it.start() }
     }
 
-    private suspend fun sendSuspending(event: Event) {
-        empressApiChannel.send(Msg.WithEvent(event))
-    }
-
     companion object {
         private const val UPDATES_CHANNEL_CAPACITY = 16
     }
 }
 
 private sealed class Msg<Event, Patch : Any> {
-    class Interrupt<Event, Patch : Any> : Msg<Event, Patch>()
-    data class WithEvent<Event, Patch : Any>(val event: Event) : Msg<Event, Patch>()
-    class GetModel<Event, Patch : Any>(val channel: Channel<Model<Patch>>) : Msg<Event, Patch>()
+    class Interrupt<Event, Patch : Any>(val response: CompletableDeferred<Unit>) :
+        Msg<Event, Patch>()
+
+    data class WithEvent<Event, Patch : Any>(
+        val event: Event,
+        val response: CompletableDeferred<Unit>
+    ) : Msg<Event, Patch>()
+
+    class GetModel<Event, Patch : Any>(val response: CompletableDeferred<Model<Patch>>) :
+        Msg<Event, Patch>()
 }
 
 /** Default implementation for holding active requests. */

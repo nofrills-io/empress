@@ -57,7 +57,7 @@ interface EmpressApi<Event, Patch : Any> {
      * Calling this will cause the completion of the [flow][Flow] returned by [updates].
      * Usually only needed in tests.
      */
-    fun interrupt()
+    suspend fun interrupt()
 
     /** Return current snapshot of the model.
      * Usually you want to obtain whole model when starting the application.
@@ -65,7 +65,7 @@ interface EmpressApi<Event, Patch : Any> {
     suspend fun modelSnapshot(): Model<Patch>
 
     /** Sends an [event] for processing. */
-    fun send(event: Event)
+    suspend fun send(event: Event)
 
     /** Allows to listen for [updates][Update].
      * When receiving an update, you can check [Model.updated] to see which patches have changed.

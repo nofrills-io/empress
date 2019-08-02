@@ -61,16 +61,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     private fun setupButtonListeners() {
         decrement_button.setOnClickListener {
-            empressApi.send(Event.Decrement)
+            launch { empressApi.send(Event.Decrement)}
         }
         increment_button.setOnClickListener {
-            empressApi.send(Event.Increment)
+            launch { empressApi.send(Event.Increment) }
         }
         send_button.setOnClickListener {
-            empressApi.send(Event.SendCounter)
+            launch { empressApi.send(Event.SendCounter) }
         }
         cancel_button.setOnClickListener {
-            empressApi.send(Event.CancelSendingCounter)
+            launch { empressApi.send(Event.CancelSendingCounter) }
         }
     }
 
