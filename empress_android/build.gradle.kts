@@ -60,15 +60,6 @@ dependencies {
     androidTestImplementation(Deps.testRunner)
 }
 
-configurations.configureEach {
-    resolutionStrategy.dependencySubstitution.all {
-        val requested = requested
-        if (requested is ModuleComponentSelector && requested.group == "androidx.test" && requested.module == "core") {
-            useTarget("androidx.test:core:1.2.0", "${Deps.fragmentTesting} uses old version")
-        }
-    }
-}
-
 tasks.withType(DokkaTask::class) {
     externalDocumentationLink {
         url = URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
