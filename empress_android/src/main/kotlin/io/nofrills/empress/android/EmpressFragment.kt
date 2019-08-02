@@ -18,11 +18,8 @@ package io.nofrills.empress.android
 
 import android.os.Bundle
 import android.os.Parcelable
-import android.util.Log
 import androidx.fragment.app.Fragment
-import io.nofrills.empress.DefaultEmpressBackend
-import io.nofrills.empress.DefaultRequestHolder
-import io.nofrills.empress.DefaultRequestIdProducer
+import io.nofrills.empress.EmpressBackend
 import io.nofrills.empress.Empress
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
@@ -33,7 +30,7 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment(), Corout
 
     private val job = Job()
 
-    internal lateinit var empressBackend: DefaultEmpressBackend<Event, Patch, Request>
+    internal lateinit var empressBackend: EmpressBackend<Event, Patch, Request>
     private var storedPatches: ArrayList<Patch>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,22 +62,10 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment(), Corout
         dispatcher: CoroutineDispatcher,
         empress: Empress<Event, Patch, Request>
     ) {
-        if (dispatcher is MainCoroutineDispatcher) {
-            // Using the main dispatcher is not possible, because in
-            // `onSaveInstanceState` we use a `runBlocking` function,
-            // which locks current thread (main thread), and prevents
-            // from executing anything else.
-            error("Cannot use an instance of MainCoroutineDispatcher for empress.")
-        }
-
         if (!this::empressBackend.isInitialized) {
             coroutineContext = dispatcher + job
-            val requestIdProducer = DefaultRequestIdProducer()
-            val requestStorage = DefaultRequestHolder()
-            empressBackend = DefaultEmpressBackend(
+            empressBackend = EmpressBackend(
                 empress,
-                requestIdProducer,
-                requestStorage,
                 this@EmpressFragment,
                 storedPatches
             )

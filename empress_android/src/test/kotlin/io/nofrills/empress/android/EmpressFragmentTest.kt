@@ -50,16 +50,6 @@ class EmpressFragmentTest {
         testWithActivity(false, finalModel)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun failsWithMainDispatcher() {
-        val intent = SampleActivity.newIntent(
-            InstrumentationRegistry.getInstrumentation().context,
-            false,
-            SampleActivity.DispatcherType.MAIN
-        )
-        ActivityScenario.launch<SampleActivity>(intent)
-    }
-
     @Test
     fun fragmentUsageRetained() {
         val previousModel: Model<Patch> = Model.from(listOf(Patch.Counter(1)))
@@ -87,7 +77,7 @@ class EmpressFragmentTest {
                     api.updates().toList()
                 }
 
-                api.send(Event.GetFailure)
+                api.send(Event.GetFailure).join()
                 api.interrupt()
 
                 deferredUpdates.await()
@@ -95,7 +85,7 @@ class EmpressFragmentTest {
         }
     }
 
-    @Test(expected = CancellationException::class)
+    @Test(expected = OnRequestFailure::class)
     fun onRequestExceptionInActivity() {
         val intent = SampleActivity.newIntent(
             InstrumentationRegistry.getInstrumentation().context,
@@ -149,11 +139,11 @@ class EmpressFragmentTest {
                 val baseModel = Model.from(listOf(Patch.Counter(0), Patch.Sender(null)))
                 assertEquals(baseModel, api.modelSnapshot())
 
-                api.send(Event.Increment)
+                api.send(Event.Increment).join()
                 val model1 = Model.from(baseModel, listOf(Patch.Counter(1)))
                 assertEquals(model1, api.modelSnapshot())
 
-                api.send(Event.SendCounter)
+                api.send(Event.SendCounter).join()
                 val model2 = Model.from(model1, listOf(Patch.Sender(RequestId(1))))
                 assertEquals(model2, api.modelSnapshot())
             }

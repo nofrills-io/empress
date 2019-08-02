@@ -17,157 +17,29 @@
 package io.nofrills.empress
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BroadcastChannel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
 
-/** Default backend implementation.
- * @param empress Empress interface that we want to run.
- * @param idProducer Producer for request IDs.
- * @param requestHolder Request holder.
- * @param scope A coroutine scope in which we'll process incoming events.
- * @param storedPatches Patches that were previously stored, and should be used instead patches from [initializer][Empress.initializer].
- */
-class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
-    private val empress: Empress<Event, Patch, Request>,
-    private val idProducer: RequestIdProducer,
-    private val requestHolder: RequestHolder,
-    private val scope: CoroutineScope,
-    storedPatches: Collection<Patch>?
-) : EmpressApi<Event, Patch> {
+internal class ModelHolder<Patch : Any>(private var model: Model<Patch>) {
+    private val mutex: Mutex = Mutex()
 
-    private val empressApiChannel = Channel<Msg<Event, Patch>>()
-
-    private var model: Model<Patch> = if (storedPatches == null) {
-        Model.from(empress.initializer())
-    } else {
-        Model.from(storedPatches + empress.initializer(), skipDuplicates = true)
-    }
-
-    private val requests: Requests<Event, Request> by lazy {
-        DefaultRequests(
-            idProducer,
-            empress::onRequest,
-            requestHolder,
-            scope,
-            this::send
-        )
-    }
-
-    private val updates = BroadcastChannel<Update<Event, Patch>>(UPDATES_CHANNEL_CAPACITY)
-    private val updatesFlow: Flow<Update<Event, Patch>> = updates.asFlow()
-
-    init {
-        scope.launch {
-            var isRunning = true
-            for (msg in empressApiChannel) {
-                @Suppress("UNUSED_VARIABLE")
-                val unused: Any = when (msg) {
-                    is Msg.Interrupt -> run {
-                        isRunning = false
-                        msg.response.complete(Unit)
-                    }
-                    is Msg.WithEvent -> run {
-                        processEvent(msg.event)
-                        msg.response.complete(Unit)
-                    }
-                    is Msg.GetModel -> msg.response.complete(model)
-                }
-                if ((!isRunning && empressApiChannel.isEmpty && requestHolder.isEmpty()) || empressApiChannel.isClosedForReceive) {
-                    closeChannels()
-                    break
-                }
-            }
-        }.invokeOnCompletion {
-            closeChannels(it)
+    suspend fun get(): Model<Patch> {
+        return mutex.withLock {
+            model
         }
     }
 
-    override suspend fun interrupt() {
-        val response = CompletableDeferred<Unit>()
-        empressApiChannel.send(Msg.Interrupt(response))
-        response.await()
-    }
-
-    override suspend fun modelSnapshot(): Model<Patch> {
-        val response = CompletableDeferred<Model<Patch>>()
-        empressApiChannel.send(Msg.GetModel(response))
-        return response.await()
-    }
-
-    override suspend fun send(event: Event) {
-        val response = CompletableDeferred<Unit>()
-        empressApiChannel.send(Msg.WithEvent(event, response))
-        response.await()
-    }
-
-    override fun updates(): Flow<Update<Event, Patch>> {
-        return updatesFlow
-    }
-
-    internal fun areChannelsClosed(): Boolean {
-        return empressApiChannel.isClosedForSend && updates.isClosedForSend
-    }
-
-    private fun closeChannels(throwable: Throwable? = null) {
-        empressApiChannel.close(throwable)
-        updates.close(throwable)
-    }
-
-    private suspend fun processEvent(event: Event) {
-        val updatedPatches = empress.onEvent(event, model, requests)
-        model = Model.from(model, updatedPatches)
-
-        updates.send(Update(model, event))
-
-        requestHolder.snapshot()
-            .filter { !it.isActive && !it.isCompleted }
-            .forEach { it.start() }
-    }
-
-    companion object {
-        private const val UPDATES_CHANNEL_CAPACITY = 16
-    }
-}
-
-private sealed class Msg<Event, Patch : Any> {
-    class Interrupt<Event, Patch : Any>(val response: CompletableDeferred<Unit>) :
-        Msg<Event, Patch>()
-
-    data class WithEvent<Event, Patch : Any>(
-        val event: Event,
-        val response: CompletableDeferred<Unit>
-    ) : Msg<Event, Patch>()
-
-    class GetModel<Event, Patch : Any>(val response: CompletableDeferred<Model<Patch>>) :
-        Msg<Event, Patch>()
-}
-
-/** Default implementation for holding active requests. */
-class DefaultRequestHolder : RequestHolder {
-    private val requestMap: MutableMap<RequestId, Job> = ConcurrentHashMap()
-
-    override fun isEmpty(): Boolean {
-        return requestMap.isEmpty()
-    }
-
-    override fun pop(requestId: RequestId): Job? {
-        return requestMap.remove(requestId)
-    }
-
-    override fun push(requestId: RequestId, requestJob: Job) {
-        requestMap[requestId] = requestJob
-    }
-
-    override fun snapshot(): Sequence<Job> {
-        return requestMap.values.asSequence()
+    suspend fun update(updater: (Model<Patch>) -> Model<Patch>): Model<Patch> {
+        return mutex.withLock {
+            model = updater(model)
+            model
+        }
     }
 }
 
 /** Default implementation for handling requests. */
-internal class DefaultRequests<Event, Request> constructor(
+internal class RequestsImpl<Event, Request> constructor(
     private val idProducer: RequestIdProducer,
     private val onRequest: suspend (Request) -> Event,
     private val requestHolder: RequestHolder,
@@ -200,11 +72,41 @@ internal class DefaultRequests<Event, Request> constructor(
     }
 }
 
-/** Default implementation for producing request IDs. */
-class DefaultRequestIdProducer : RequestIdProducer {
+/** Manages currently active requests. */
+internal class RequestHolder {
+    private val requestMap: MutableMap<RequestId, Job> = ConcurrentHashMap()
+
+    /** Checks if there are active requests.
+     * @return True if there are no running or scheduled requests.
+     */
+    fun isEmpty(): Boolean {
+        return requestMap.isEmpty()
+    }
+
+    /** Removes a request from the manager.
+     * @return A [job][Job] for the request or null if the request was not found or has already completed.
+     */
+    fun pop(requestId: RequestId): Job? {
+        return requestMap.remove(requestId)
+    }
+
+    /** Stores a [job][Job] associated with [requestId]. */
+    fun push(requestId: RequestId, requestJob: Job) {
+        requestMap[requestId] = requestJob
+    }
+
+    /** Returns current list of [jobs][Job] for currently running or scheduled requests. */
+    fun snapshot(): Sequence<Job> {
+        return requestMap.values.asSequence()
+    }
+}
+
+/** Generates identifiers for requests. */
+internal class RequestIdProducer {
     private var nextRequestId: Int = 0
 
-    override fun getNextRequestId(): RequestId {
+    /** Returns a unique ID for a request. */
+    fun getNextRequestId(): RequestId {
         nextRequestId += 1
         return RequestId(nextRequestId)
     }

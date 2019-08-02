@@ -16,6 +16,7 @@
 
 package io.nofrills.empress
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 
 /** The main interface that needs to be implemented.
@@ -51,13 +52,13 @@ interface Empress<Event, Patch : Any, Request> {
     suspend fun onRequest(request: Request): Event
 }
 
-/** Interface for interacting with a running empress system. */
+/** Interface for interacting with a running [Empress] instance. */
 interface EmpressApi<Event, Patch : Any> {
     /** Interrupts processing of events.
      * Calling this will cause the completion of the [flow][Flow] returned by [updates].
      * Usually only needed in tests.
      */
-    suspend fun interrupt()
+    fun interrupt()
 
     /** Return current snapshot of the model.
      * Usually you want to obtain whole model when starting the application.
@@ -65,7 +66,7 @@ interface EmpressApi<Event, Patch : Any> {
     suspend fun modelSnapshot(): Model<Patch>
 
     /** Sends an [event] for processing. */
-    suspend fun send(event: Event)
+    fun send(event: Event): Job
 
     /** Allows to listen for [updates][Update].
      * When receiving an update, you can check [Model.updated] to see which patches have changed.

@@ -17,7 +17,6 @@
 package io.nofrills.empress
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -26,7 +25,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class DefaultEmpressBackendTest {
+class EmpressBackendTest {
     private val baseModel = Model.from(
         listOf(
             Patch.Counter(0),
@@ -309,7 +308,7 @@ class DefaultEmpressBackendTest {
         }
     }
 
-    @Test(expected = CancellationException::class)
+    @Test(expected = RequestTrouble::class)
     fun throwingErrorInRequestHandler() {
         runBlocking {
             val scope = CoroutineScope(Dispatchers.Unconfined)
@@ -357,7 +356,7 @@ class DefaultEmpressBackendTest {
         tested.interrupt()
     }
 
-    private fun usingTestScope(block: suspend TestCoroutineScope.(DefaultEmpressBackend<Event, Patch, Request>) -> Unit) {
+    private fun usingTestScope(block: suspend TestCoroutineScope.(EmpressBackend<Event, Patch, Request>) -> Unit) {
         val scope = TestCoroutineScope()
         testScope = scope
         val empressBackend = makeEmpressBackend(scope)
@@ -369,13 +368,9 @@ class DefaultEmpressBackendTest {
     private fun makeEmpressBackend(
         coroutineScope: CoroutineScope,
         storedPatches: Collection<Patch>? = null
-    ): DefaultEmpressBackend<Event, Patch, Request> {
-        val requestIdProducer = DefaultRequestIdProducer()
-        val requestHolder = DefaultRequestHolder()
-        return DefaultEmpressBackend(
+    ): EmpressBackend<Event, Patch, Request> {
+        return EmpressBackend(
             empress,
-            requestIdProducer,
-            requestHolder,
             coroutineScope,
             storedPatches
         )

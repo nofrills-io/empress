@@ -16,15 +16,18 @@
 
 package io.nofrills.empress.sample
 
-import android.app.Application
 import android.os.StrictMode
 
-class SampleApp : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        if (BuildConfig.DEBUG) {
-            StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build())
-            StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build())
+inline fun allowDiskReads(block: () -> Unit) {
+    if (BuildConfig.DEBUG) {
+        val oldPolicy = StrictMode.getThreadPolicy()
+        try {
+            StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder(oldPolicy).permitDiskReads().build())
+            block()
+        } finally {
+            StrictMode.setThreadPolicy(oldPolicy)
         }
+    } else {
+        block()
     }
 }

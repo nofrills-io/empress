@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.Event
@@ -41,7 +42,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private val empressApi by lazy { enthrone(SampleEmpress()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
         launch {
@@ -61,16 +62,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     private fun setupButtonListeners() {
         decrement_button.setOnClickListener {
-            launch { empressApi.send(Event.Decrement)}
+            empressApi.send(Event.Decrement)
         }
         increment_button.setOnClickListener {
-            launch { empressApi.send(Event.Increment) }
+            empressApi.send(Event.Increment)
         }
         send_button.setOnClickListener {
-            launch { empressApi.send(Event.SendCounter) }
+            empressApi.send(Event.SendCounter)
         }
         cancel_button.setOnClickListener {
-            launch { empressApi.send(Event.CancelSendingCounter) }
+            empressApi.send(Event.CancelSendingCounter)
         }
     }
 
@@ -86,15 +87,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private fun renderProgress(patch: Patch.Sender, sourceEvent: Event? = null) {
         if (patch.requestId == null) {
             if (sourceEvent is Event.CounterSent) {
-                Toast.makeText(this, R.string.counter_sent, Toast.LENGTH_LONG).show()
+                showToast(R.string.counter_sent)
             } else if (sourceEvent is Event.CancelSendingCounter) {
-                Toast.makeText(this, R.string.send_counter_cancelled, Toast.LENGTH_LONG).show()
+                showToast(R.string.send_counter_cancelled)
             }
         }
         progress_bar.visibility = if (patch.requestId != null) {
             View.VISIBLE
         } else {
             View.GONE
+        }
+    }
+
+    private fun showToast(@StringRes msg: Int) {
+        allowDiskReads {
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
         }
     }
 
