@@ -27,7 +27,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DefaultEmpressBackendTest {
-    private val baseModel = Model(
+    private val baseModel = Model.from(
         listOf(
             Patch.Counter(0),
             Patch.Loader(null),
@@ -58,11 +58,11 @@ class DefaultEmpressBackendTest {
 
         assertEquals(2, updates.size)
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(1))), Event.Increment),
+            Update(Model.from(baseModel, listOf(Patch.Counter(1))), Event.Increment),
             updates[0]
         )
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(2))), Event.Increment),
+            Update(Model.from(baseModel, listOf(Patch.Counter(2))), Event.Increment),
             updates[1]
         )
         assertTrue(tested.areChannelsClosed())
@@ -82,14 +82,14 @@ class DefaultEmpressBackendTest {
         assertEquals(2, updates.size)
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
+                Model.from(baseModel, listOf(Patch.Sender(RequestId(1)))),
                 Event.Send(1)
             ),
             updates[0]
         )
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(null))),
+                Model.from(baseModel, listOf(Patch.Sender(null))),
                 Event.CounterSent
             ), updates[1]
         )
@@ -111,7 +111,7 @@ class DefaultEmpressBackendTest {
 
         assertEquals(1, updates.size)
         assertEquals(
-            Update<Event, Patch>(Model(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
+            Update<Event, Patch>(Model.from(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
             updates[0]
         )
     }
@@ -135,11 +135,11 @@ class DefaultEmpressBackendTest {
 
         assertEquals(2, updates1.size)
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(-1))), Event.Decrement),
+            Update(Model.from(baseModel, listOf(Patch.Counter(-1))), Event.Decrement),
             updates1[0]
         )
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(-2))), Event.Decrement),
+            Update(Model.from(baseModel, listOf(Patch.Counter(-2))), Event.Decrement),
             updates1[1]
         )
     }
@@ -165,21 +165,21 @@ class DefaultEmpressBackendTest {
 
         assertEquals(3, updates1.size)
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(1))), Event.Increment),
+            Update(Model.from(baseModel, listOf(Patch.Counter(1))), Event.Increment),
             updates1[0]
         )
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(2))), Event.Increment),
+            Update(Model.from(baseModel, listOf(Patch.Counter(2))), Event.Increment),
             updates1[1]
         )
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
+            Update(Model.from(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
             updates1[2]
         )
 
         assertEquals(1, updates2.size)
         assertEquals(
-            Update(Model(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
+            Update(Model.from(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
             updates2[0]
         )
     }
@@ -200,13 +200,13 @@ class DefaultEmpressBackendTest {
         assertEquals(2, updates.size)
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
+                Model.from(baseModel, listOf(Patch.Sender(RequestId(1)))),
                 Event.Send(1000)
             ), updates[0]
         )
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(null))),
+                Model.from(baseModel, listOf(Patch.Sender(null))),
                 Event.CancelSending
             ), updates[1]
         )
@@ -228,19 +228,19 @@ class DefaultEmpressBackendTest {
         assertEquals(3, updates.size)
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
+                Model.from(baseModel, listOf(Patch.Sender(RequestId(1)))),
                 Event.Send(1)
             ), updates[0]
         )
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel, listOf(Patch.Sender(null))),
+                Model.from(baseModel, listOf(Patch.Sender(null))),
                 Event.CounterSent
             ), updates[1]
         )
         assertEquals(
             Update<Event, Patch>(
-                Model(baseModel),
+                Model.from(baseModel),
                 Event.CancelSending
             ), updates[2]
         )
@@ -262,7 +262,7 @@ class DefaultEmpressBackendTest {
 
         assertEquals(4, updates.size)
 
-        val model0 = Model(baseModel, listOf(Patch.Loader(RequestId(1))))
+        val model0 = Model.from(baseModel, listOf(Patch.Loader(RequestId(1))))
         assertEquals(
             Update<Event, Patch>(
                 model0,
@@ -270,7 +270,7 @@ class DefaultEmpressBackendTest {
             ), updates[0]
         )
 
-        val model1 = Model(model0, listOf(Patch.Sender(RequestId(2))))
+        val model1 = Model.from(model0, listOf(Patch.Sender(RequestId(2))))
         assertEquals(
             Update<Event, Patch>(
                 model1,
@@ -278,7 +278,7 @@ class DefaultEmpressBackendTest {
             ), updates[1]
         )
 
-        val model2 = Model(model1, listOf(Patch.Sender(null)))
+        val model2 = Model.from(model1, listOf(Patch.Sender(null)))
         assertEquals(
             Update<Event, Patch>(
                 model2,
@@ -286,7 +286,7 @@ class DefaultEmpressBackendTest {
             ), updates[2]
         )
 
-        val model3 = Model(model2, listOf(Patch.Loader(null)))
+        val model3 = Model.from(model2, listOf(Patch.Loader(null)))
         assertEquals(
             Update<Event, Patch>(
                 model3,
@@ -333,7 +333,7 @@ class DefaultEmpressBackendTest {
                     job.cancel()
                 }
                 assertEquals(
-                    Model(baseModel, listOf(Patch.Sender(RequestId(1)))),
+                    Model.from(baseModel, listOf(Patch.Sender(RequestId(1)))),
                     tested.modelSnapshot()
                 )
                 tested.updates().toList()
@@ -351,7 +351,7 @@ class DefaultEmpressBackendTest {
             storedPatches = storedPatches
         )
         assertEquals(
-            Model(listOf(Patch.Counter(3), Patch.Loader(null), Patch.Sender(null))),
+            Model.from(listOf(Patch.Counter(3), Patch.Loader(null), Patch.Sender(null))),
             tested.modelSnapshot()
         )
         tested.interrupt()

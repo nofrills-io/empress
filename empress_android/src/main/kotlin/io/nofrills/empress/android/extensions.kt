@@ -26,6 +26,15 @@ import kotlinx.coroutines.Dispatchers
 
 private const val DEFAULT_EMPRESS_ID = "default"
 
+/** Installs an empress instance into the [activity][this].
+ * If you install more than one [Empress] into the same activity,
+ * you need to use different [IDs][id] for each instance.
+ * @param empress Instance of [Empress] to install.
+ * @param id A unique ID that will be associated with the [empress].
+ * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
+ * @param dispatcher A dispatcher to use for [empress].
+ * @return An instance of [EmpressApi] for communicating with [empress].
+ */
 fun <Event, Patch : Any, Request> FragmentActivity.enthrone(
     empress: Empress<Event, Patch, Request>,
     id: String = DEFAULT_EMPRESS_ID,
@@ -35,6 +44,15 @@ fun <Event, Patch : Any, Request> FragmentActivity.enthrone(
     return getEmpressInstance(id, empress, supportFragmentManager, retainInstance, dispatcher)
 }
 
+/** Installs an empress instance into the [fragment][this].
+ * If you install more than one [Empress] into the same fragment,
+ * you need to use different [IDs][id] for each instance.
+ * @param empress Instance of [Empress] to install.
+ * @param id A unique ID that will be associated with the [empress].
+ * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
+ * @param dispatcher A dispatcher to use for [empress].
+ * @return An instance of [EmpressApi] for communicating with [empress].
+ */
 fun <Event, Patch : Any, Request> Fragment.enthrone(
     empress: Empress<Event, Patch, Request>,
     id: String = DEFAULT_EMPRESS_ID,

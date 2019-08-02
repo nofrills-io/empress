@@ -26,6 +26,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.nofrills.empress.Model
 import io.nofrills.empress.RequestId
 import io.nofrills.empress.test_support.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -38,14 +39,14 @@ import org.robolectric.RobolectricTestRunner
 class EmpressFragmentTest {
     @Test
     fun activityUsageRetained() {
-        val previousModel: Model<Patch> = Model(listOf(Patch.Counter(1)))
-        val finalModel: Model<Patch> = Model(previousModel, listOf(Patch.Sender(RequestId(1))))
+        val previousModel: Model<Patch> = Model.from(listOf(Patch.Counter(1)))
+        val finalModel: Model<Patch> = Model.from(previousModel, listOf(Patch.Sender(RequestId(1))))
         testWithActivity(true, finalModel)
     }
 
     @Test
     fun activityUsageNotRetained() {
-        val finalModel: Model<Patch> = Model(listOf(Patch.Counter(1), Patch.Sender(null)))
+        val finalModel: Model<Patch> = Model.from(listOf(Patch.Counter(1), Patch.Sender(null)))
         testWithActivity(false, finalModel)
     }
 
@@ -61,14 +62,14 @@ class EmpressFragmentTest {
 
     @Test
     fun fragmentUsageRetained() {
-        val previousModel: Model<Patch> = Model(listOf(Patch.Counter(1)))
-        val finalModel: Model<Patch> = Model(previousModel, listOf(Patch.Sender(RequestId(1))))
+        val previousModel: Model<Patch> = Model.from(listOf(Patch.Counter(1)))
+        val finalModel: Model<Patch> = Model.from(previousModel, listOf(Patch.Sender(RequestId(1))))
         testWithFragment(true, finalModel)
     }
 
     @Test
     fun fragmentUsageNotRetained() {
-        val finalModel: Model<Patch> = Model(listOf(Patch.Counter(1), Patch.Sender(null)))
+        val finalModel: Model<Patch> = Model.from(listOf(Patch.Counter(1), Patch.Sender(null)))
         testWithFragment(false, finalModel)
     }
 
@@ -94,7 +95,7 @@ class EmpressFragmentTest {
         }
     }
 
-    @Test(expected = OnRequestFailure::class)
+    @Test(expected = CancellationException::class)
     fun onRequestExceptionInActivity() {
         val intent = SampleActivity.newIntent(
             InstrumentationRegistry.getInstrumentation().context,
@@ -111,10 +112,7 @@ class EmpressFragmentTest {
                 val deferredUpdates = async {
                     api.updates().toList()
                 }
-
                 api.send(Event.GetFailureWithRequest)
-                api.interrupt()
-
                 deferredUpdates.await()
             }
         }
@@ -148,15 +146,15 @@ class EmpressFragmentTest {
             val api = it.api
 
             runBlocking {
-                val baseModel = Model(listOf(Patch.Counter(0), Patch.Sender(null)))
+                val baseModel = Model.from(listOf(Patch.Counter(0), Patch.Sender(null)))
                 assertEquals(baseModel, api.modelSnapshot())
 
                 api.send(Event.Increment)
-                val model1 = Model(baseModel, listOf(Patch.Counter(1)))
+                val model1 = Model.from(baseModel, listOf(Patch.Counter(1)))
                 assertEquals(model1, api.modelSnapshot())
 
                 api.send(Event.SendCounter)
-                val model2 = Model(model1, listOf(Patch.Sender(RequestId(1))))
+                val model2 = Model.from(model1, listOf(Patch.Sender(RequestId(1))))
                 assertEquals(model2, api.modelSnapshot())
             }
         }

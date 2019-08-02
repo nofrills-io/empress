@@ -26,7 +26,7 @@ class ModelTest {
     fun fromSinglePatch() {
         val patch = Patch.Info("test")
         val patches = listOf(patch)
-        val model: Model<Patch> = Model(patches)
+        val model: Model<Patch> = Model.from(patches)
 
         assertEquals(patches, model.all().toList())
         assertEquals(patches, model.updated().toList())
@@ -40,7 +40,7 @@ class ModelTest {
         val info = Patch.Info("test")
         val network = Patch.Network(true)
         val patches = listOf(info, network)
-        val model = Model(patches)
+        val model = Model.from(patches)
 
         assertEquals(patches, model.all().toList())
         assertEquals(patches, model.updated().toList())
@@ -51,7 +51,7 @@ class ModelTest {
 
     @Test(expected = IllegalStateException::class)
     fun withDuplicatePatchClasses() {
-        Model(
+        Model.from(
             listOf(
                 Patch.Info("A"),
                 Patch.Network(false),
@@ -62,7 +62,7 @@ class ModelTest {
 
     @Test
     fun skipsDuplicates() {
-        val model = Model(
+        val model = Model.from(
             listOf(
                 Patch.Info("A"),
                 Patch.Network(true),
@@ -75,8 +75,8 @@ class ModelTest {
 
     @Test
     fun fromExistingModel() {
-        val model: Model<Patch> = Model(listOf(Patch.Info("A")))
-        val newModel = Model(model)
+        val model: Model<Patch> = Model.from(listOf(Patch.Info("A")))
+        val newModel = Model.from(model)
         assertNotEquals(model, newModel)
         assertEquals(1, model.updated().size)
         assertEquals(0, newModel.updated().size)
@@ -86,9 +86,9 @@ class ModelTest {
 
     @Test
     fun withUpdates() {
-        val source: Model<Patch> = Model(listOf(Patch.Info("A"), Patch.Network(true)))
+        val source: Model<Patch> = Model.from(listOf(Patch.Info("A"), Patch.Network(true)))
         val update = Patch.Info("B")
-        val model = Model(source, listOf(update))
+        val model = Model.from(source, listOf(update))
         assertEquals(2, model.all().size)
         assertEquals(1, model.updated().size)
         assertEquals(Patch.Network(true), model.get<Patch.Network>())
@@ -97,9 +97,9 @@ class ModelTest {
 
     @Test(expected = IllegalStateException::class)
     fun withDuplicateUpdates() {
-        val source: Model<Patch> = Model(listOf(Patch.Info("A"), Patch.Network(true)))
+        val source: Model<Patch> = Model.from(listOf(Patch.Info("A"), Patch.Network(true)))
         val updates = listOf(Patch.Info("B"), Patch.Network(false), Patch.Info("C"))
-        Model(source, updates)
+        Model.from(source, updates)
     }
 
     internal sealed class Patch {

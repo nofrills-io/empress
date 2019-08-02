@@ -23,6 +23,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import java.util.concurrent.ConcurrentHashMap
 
+/** Default backend implementation.
+ * @param empress Empress interface that we want to run.
+ * @param idProducer Producer for request IDs.
+ * @param requestHolder Request holder.
+ * @param scope A coroutine scope in which we'll process incoming events.
+ * @param storedPatches Patches that were previously stored, and should be used instead patches from [initializer][Empress.initializer].
+ */
 class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     private val empress: Empress<Event, Patch, Request>,
     private val idProducer: RequestIdProducer,
@@ -34,9 +41,9 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
     private val empressApiChannel = Channel<Msg<Event, Patch>>()
 
     private var model: Model<Patch> = if (storedPatches == null) {
-        Model(empress.initializer())
+        Model.from(empress.initializer())
     } else {
-        Model(storedPatches + empress.initializer(), skipDuplicates = true)
+        Model.from(storedPatches + empress.initializer(), skipDuplicates = true)
     }
 
     private val requests: Requests<Event, Request> by lazy {
@@ -114,7 +121,7 @@ class DefaultEmpressBackend<Event, Patch : Any, Request> constructor(
 
     private suspend fun processEvent(event: Event) {
         val updatedPatches = empress.onEvent(event, model, requests)
-        model = Model(model, updatedPatches)
+        model = Model.from(model, updatedPatches)
 
         updates.send(Update(model, event))
 
@@ -138,6 +145,7 @@ private sealed class Msg<Event, Patch : Any> {
     class GetModel<Event, Patch : Any>(val channel: Channel<Model<Patch>>) : Msg<Event, Patch>()
 }
 
+/** Default implementation for holding active requests. */
 class DefaultRequestHolder : RequestHolder {
     private val requestMap: MutableMap<RequestId, Job> = ConcurrentHashMap()
 
@@ -158,6 +166,7 @@ class DefaultRequestHolder : RequestHolder {
     }
 }
 
+/** Default implementation for handling requests. */
 internal class DefaultRequests<Event, Request> constructor(
     private val idProducer: RequestIdProducer,
     private val onRequest: suspend (Request) -> Event,
@@ -191,6 +200,7 @@ internal class DefaultRequests<Event, Request> constructor(
     }
 }
 
+/** Default implementation for producing request IDs. */
 class DefaultRequestIdProducer : RequestIdProducer {
     private var nextRequestId: Int = 0
 

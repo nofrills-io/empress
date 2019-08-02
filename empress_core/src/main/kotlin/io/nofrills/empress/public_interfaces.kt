@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.Flow
  * @param Event Signals an event for which we need to take some action.
  * @param Patch Represents application state. Usually modelled as a sealed class,
  *  where each subclass is relatively small, and is related to a single aspect of the app.
- * @param Request Denotes an intent for obtaining some resource asynchronously.
+ * @param Request Denotes an intent for asynchronously obtaining some kind of a resource.
  */
 interface Empress<Event, Patch : Any, Request> {
     /** Initializer should return a collection of all possible patches.
