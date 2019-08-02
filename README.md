@@ -58,7 +58,8 @@ class SampleEmpress : Empress<Event, Patch, Request> {
         model: Model<Patch>,
         requests: Requests<Event, Request>
     ): Collection<Patch> {
-        // return only patches that have changed (if nothing has changed, return an empty list)
+        // Here, we return only patches that have changed.
+        // If nothing has changed, we could return an empty list.
         val counter: Patch.Counter = model.get()
         return when (event) {
             Event.Decrement -> listOf(counter.copy(count = counter.count - 1))
@@ -97,7 +98,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     // install our empress
     empress = enthrone(CounterEmpress())
     
-    // pass click events to empress
+    // pass events to empress
     decrement_button.setOnClickListener {
         empress.send(Event.Decrement)
     }
