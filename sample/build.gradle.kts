@@ -47,7 +47,7 @@ dependencies {
     implementation(Deps.constraintLayout)
     implementation(Deps.kotlinStdLib)
 
-    kapt(":empress_compiler")
+    kapt(project(":empress_compiler"))
 
     testImplementation(Deps.junit)
 }

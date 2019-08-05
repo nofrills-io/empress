@@ -30,19 +30,24 @@ import kotlin.math.abs
 @EmpressModule(Event::class, Patch::class, Request::class)
 class AnnotatedEmpress {
     @Initializer
-    fun initialPatches(): Collection<Patch> {
-        return listOf(Patch.Counter(0), Patch.Sender(null))
-    }
+    fun initialCounter() = Patch.Counter(0)
 
-    @OnEvent(Event.Decrement::class)
-    fun onDecrement(counter: Patch.Counter): Collection<Patch> {
+    @Initializer
+    fun initialSender() = Patch.Sender(null)
+
+    @OnEvent(Event.Decrement::class) // TODO decide if OnEvent & OnRequest should accept a class; if not, use a method param
+    fun onDecrement(event: Event.Decrement, counter: Patch.Counter): Collection<Patch> {
         // here I can receive the patch I want (instead of a whole model);
         // and I return only a list, or a single patch
         return listOf(counter.copy(count = counter.count - 1))
     }
 
     @OnEvent(Event.SendCounter::class)
-    fun onSendCounter(counter: Patch.Counter, sender: Patch.Sender, requests: Requests<Event, Request>): Patch? {
+    fun onSendCounter(
+        counter: Patch.Counter,
+        sender: Patch.Sender,
+        requests: Requests<Event, Request>
+    ): Patch? {
         if (sender.requestId != null) return null
         val requestId = requests.post(Request.SendCounter(counter.count))
         return sender.copy(requestId = requestId)

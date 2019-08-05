@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java-library")
     kotlin("jvm")
+    kotlin("kapt")
 }
 
 java {
@@ -11,11 +12,13 @@ java {
 }
 
 dependencies {
-    compileOnly(Deps.autoService)
     implementation(project(":empress_annotations"))
+    implementation(Deps.autoService)
     implementation(Deps.kotlinPoet)
     implementation(Deps.kotlinReflect)
     implementation(Deps.kotlinStdLib)
+
+    kapt(Deps.autoService)
 }
 
 tasks.withType(KotlinCompile::class).all {
