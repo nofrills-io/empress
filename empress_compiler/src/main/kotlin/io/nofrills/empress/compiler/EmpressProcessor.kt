@@ -17,21 +17,31 @@
 package io.nofrills.empress.compiler
 
 import com.google.auto.service.AutoService
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import io.nofrills.empress.Empress
+import io.nofrills.empress.Model
+import io.nofrills.empress.Requests
 import io.nofrills.empress.annotation.EmpressModule
 import io.nofrills.empress.annotation.Initializer
 import io.nofrills.empress.annotation.OnEvent
 import io.nofrills.empress.annotation.OnRequest
 import java.io.File
-import java.lang.RuntimeException
+import java.lang.IllegalStateException
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
+import javax.lang.model.type.MirroredTypeException
+import javax.lang.model.type.MirroredTypesException
 import javax.lang.model.type.TypeMirror
 import javax.tools.Diagnostic.Kind.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 
 @AutoService(Processor::class)
 class EmpressProcessor : AbstractProcessor() {
@@ -64,20 +74,26 @@ class EmpressProcessor : AbstractProcessor() {
         for (element in annotatedElements) {
             try {
                 processEmpressModule(element, outDir)
+            } catch (e: MethodNotPublic) {
+                logError("Method ${e.executableElement.simpleName} should be public.")
+                return false
             } catch (e: MoreThanOneEventHandler) {
-                logError("There is more than one event handler for ${e.eventKClass}.")
+                logError("There is more than one event handler for ${e.eventType.asTypeName()}.")
                 return false
             } catch (e: MoreThanOneInitializer) {
                 logError("There is more than one initializer for ${e.returnType.asTypeName()} patch.")
                 return false
             } catch (e: MoreThanOneRequestHandler) {
-                logError("There is more than one request handler for ${e.requestKClass}.")
+                logError("There is more than one request handler for ${e.requestType.asTypeName()}.")
+                return false
+            } catch (e: NoParametersAccepted) {
+                logError("Method ${e.executableElement.asType().asTypeName()} must not contain any parameters.")
+                return false
+            } catch (e: NotSubclass) {
+                logError("Type ${e.childType.asTypeName()} is not a proper subclass of ${e.parentType.asTypeName()} (in ${e.executableElement.enclosingElement.simpleName}#${e.executableElement.simpleName}).")
                 return false
             } catch (e: UnexpectedEmpressAnnotation) {
                 logError("Element ${e.element.simpleName} should be annotated with a single empress annotation.")
-                return false
-            } catch (e: UnsupportedClass) {
-                logError("Class ${e.kClass.qualifiedName} should be a sealed class.")
                 return false
             } catch (e: UnexpectedElement) {
                 logError("Expected a TypeElement but got ${e.element.javaClass.name}.")
@@ -88,86 +104,247 @@ class EmpressProcessor : AbstractProcessor() {
         return true
     }
 
-    private fun processEmpressModule(element: Element, @Suppress("UNUSED_PARAMETER") outDir: File) {
+    private fun processEmpressModule(element: Element, outDir: File) {
         val empressModuleElement = element as? TypeElement ?: throw UnexpectedElement(element)
         val empressModule = element.getAnnotation(EmpressModule::class.java)
-
-        checkIsSealed(empressModule.events)
-        checkIsSealed(empressModule.patches)
-        checkIsSealed(empressModule.requests)
 
         // TODO check if all patches are initialized
         // TODO check if there are handlers for every possible event and request
 
-        processEnclosedElements(empressModule, empressModuleElement)
+        val eventRoot = getTypeMirrorFromAnnotationValue { empressModule.events }
+        val patchRoot = getTypeMirrorFromAnnotationValue { empressModule.patches }
+        val requestRoot = getTypeMirrorFromAnnotationValue { empressModule.requests }
+
+        val initialPatches = getInitialPatches(empressModuleElement, patchRoot)
+        val eventHandlers = getEventHandlers(empressModuleElement, eventRoot)
+        val requestHandlers = getRequestHandlers(empressModuleElement, requestRoot)
+
+        val empressInterface = Empress::class.asClassName().parameterizedBy(
+            eventRoot.asTypeName(),
+            patchRoot.asTypeName(),
+            requestRoot.asTypeName()
+        )
+
+        val empressModuleProperty = PropertySpec
+            .builder(
+                EMPRESS_MODULE_FIELD,
+                empressModuleElement.asType().asTypeName(),
+                KModifier.PRIVATE
+            )
+            .initializer(EMPRESS_MODULE_FIELD)
+            .build()
+
+        val primaryConstructor = FunSpec
+            .constructorBuilder()
+            .addParameter(EMPRESS_MODULE_FIELD, empressModuleElement.asType().asTypeName())
+            .build()
+
+        val empressImplType = TypeSpec.classBuilder("Empress_${element.asClassName().simpleName}")
+            .addSuperinterface(empressInterface)
+            .primaryConstructor(primaryConstructor)
+            .addProperty(empressModuleProperty)
+            .addFunction(buildPatchInitializer(initialPatches, patchRoot))
+            .addFunction(buildEventHandler(eventRoot, patchRoot, requestRoot, eventHandlers))
+            .addFunction(buildRequestHandler(eventRoot, requestRoot, requestHandlers))
+            .build()
+
+        val file = FileSpec
+            .builder(element.asClassName().packageName, element.simpleName.toString())
+            .addType(empressImplType)
+            .build()
+
+        logWarning(file.toString())
     }
 
-    private fun processEnclosedElements(
-        @Suppress("UNUSED_PARAMETER") empressModule: EmpressModule,
-        empressModuleElement: TypeElement
-    ) {
-        val handledPatches = mutableSetOf<TypeMirror>()
-        val handledEvents = mutableSetOf<KClass<*>>()
-        val handledRequests = mutableSetOf<KClass<*>>()
+    private fun buildPatchInitializer(
+        initialPatches: Map<TypeMirror, ExecutableElement>,
+        patchRoot: TypeMirror
+    ): FunSpec {
+        val collection = ClassName("kotlin.collections", "Collection")
+        val initializerMethodCalls = initialPatches
+            .map { (_, e) ->
+                "$EMPRESS_MODULE_FIELD.${e.simpleName}()"
+            }.joinToString(", ")
+        return FunSpec
+            .builder("initializer")
+            .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+            .returns(collection.parameterizedBy(patchRoot.asTypeName()))
+            .addCode("return listOf(%L)", initializerMethodCalls)
+            .build()
+    }
 
-        for (enclosedElement in empressModuleElement.enclosedElements) {
-            val executableElement = enclosedElement as? ExecutableElement ?: continue
-            var wasAnnotated = false // true if annotated by Initializer, OnEvent or OnRequest
+    private fun buildEventHandler(
+        eventRoot: TypeMirror,
+        patchRoot: TypeMirror,
+        requestRoot: TypeMirror,
+        eventHandlers: Map<TypeMirror, ExecutableElement>
+    ): FunSpec {
+        val collection = ClassName("kotlin.collections", "Collection")
+        val eventParamName = "event"
+        val eventCases = eventHandlers
+            .map { (t, e) -> "is ${t.asTypeName()} -> $EMPRESS_MODULE_FIELD.${e.simpleName}()" } // TODO pass params; TODO return type (either list or a single (nullable?) patch)
+            .joinToString("\n")
+        return FunSpec
+            .builder("onEvent")
+            .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+            .addParameter(eventParamName, eventRoot.asTypeName())
+            .addParameter(
+                "model",
+                Model::class.asClassName().parameterizedBy(patchRoot.asTypeName())
+            )
+            .addParameter(
+                "requests",
+                Requests::class.asClassName().parameterizedBy(
+                    eventRoot.asTypeName(),
+                    requestRoot.asTypeName()
+                )
+            )
+            .returns(collection.parameterizedBy(patchRoot.asTypeName()))
+            .addCode("return when(%L) {\n %L \n}", eventParamName, eventCases)
+            .build()
+    }
 
-            enclosedElement.getAnnotation(Initializer::class.java)?.let {
-                checkAlreadyAnnotated(enclosedElement, wasAnnotated)
-                wasAnnotated = true
+    private fun buildRequestHandler(
+        eventRoot: TypeMirror,
+        requestRoot: TypeMirror,
+        requestHandlers: Map<TypeMirror, ExecutableElement>
+    ): FunSpec {
+        val requestParamName = "request"
+        val whenCases = requestHandlers
+            .map { (t, e) -> "is ${t.asTypeName()} -> $EMPRESS_MODULE_FIELD.${e.simpleName}($requestParamName)" }
+            .joinToString("\n")
+        return FunSpec
+            .builder("onRequest")
+            .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE, KModifier.SUSPEND)
+            .addParameter(requestParamName, requestRoot.asTypeName())
+            .returns(eventRoot.asTypeName())
+            .addCode("return when(%L) {\n %L \n}", requestParamName, whenCases)
+            .build()
+    }
 
-                // TODO check if executableElement.returnType (patch returned by initializer) is subclass of empressModule.patches
+    private fun getInitialPatches(
+        empressModuleElement: TypeElement,
+        patchRoot: TypeMirror
+    ): Map<TypeMirror, ExecutableElement> {
+        val mutableMap = mutableMapOf<TypeMirror, ExecutableElement>()
 
-                if (!handledPatches.add(executableElement.returnType)) {
+        empressModuleElement.enclosedElements
+            .asSequence()
+            .filter { it is ExecutableElement && it.getAnnotation(Initializer::class.javaObjectType) != null }
+            .map { it as ExecutableElement }
+            .forEach { executableElement ->
+                if (!executableElement.modifiers.contains(Modifier.PUBLIC)) {
+                    throw MethodNotPublic(executableElement)
+                }
+
+                if (!isProperSubtype(executableElement.returnType, patchRoot)) {
+                    throw NotSubclass(executableElement, executableElement.returnType, patchRoot)
+                }
+                if (executableElement.parameters.isNotEmpty()) {
+                    throw NoParametersAccepted(executableElement)
+                }
+                // TODO make sure proper return type
+
+                if (mutableMap.put(executableElement.returnType, executableElement) != null) {
                     throw MoreThanOneInitializer(executableElement.returnType)
                 }
-
-                logNote("Initializer for ${executableElement.returnType}")
             }
 
-            enclosedElement.getAnnotation(OnEvent::class.java)?.let {
-                checkAlreadyAnnotated(enclosedElement, wasAnnotated)
-                wasAnnotated = true
+        return mutableMap
+    }
 
-                // TODO check if it.event is subclass of empressModule.events
+    private fun getEventHandlers(
+        empressModuleElement: TypeElement,
+        eventRoot: TypeMirror
+    ): Map<TypeMirror, ExecutableElement> {
+        val mutableMap = mutableMapOf<TypeMirror, ExecutableElement>()
 
-                if (!handledEvents.add(it.event)) {
-                    throw MoreThanOneEventHandler(it.event)
+        empressModuleElement.enclosedElements
+            .asSequence()
+            .filter { it is ExecutableElement && it.getAnnotation(OnEvent::class.javaObjectType) != null }
+            .map { Pair(it as ExecutableElement, it.getAnnotation(OnEvent::class.javaObjectType)) }
+            .forEach { (executableElement, onEventAnnotation) ->
+                if (!executableElement.modifiers.contains(Modifier.PUBLIC)) {
+                    throw MethodNotPublic(executableElement)
+                }
+                getTypeMirrorsFromAnnotationValue { onEventAnnotation.event }
+                    .forEach { eventType ->
+                        if (!isProperSubtype(eventType, eventRoot)) {
+                            throw NotSubclass(executableElement, eventType, eventRoot)
+                        }
+
+                        // TODO make sure if there's an argument, it's a patch, or Requests
+                        // TODO make sure returns a patch or collection of patches
+
+                        if (mutableMap.put(eventType, executableElement) != null) {
+                            throw MoreThanOneEventHandler(eventType)
+                        }
+                    }
+            }
+
+        return mutableMap
+    }
+
+    private fun getRequestHandlers(
+        empressModuleElement: TypeElement,
+        requestRoot: TypeMirror
+    ): Map<TypeMirror, ExecutableElement> {
+        val mutableMap = mutableMapOf<TypeMirror, ExecutableElement>()
+
+        empressModuleElement.enclosedElements
+            .asSequence()
+            .filter { it is ExecutableElement && it.getAnnotation(OnRequest::class.javaObjectType) != null }
+            .map { Pair(it as ExecutableElement, it.getAnnotation(OnRequest::class.java)) }
+            .forEach { (executableElement, onRequestAnnotation) ->
+                if (!executableElement.modifiers.contains(Modifier.PUBLIC)) {
+                    throw MethodNotPublic(executableElement)
                 }
 
-                logNote("Event handler for ${it}")
-            }
+                val requestType = getTypeMirrorFromAnnotationValue { onRequestAnnotation.request }
 
-            enclosedElement.getAnnotation(OnRequest::class.java)?.let {
-                checkAlreadyAnnotated(enclosedElement, wasAnnotated)
-                wasAnnotated = true
-
-                // TODO check if it.request is subclass of empressModule.requests
-
-                if (!handledRequests.add(it.request)) {
-                    throw MoreThanOneRequestHandler(it.request)
+                if (!isProperSubtype(requestType, requestRoot)) {
+                    throw NotSubclass(executableElement, requestType, requestRoot)
                 }
 
-                logNote("Request handler for ${it}")
+                // TODO make sure if there's an argument, it's a request subclass
+                // TODO make sure returns an event
+
+                if (mutableMap.put(requestType, executableElement) != null) {
+                    throw MoreThanOneRequestHandler(requestType)
+                }
             }
-        }
+
+        return mutableMap
     }
 
-    private fun checkAlreadyAnnotated(element: Element, isHandled: Boolean) {
-        if (isHandled) {
-            throw UnexpectedEmpressAnnotation(element)
+    private fun getTypeMirrorFromAnnotationValue(accessor: () -> KClass<*>): TypeMirror {
+        try {
+            accessor()
+        } catch (e: MirroredTypeException) {
+            return e.typeMirror
         }
+
+        throw IllegalStateException("accessor didn't throw MirroredTypeException")
     }
 
-    private fun checkIsSealed(kClass: KClass<*>) {
-        if (!kClass.isSealed) {
-            throw UnsupportedClass(kClass)
+    private fun getTypeMirrorsFromAnnotationValue(accessor: () -> Array<out KClass<*>>): List<TypeMirror> {
+        try {
+            accessor()
+        } catch (e: MirroredTypesException) {
+            return e.typeMirrors
         }
+
+        throw IllegalStateException("accessor didn't throw MirroredTypesException")
     }
 
-    private fun logNote(msg: String) {
+    private fun isProperSubtype(childType: TypeMirror, parentType: TypeMirror): Boolean {
+        return processingEnv.typeUtils.isSubtype(
+            childType,
+            parentType
+        ) && childType.asTypeName() != parentType.asTypeName()
+    }
+
+    private fun logWarning(msg: String) {
         processingEnv.messager.printMessage(WARNING, msg)
     }
 
@@ -175,14 +352,23 @@ class EmpressProcessor : AbstractProcessor() {
         processingEnv.messager.printMessage(ERROR, msg)
     }
 
-    internal class MoreThanOneEventHandler(val eventKClass: KClass<*>) : Throwable()
+    internal class MethodNotPublic(val executableElement: ExecutableElement) : Throwable()
+    internal class MoreThanOneEventHandler(val eventType: TypeMirror) : Throwable()
     internal class MoreThanOneInitializer(val returnType: TypeMirror) : Throwable()
-    internal class MoreThanOneRequestHandler(val requestKClass: KClass<*>) : Throwable()
+    internal class MoreThanOneRequestHandler(val requestType: TypeMirror) : Throwable()
+    internal class NoParametersAccepted(val executableElement: ExecutableElement) : Throwable()
+    internal class NotSubclass(
+        val executableElement: ExecutableElement,
+        val childType: TypeMirror,
+        val parentType: TypeMirror
+    ) : Throwable()
+
     internal class UnexpectedEmpressAnnotation(val element: Element) : Throwable()
-    internal class UnsupportedClass(val kClass: KClass<*>) : Throwable()
     internal class UnexpectedElement(val element: Element) : Throwable()
 
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
+
+        private const val EMPRESS_MODULE_FIELD = "empressModule"
     }
 }

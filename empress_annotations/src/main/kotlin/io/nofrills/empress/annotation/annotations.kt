@@ -32,7 +32,7 @@ annotation class Initializer
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class OnEvent(val event: KClass<*>)
+annotation class OnEvent(vararg val event: KClass<*>)
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

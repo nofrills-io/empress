@@ -35,11 +35,12 @@ class AnnotatedEmpress {
     @Initializer
     fun initialSender() = Patch.Sender(null)
 
-    @OnEvent(Event.Decrement::class) // TODO decide if OnEvent & OnRequest should accept a class; if not, use a method param
-    fun onDecrement(event: Event.Decrement, counter: Patch.Counter): Collection<Patch> {
+    @OnEvent(Event.Decrement::class, Event.Increment::class)
+    fun onChangeCount(event: Event, counter: Patch.Counter): Collection<Patch> {
         // here I can receive the patch I want (instead of a whole model);
         // and I return only a list, or a single patch
-        return listOf(counter.copy(count = counter.count - 1))
+        val d = if (event == Event.Decrement) -1 else 1
+        return listOf(counter.copy(count = counter.count + d))
     }
 
     @OnEvent(Event.SendCounter::class)
