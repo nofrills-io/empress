@@ -37,7 +37,7 @@ internal class InvalidParameterType(
     parameter: VariableElement
 ) : EmpressProcessorException(
     executableElement,
-    "Parameter '$parameter' has unsupported type."
+    "Parameter '$parameter' has invalid type."
 )
 
 internal class InvalidReturnType(

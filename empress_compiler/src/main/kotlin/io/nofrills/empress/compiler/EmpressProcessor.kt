@@ -315,7 +315,7 @@ class EmpressProcessor : AbstractProcessor() {
                         // it has to be an event, patch, Model or Requests
                         for (param in executableElement.parameters) {
                             if (
-                                !isSubtype(param.asType(), eventRoot)
+                                !processingEnv.typeUtils.isAssignable(eventType, param.asType())
                                 && !isProperSubtype(param.asType(), patchRoot)
                                 && param.asType().asTypeName() != modelTypeName
                                 && param.asType().asTypeName() != requestsTypeName
@@ -384,8 +384,8 @@ class EmpressProcessor : AbstractProcessor() {
                     )
                 } else if (paramsCount == maxParamCount) {
                     val firstParamType = executableElement.parameters[0].asType()
-                    if (!isSubtype(firstParamType, requestRoot)) {
-                        throw NotSubclass(executableElement, firstParamType, requestRoot)
+                    if (!isSubtype(firstParamType, requestType)) {
+                        throw NotSubclass(executableElement, firstParamType, requestType)
                     }
 
                     // if function is suspendable, return type is part of the last argument
