@@ -192,7 +192,16 @@ class EmpressProcessor : AbstractProcessor() {
     ): FunSpec {
         val requestParamName = "request"
         val whenCases = requestHandlers
-            .map { (t, e) -> "is ${t.asTypeName()} -> $EMPRESS_MODULE_FIELD.${e.simpleName}($requestParamName)" }
+            .map { (t, e) ->
+                val isSuspendable = isSuspendable(e)
+                val params = when {
+                    isSuspendable && e.parameters.size > 1
+                            || !isSuspendable && e.parameters.size > 0 -> requestParamName
+                    else -> ""
+
+                }
+                "is ${t.asTypeName()} -> $EMPRESS_MODULE_FIELD.${e.simpleName}($params)"
+            }
             .joinToString("\n")
         return FunSpec
             .builder("onRequest")
@@ -321,9 +330,7 @@ class EmpressProcessor : AbstractProcessor() {
                 }
 
                 val paramsCount = executableElement.parameters.size
-                val isSuspendable =
-                    executableElement.parameters.lastOrNull()?.asType()?.asTypeName().toString()
-                        .startsWith(Continuation::class.asTypeName().toString())
+                val isSuspendable = isSuspendable(executableElement)
                 val maxParamCount = when {
                     isSuspendable -> 2
                     else -> 1
@@ -334,8 +341,9 @@ class EmpressProcessor : AbstractProcessor() {
                         expectedParamCount = 1
                     )
                 } else if (paramsCount == maxParamCount) {
-                    if (!isProperSubtype(executableElement.parameters[0].asType(), requestRoot)) {
-                        throw NotProperSubclass(executableElement, requestType, requestRoot)
+                    val firstParamType = executableElement.parameters[0].asType()
+                    if (!isSubtype(firstParamType, requestRoot)) {
+                        throw NotSubclass(executableElement, firstParamType, requestRoot)
                     }
 
                     // if function is suspendable, return type is part of the last argument
@@ -375,6 +383,11 @@ class EmpressProcessor : AbstractProcessor() {
             }
 
         return mutableMap
+    }
+
+    private fun isSuspendable(executableElement: ExecutableElement): Boolean {
+        return executableElement.parameters.lastOrNull()?.asType()?.asTypeName().toString()
+            .startsWith(Continuation::class.asTypeName().toString())
     }
 
     private fun getTypeMirrorFromAnnotationValue(accessor: () -> KClass<*>): TypeMirror {
