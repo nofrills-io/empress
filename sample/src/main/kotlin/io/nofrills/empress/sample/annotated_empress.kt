@@ -16,6 +16,7 @@
 
 package io.nofrills.empress.sample
 
+import io.nofrills.empress.Model
 import io.nofrills.empress.Requests
 import io.nofrills.empress.annotation.EmpressModule
 import io.nofrills.empress.annotation.Initializer
@@ -55,7 +56,8 @@ class AnnotatedEmpress {
     }
 
     @OnEvent(Event.CancelSendingCounter::class)
-    fun onCancelSendingCounter(sender: Patch.Sender, requests: Requests<Event, Request>): Patch {
+    fun onCancelSendingCounter(model: Model<Patch>, requests: Requests<Event, Request>): Patch {
+        val sender = model.get<Patch.Sender>()
         requests.cancel(sender.requestId)
         return sender.copy(requestId = null)
     }

@@ -154,6 +154,47 @@ class EmpressProcessor : AbstractProcessor() {
             .build()
     }
 
+    private fun generateEventHandlerCall(
+        handler: ExecutableElement,
+        eventRoot: TypeMirror,
+        patchRoot: TypeMirror,
+        requestRoot: TypeMirror
+    ): String {
+        val modelTypeName = Model::class.asClassName()
+            .parameterizedBy(patchRoot.asTypeName())
+        val requestsTypeName = Requests::class.asClassName()
+            .parameterizedBy(eventRoot.asTypeName(), requestRoot.asTypeName())
+
+        // allowed param types: event, whole model, selected patch, Requests
+        val params = handler.parameters.joinToString(", ") { param ->
+            when {
+                isSubtype(param.asType(), eventRoot) -> "event"
+                isProperSubtype(
+                    param.asType(),
+                    patchRoot
+                ) -> "model.get<${param.asType().asTypeName()}>()"
+                param.asType().asTypeName() == modelTypeName -> "model"
+                param.asType().asTypeName() == requestsTypeName -> "requests"
+                else -> throw InvalidParameterType(handler, param)
+            }
+        }
+        val invocation = "$EMPRESS_MODULE_FIELD.${handler.simpleName}($params)"
+        return if (isSubtype(handler.returnType, patchRoot)) {
+            """
+                run {
+                    val r = $invocation
+                    if (r != null) {
+                        listOf(r)
+                    } else {
+                        emptyList()
+                    }
+                }
+            """.trimIndent()
+        } else {
+            invocation
+        }
+    }
+
     private fun buildEventHandler(
         eventRoot: TypeMirror,
         patchRoot: TypeMirror,
@@ -163,7 +204,14 @@ class EmpressProcessor : AbstractProcessor() {
         val collection = ClassName("kotlin.collections", "Collection")
         val eventParamName = "event"
         val eventCases = eventHandlers
-            .map { (t, e) -> "is ${t.asTypeName()} -> $EMPRESS_MODULE_FIELD.${e.simpleName}()" } // TODO pass params; TODO return type (either list or a single (nullable?) patch)
+            .map { (t, e) ->
+                "is ${t.asTypeName()} -> ${generateEventHandlerCall(
+                    handler = e,
+                    eventRoot = eventRoot,
+                    patchRoot = patchRoot,
+                    requestRoot = requestRoot
+                )}"
+            }
             .joinToString("\n")
         return FunSpec
             .builder("onEvent")
@@ -253,6 +301,8 @@ class EmpressProcessor : AbstractProcessor() {
         requestRoot: TypeMirror
     ): Map<TypeMirror, ExecutableElement> {
         val mutableMap = mutableMapOf<TypeMirror, ExecutableElement>()
+        val modelTypeName = Model::class.asClassName()
+            .parameterizedBy(patchRoot.asTypeName())
         val requestsTypeName = Requests::class.asClassName()
             .parameterizedBy(eventRoot.asTypeName(), requestRoot.asTypeName())
 
@@ -271,11 +321,12 @@ class EmpressProcessor : AbstractProcessor() {
                         }
 
                         // If the method has parameters,
-                        // it has to be an event, patch or Requests
+                        // it has to be an event, patch, Model or Requests
                         for (param in executableElement.parameters) {
                             if (
                                 !isSubtype(param.asType(), eventRoot)
                                 && !isProperSubtype(param.asType(), patchRoot)
+                                && param.asType().asTypeName() != modelTypeName
                                 && param.asType().asTypeName() != requestsTypeName
                             ) {
                                 throw InvalidParameterType(executableElement, param)
