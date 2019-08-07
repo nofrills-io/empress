@@ -31,10 +31,11 @@ import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.*
-import javax.lang.model.type.MirroredTypeException
-import javax.lang.model.type.MirroredTypesException
-import javax.lang.model.type.TypeMirror
+import javax.lang.model.element.Element
+import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
+import javax.lang.model.element.TypeElement
+import javax.lang.model.type.*
 import javax.tools.Diagnostic.Kind.ERROR
 import javax.tools.Diagnostic.Kind.WARNING
 import kotlin.coroutines.Continuation
@@ -63,7 +64,10 @@ class EmpressProcessor : AbstractProcessor() {
 
         val kaptKotlinGeneratedDir =
             processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME] ?: run {
-                logError("Can't find the target directory for generated Kotlin files.")
+                processingEnv.messager.printMessage(
+                    ERROR,
+                    "Can't find the target directory for generated Kotlin files."
+                )
                 return false
             }
         val outDir = File(kaptKotlinGeneratedDir)
@@ -71,35 +75,8 @@ class EmpressProcessor : AbstractProcessor() {
         for (element in annotatedElements) {
             try {
                 processEmpressModule(element, outDir)
-            } catch (e: InvalidParameterCount) {
-                logError("Method ${e.executableElement.simpleName} has wrong number of parameters (expected ${e.expectedParamCount} parameters).")
-                return false
-            } catch (e: InvalidParameterType) {
-                logError("Parameter '${e.parameter}' in ${e.executableElement} has unsupported type.")
-                return false
-            } catch (e: MethodNotPublic) {
-                logError("Method ${e.executableElement.simpleName} should be public.")
-                return false
-            } catch (e: MoreThanOneEventHandler) {
-                logError("There is more than one event handler for ${e.eventType.asTypeName()}.")
-                return false
-            } catch (e: MoreThanOneInitializer) {
-                logError("There is more than one initializer for ${e.returnType.asTypeName()} patch.")
-                return false
-            } catch (e: MoreThanOneRequestHandler) {
-                logError("There is more than one request handler for ${e.requestType.asTypeName()}.")
-                return false
-            } catch (e: NoParametersAccepted) {
-                logError("Method ${e.executableElement.asType().asTypeName()} must not contain any parameters.")
-                return false
-            } catch (e: NotSubclass) {
-                logError("Type ${e.childType.asTypeName()} is not a proper subclass of ${e.parentType.asTypeName()} (in ${e.executableElement.enclosingElement.simpleName}#${e.executableElement}).")
-                return false
-            } catch (e: UnexpectedEmpressAnnotation) {
-                logError("Element ${e.element.simpleName} should be annotated with a single empress annotation.")
-                return false
-            } catch (e: UnexpectedElement) {
-                logError("Expected a TypeElement but got ${e.element.javaClass.name}.")
+            } catch (e: EmpressProcessorException) {
+                processingEnv.messager.printMessage(ERROR, e.localizedMessage, e.element)
                 return false
             }
         }
@@ -245,11 +222,15 @@ class EmpressProcessor : AbstractProcessor() {
                     throw NoParametersAccepted(executableElement)
                 }
                 if (!isProperSubtype(executableElement.returnType, patchRoot)) {
-                    throw NotSubclass(executableElement, executableElement.returnType, patchRoot)
+                    throw NotProperSubclass(
+                        executableElement,
+                        executableElement.returnType,
+                        patchRoot
+                    )
                 }
 
                 if (mutableMap.put(executableElement.returnType, executableElement) != null) {
-                    throw MoreThanOneInitializer(executableElement.returnType)
+                    throw MoreThanOneInitializer(executableElement, executableElement.returnType)
                 }
             }
 
@@ -277,10 +258,11 @@ class EmpressProcessor : AbstractProcessor() {
                 getTypeMirrorsFromAnnotationValue { onEventAnnotation.event }
                     .forEach { eventType ->
                         if (!isProperSubtype(eventType, eventRoot)) {
-                            // TODO actually this refers to annotation value
-                            throw NotSubclass(executableElement, eventType, eventRoot)
+                            throw NotProperSubclass(executableElement, eventType, eventRoot)
                         }
 
+                        // If the method has parameters,
+                        // it has to be an event, patch or Requests
                         for (param in executableElement.parameters) {
                             if (
                                 !isSubtype(param.asType(), eventRoot)
@@ -291,16 +273,30 @@ class EmpressProcessor : AbstractProcessor() {
                             }
                         }
 
-                        // TODO make sure if there's an argument, it's a patch, or Requests
-                        // TODO make sure returns a patch or collection of patches
+                        // Method should return either a single patch, or a collection of patches
+                        if (!isSubtype(executableElement.returnType, patchRoot)
+                            && !isCollectionOfItems(executableElement.returnType, patchRoot)
+                        ) {
+                            throw InvalidReturnType(executableElement, executableElement.returnType)
+                        }
 
                         if (mutableMap.put(eventType, executableElement) != null) {
-                            throw MoreThanOneEventHandler(eventType)
+                            throw MoreThanOneEventHandler(executableElement, eventType)
                         }
                     }
             }
 
         return mutableMap
+    }
+
+    /** Checks if a [returnType] is a Collection<T>, where T is represented by [expectedItemType]. */
+    private fun isCollectionOfItems(returnType: TypeMirror, expectedItemType: TypeMirror): Boolean {
+        val declaredType = returnType as? DeclaredType ?: return false
+        val firstTypeArg = declaredType.typeArguments?.firstOrNull() ?: return false
+        return declaredType.asTypeName().toString().startsWith("java.util.Collection") && isSubtype(
+            firstTypeArg,
+            expectedItemType
+        )
     }
 
     private fun getRequestHandlers(
@@ -321,8 +317,7 @@ class EmpressProcessor : AbstractProcessor() {
 
                 val requestType = getTypeMirrorFromAnnotationValue { onRequestAnnotation.request }
                 if (!isProperSubtype(requestType, requestRoot)) {
-                    // TODO this actually should refer to class in annotation, not the executableElement
-                    throw NotSubclass(executableElement, requestType, requestRoot)
+                    throw NotProperSubclass(executableElement, requestType, requestRoot)
                 }
 
                 val paramsCount = executableElement.parameters.size
@@ -340,19 +335,24 @@ class EmpressProcessor : AbstractProcessor() {
                     )
                 } else if (paramsCount == maxParamCount) {
                     if (!isProperSubtype(executableElement.parameters[0].asType(), requestRoot)) {
-                        throw NotSubclass(executableElement, requestType, requestRoot)
+                        throw NotProperSubclass(executableElement, requestType, requestRoot)
                     }
 
-                    // return type
+                    // if function is suspendable, return type is part of the last argument
                     if (isSuspendable) {
-                        val continuationTypeName =
-                            executableElement.parameters[1].asType().asTypeName()
-                        val expectedContinuation = Continuation::class.asClassName()
-                            .parameterizedBy(TypeVariableName("in ${eventRoot.asTypeName()}"))
-                        if (continuationTypeName != expectedContinuation) {
+                        val continuationType =
+                            executableElement.parameters[paramsCount - 1].asType() as DeclaredType
+                        val continuationTypeName = continuationType.asTypeName()
+                        val continuationParamType = continuationType.typeArguments.first()
+                        val superBound = (continuationParamType as WildcardType).superBound
+                        if (!continuationTypeName.toString().startsWith("kotlin.coroutines.Continuation") || !isSubtype(
+                                superBound,
+                                eventRoot
+                            )
+                        ) {
                             throw NotSubclass(
                                 executableElement,
-                                executableElement.parameters[1].asType(), // TODO this reports Continuation<x>, and below we only have an event
+                                continuationType.typeArguments.first(),
                                 eventRoot
                             )
                         }
@@ -361,12 +361,16 @@ class EmpressProcessor : AbstractProcessor() {
 
                 if (!isSuspendable) {
                     if (!isSubtype(executableElement.returnType, eventRoot)) {
-                        throw NotSubclass(executableElement, executableElement.returnType, eventRoot)
+                        throw NotSubclass(
+                            executableElement,
+                            executableElement.returnType,
+                            eventRoot
+                        )
                     }
                 }
 
                 if (mutableMap.put(requestType, executableElement) != null) {
-                    throw MoreThanOneRequestHandler(requestType)
+                    throw MoreThanOneRequestHandler(executableElement, requestType)
                 }
             }
 
@@ -410,34 +414,6 @@ class EmpressProcessor : AbstractProcessor() {
     private fun logWarning(msg: String) {
         processingEnv.messager.printMessage(WARNING, msg)
     }
-
-    private fun logError(msg: String) {
-        processingEnv.messager.printMessage(ERROR, msg)
-    }
-
-    internal class InvalidParameterCount(
-        val executableElement: ExecutableElement,
-        val expectedParamCount: Int
-    ) : Throwable()
-
-    internal class InvalidParameterType(
-        val executableElement: ExecutableElement,
-        val parameter: VariableElement
-    ) : Throwable()
-
-    internal class MethodNotPublic(val executableElement: ExecutableElement) : Throwable()
-    internal class MoreThanOneEventHandler(val eventType: TypeMirror) : Throwable()
-    internal class MoreThanOneInitializer(val returnType: TypeMirror) : Throwable()
-    internal class MoreThanOneRequestHandler(val requestType: TypeMirror) : Throwable()
-    internal class NoParametersAccepted(val executableElement: ExecutableElement) : Throwable()
-    internal class NotSubclass(
-        val executableElement: ExecutableElement,
-        val childType: TypeMirror,
-        val parentType: TypeMirror
-    ) : Throwable()
-
-    internal class UnexpectedEmpressAnnotation(val element: Element) : Throwable()
-    internal class UnexpectedElement(val element: Element) : Throwable()
 
     companion object {
         const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
