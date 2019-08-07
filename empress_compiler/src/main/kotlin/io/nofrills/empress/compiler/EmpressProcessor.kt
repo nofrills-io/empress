@@ -180,16 +180,7 @@ class EmpressProcessor : AbstractProcessor() {
         }
         val invocation = "$EMPRESS_MODULE_FIELD.${handler.simpleName}($params)"
         return if (isSubtype(handler.returnType, patchRoot)) {
-            """
-                run {
-                    val r = $invocation
-                    if (r != null) {
-                        listOf(r)
-                    } else {
-                        emptyList()
-                    }
-                }
-            """.trimIndent()
+            "$invocation?.let { listOf(it) } ?: emptyList()"
         } else {
             invocation
         }
