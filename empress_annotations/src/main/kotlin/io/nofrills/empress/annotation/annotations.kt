@@ -19,7 +19,7 @@ package io.nofrills.empress.annotation
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.SOURCE)
 annotation class EmpressModule(
     val events: KClass<*>,
     val patches: KClass<*>,
@@ -27,13 +27,13 @@ annotation class EmpressModule(
 )
 
 @Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.SOURCE)
 annotation class Initializer
 
 @Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class OnEvent(vararg val event: KClass<*>)
+@Retention(AnnotationRetention.SOURCE)
+annotation class OnEvent(val event: KClass<*>)
 
 @Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.SOURCE)
 annotation class OnRequest(val request: KClass<*>)

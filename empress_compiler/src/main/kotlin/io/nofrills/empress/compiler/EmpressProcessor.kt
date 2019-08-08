@@ -35,9 +35,11 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.*
+import javax.lang.model.type.DeclaredType
+import javax.lang.model.type.MirroredTypeException
+import javax.lang.model.type.TypeMirror
+import javax.lang.model.type.WildcardType
 import javax.tools.Diagnostic.Kind.ERROR
-import javax.tools.Diagnostic.Kind.WARNING
 import kotlin.coroutines.Continuation
 import kotlin.reflect.KClass
 
@@ -88,9 +90,6 @@ class EmpressProcessor : AbstractProcessor() {
         val empressModuleElement = element as? TypeElement ?: throw UnexpectedElement(element)
         val empressModule = element.getAnnotation(EmpressModule::class.java)
 
-        // TODO check if all patches are initialized
-        // TODO check if there are handlers for every possible event and request
-
         val eventRoot = getTypeMirrorFromAnnotationValue { empressModule.events }
         val patchRoot = getTypeMirrorFromAnnotationValue { empressModule.patches }
         val requestRoot = getTypeMirrorFromAnnotationValue { empressModule.requests }
@@ -120,7 +119,14 @@ class EmpressProcessor : AbstractProcessor() {
             .addParameter(EMPRESS_MODULE_FIELD, empressModuleElement.asType().asTypeName())
             .build()
 
-        val empressImplType = TypeSpec.classBuilder("Empress_${element.asClassName().simpleName}")
+        val className = "Empress_${element.asClassName().simpleName}"
+        val suppressAnnotation = AnnotationSpec.builder(Suppress::class.java)
+            .addMember("\"USELESS_ELVIS\"")
+            .addMember("\"UNNECESSARY_SAFE_CALL\"")
+            .build()
+
+        val empressImplType = TypeSpec.classBuilder(className)
+            .addAnnotation(suppressAnnotation)
             .addSuperinterface(empressInterface)
             .primaryConstructor(primaryConstructor)
             .addProperty(empressModuleProperty)
@@ -129,12 +135,15 @@ class EmpressProcessor : AbstractProcessor() {
             .addFunction(buildRequestHandler(eventRoot, requestRoot, requestHandlers))
             .build()
 
-        val file = FileSpec
-            .builder(element.asClassName().packageName, element.simpleName.toString())
+        val fileSpec = FileSpec
+            .builder(element.asClassName().packageName, className)
             .addType(empressImplType)
             .build()
 
-        logWarning(file.toString())
+        val packageDir = File(outDir, fileSpec.packageName.replace(".", File.separator))
+        val outFile = File(packageDir, "$className.kt")
+        packageDir.mkdirs()
+        outFile.writeText(fileSpec.toString())
     }
 
     private fun buildPatchInitializer(
@@ -147,7 +156,7 @@ class EmpressProcessor : AbstractProcessor() {
                 "$EMPRESS_MODULE_FIELD.${e.simpleName}()"
             }.joinToString(", ")
         return FunSpec
-            .builder("initializer")
+            .builder(INITIALIZER_METHOD_NAME)
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
             .returns(collection.parameterizedBy(patchRoot.asTypeName()))
             .addCode("return listOf(%L)", initializerMethodCalls)
@@ -168,13 +177,13 @@ class EmpressProcessor : AbstractProcessor() {
         // allowed param types: event, whole model, selected patch, Requests
         val params = handler.parameters.joinToString(", ") { param ->
             when {
-                isSubtype(param.asType(), eventRoot) -> "event"
+                isSubtype(param.asType(), eventRoot) -> ON_EVENT_PARAM_EVENT
                 isProperSubtype(
                     param.asType(),
                     patchRoot
-                ) -> "model.get<${param.asType().asTypeName()}>()"
-                param.asType().asTypeName() == modelTypeName -> "model"
-                param.asType().asTypeName() == requestsTypeName -> "requests"
+                ) -> "$ON_EVENT_PARAM_MODEL.get<${param.asType().asTypeName()}>()"
+                param.asType().asTypeName() == modelTypeName -> ON_EVENT_PARAM_MODEL
+                param.asType().asTypeName() == requestsTypeName -> ON_EVENT_PARAM_REQUESTS
                 else -> throw InvalidParameterType(handler, param)
             }
         }
@@ -193,7 +202,6 @@ class EmpressProcessor : AbstractProcessor() {
         eventHandlers: Map<TypeMirror, ExecutableElement>
     ): FunSpec {
         val collection = ClassName("kotlin.collections", "Collection")
-        val eventParamName = "event"
         val eventCases = eventHandlers
             .map { (t, e) ->
                 "is ${t.asTypeName()} -> ${generateEventHandlerCall(
@@ -203,24 +211,26 @@ class EmpressProcessor : AbstractProcessor() {
                     requestRoot = requestRoot
                 )}"
             }
+            .plus("else -> throw IllegalArgumentException(\"No handler for event: \$$ON_EVENT_PARAM_EVENT\")")
             .joinToString("\n")
+
         return FunSpec
-            .builder("onEvent")
+            .builder(ON_EVENT_METHOD_NAME)
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
-            .addParameter(eventParamName, eventRoot.asTypeName())
+            .addParameter(ON_EVENT_PARAM_EVENT, eventRoot.asTypeName())
             .addParameter(
-                "model",
+                ON_EVENT_PARAM_MODEL,
                 Model::class.asClassName().parameterizedBy(patchRoot.asTypeName())
             )
             .addParameter(
-                "requests",
+                ON_EVENT_PARAM_REQUESTS,
                 Requests::class.asClassName().parameterizedBy(
                     eventRoot.asTypeName(),
                     requestRoot.asTypeName()
                 )
             )
             .returns(collection.parameterizedBy(patchRoot.asTypeName()))
-            .addCode("return when(%L) {\n %L \n}", eventParamName, eventCases)
+            .addCode("return when(%L) {\n %L \n}", ON_EVENT_PARAM_EVENT, eventCases)
             .build()
     }
 
@@ -229,25 +239,25 @@ class EmpressProcessor : AbstractProcessor() {
         requestRoot: TypeMirror,
         requestHandlers: Map<TypeMirror, ExecutableElement>
     ): FunSpec {
-        val requestParamName = "request"
         val whenCases = requestHandlers
             .map { (t, e) ->
                 val isSuspendable = isSuspendable(e)
                 val params = when {
                     isSuspendable && e.parameters.size > 1
-                            || !isSuspendable && e.parameters.size > 0 -> requestParamName
+                            || !isSuspendable && e.parameters.size > 0 -> ON_REQUEST_PARAM_REQUEST
                     else -> ""
 
                 }
                 "is ${t.asTypeName()} -> $EMPRESS_MODULE_FIELD.${e.simpleName}($params)"
             }
+            .plus("else -> throw IllegalArgumentException(\"No handler for request: \$$ON_REQUEST_PARAM_REQUEST\")")
             .joinToString("\n")
         return FunSpec
-            .builder("onRequest")
+            .builder(ON_REQUEST_METHOD_NAME)
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE, KModifier.SUSPEND)
-            .addParameter(requestParamName, requestRoot.asTypeName())
+            .addParameter(ON_REQUEST_PARAM_REQUEST, requestRoot.asTypeName())
             .returns(eventRoot.asTypeName())
-            .addCode("return when(%L) {\n %L \n}", requestParamName, whenCases)
+            .addCode("return when(%L) {\n %L \n}", ON_REQUEST_PARAM_REQUEST, whenCases)
             .build()
     }
 
@@ -305,44 +315,44 @@ class EmpressProcessor : AbstractProcessor() {
                 if (!executableElement.modifiers.contains(Modifier.PUBLIC)) {
                     throw MethodNotPublic(executableElement)
                 }
-                getTypeMirrorsFromAnnotationValue { onEventAnnotation.event }
-                    .forEach { eventType ->
-                        if (!isProperSubtype(eventType, eventRoot)) {
-                            throw NotProperSubclass(executableElement, eventType, eventRoot)
-                        }
 
-                        // If the method has parameters,
-                        // it has to be an event, patch, Model or Requests
-                        for (param in executableElement.parameters) {
-                            if (
-                                !processingEnv.typeUtils.isAssignable(eventType, param.asType())
-                                && !isProperSubtype(param.asType(), patchRoot)
-                                && param.asType().asTypeName() != modelTypeName
-                                && param.asType().asTypeName() != requestsTypeName
-                            ) {
-                                throw InvalidParameterType(executableElement, param)
-                            }
-                        }
+                val eventType = getTypeMirrorFromAnnotationValue { onEventAnnotation.event }
 
-                        // Method should return either a single patch, or a collection of patches
-                        if (!isSubtype(executableElement.returnType, patchRoot)
-                            && !isCollectionOfItems(executableElement.returnType, patchRoot)
-                        ) {
-                            throw InvalidReturnType(executableElement, executableElement.returnType)
-                        }
+                if (!isProperSubtype(eventType, eventRoot)) {
+                    throw NotProperSubclass(executableElement, eventType, eventRoot)
+                }
 
-                        if (mutableMap.put(eventType, executableElement) != null) {
-                            throw MoreThanOneEventHandler(executableElement, eventType)
-                        }
+                // If the method has parameters,
+                // it has to be an event, patch, Model or Requests
+                for (param in executableElement.parameters) {
+                    if (
+                        !processingEnv.typeUtils.isAssignable(eventType, param.asType())
+                        && !isProperSubtype(param.asType(), patchRoot)
+                        && param.asType().asTypeName() != modelTypeName
+                        && param.asType().asTypeName() != requestsTypeName
+                    ) {
+                        throw InvalidParameterType(executableElement, param)
                     }
+                }
+
+                // Method should return either a single patch, or a collection of patches
+                if (!isSubtype(executableElement.returnType, patchRoot)
+                    && !isCollectionOfItems(executableElement.returnType, patchRoot)
+                ) {
+                    throw InvalidReturnType(executableElement, executableElement.returnType)
+                }
+
+                if (mutableMap.put(eventType, executableElement) != null) {
+                    throw MoreThanOneEventHandler(executableElement, eventType)
+                }
             }
 
         return mutableMap
     }
 
-    /** Checks if a [returnType] is a Collection<T>, where T is represented by [expectedItemType]. */
-    private fun isCollectionOfItems(returnType: TypeMirror, expectedItemType: TypeMirror): Boolean {
-        val declaredType = returnType as? DeclaredType ?: return false
+    /** Checks if a [type] is a Collection<T>, where T is represented by [expectedItemType]. */
+    private fun isCollectionOfItems(type: TypeMirror, expectedItemType: TypeMirror): Boolean {
+        val declaredType = type as? DeclaredType ?: return false
         val firstTypeArg = declaredType.typeArguments?.firstOrNull() ?: return false
         return declaredType.asTypeName().toString().startsWith("java.util.Collection") && isSubtype(
             firstTypeArg,
@@ -383,9 +393,11 @@ class EmpressProcessor : AbstractProcessor() {
                         expectedParamCount = 1
                     )
                 } else if (paramsCount == maxParamCount) {
-                    val firstParamType = executableElement.parameters[0].asType()
-                    if (!isSubtype(firstParamType, requestType)) {
-                        throw NotSubclass(executableElement, firstParamType, requestType)
+                    val firstParam = executableElement.parameters[0]
+                    val firstParamType = firstParam.asType()
+
+                    if (!processingEnv.typeUtils.isAssignable(requestType, firstParamType)) {
+                        throw InvalidParameterType(executableElement, firstParam)
                     }
 
                     // if function is suspendable, return type is part of the last argument
@@ -433,23 +445,13 @@ class EmpressProcessor : AbstractProcessor() {
     }
 
     private fun getTypeMirrorFromAnnotationValue(accessor: () -> KClass<*>): TypeMirror {
-        try {
-            accessor()
+        return try {
+            processingEnv.elementUtils
+                .getTypeElement(accessor().java.canonicalName)
+                .asType()
         } catch (e: MirroredTypeException) {
-            return e.typeMirror
+            e.typeMirror
         }
-
-        throw IllegalStateException("accessor didn't throw MirroredTypeException")
-    }
-
-    private fun getTypeMirrorsFromAnnotationValue(accessor: () -> Array<out KClass<*>>): List<TypeMirror> {
-        try {
-            accessor()
-        } catch (e: MirroredTypesException) {
-            return e.typeMirrors
-        }
-
-        throw IllegalStateException("accessor didn't throw MirroredTypesException")
     }
 
     private fun isSubtype(childType: TypeMirror, parentType: TypeMirror): Boolean {
@@ -466,13 +468,19 @@ class EmpressProcessor : AbstractProcessor() {
         ) && childType.asTypeName() != parentType.asTypeName()
     }
 
-    private fun logWarning(msg: String) {
-        processingEnv.messager.printMessage(WARNING, msg)
-    }
-
     companion object {
-        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
+        private const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
 
         private const val EMPRESS_MODULE_FIELD = "empressModule"
+
+        private const val INITIALIZER_METHOD_NAME = "initializer"
+
+        private const val ON_EVENT_METHOD_NAME = "onEvent"
+        private const val ON_EVENT_PARAM_EVENT = "event"
+        private const val ON_EVENT_PARAM_MODEL = "model"
+        private const val ON_EVENT_PARAM_REQUESTS = "requests"
+
+        private const val ON_REQUEST_METHOD_NAME = "onRequest"
+        private const val ON_REQUEST_PARAM_REQUEST = "request"
     }
 }

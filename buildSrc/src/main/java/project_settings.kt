@@ -34,6 +34,7 @@ object Ver {
 object Deps {
     const val appCompat = "androidx.appcompat:appcompat:1.1.0-rc01"
     const val autoService = "com.google.auto.service:auto-service:1.0-rc6"
+    const val autoServiceAnnotations = "com.google.auto.service:auto-service-annotations:1.0-rc6"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val coroutinesAndroid =
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Ver.coroutines}"

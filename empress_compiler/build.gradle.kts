@@ -12,9 +12,10 @@ java {
 }
 
 dependencies {
-    implementation(project(":empress_annotations"))
-    implementation(project(":empress_core"))
-    implementation(Deps.autoService)
+    compileOnly(project(":empress_annotations"))
+    compileOnly(project(":empress_core"))
+    compileOnly(Deps.autoServiceAnnotations)
+
     implementation(Deps.kotlinPoet)
     implementation(Deps.kotlinReflect)
     implementation(Deps.kotlinStdLib)
@@ -24,6 +25,6 @@ dependencies {
 
 tasks.withType(KotlinCompile::class).all {
     kotlinOptions {
-//        allWarningsAsErrors = true
+        allWarningsAsErrors = true
     }
 }
