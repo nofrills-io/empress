@@ -57,9 +57,17 @@ class AnnotatedEmpress {
         return sender.copy(requestId = requestId)
     }
 
+    @OnEvent(Event.CounterSent::class)
+    fun onCounterSent(): Patch {
+        return Patch.Sender(null)
+    }
+
     @OnEvent(Event.CancelSendingCounter::class)
-    fun onCancelSendingCounter(model: Model<Patch>, requests: Requests<Event, Request>): Patch {
+    fun onCancelSendingCounter(model: Model<Patch>, requests: Requests<Event, Request>): Patch? {
         val sender = model.get<Patch.Sender>()
+        if (sender.requestId == null) {
+            return null
+        }
         requests.cancel(sender.requestId)
         return sender.copy(requestId = null)
     }
