@@ -42,6 +42,7 @@ dependencies {
 
     implementation(project(":empress_android"))
     implementation(project(":empress_annotations"))
+    implementation(project(":empress_builder"))
     implementation(project(":test_support"))
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)

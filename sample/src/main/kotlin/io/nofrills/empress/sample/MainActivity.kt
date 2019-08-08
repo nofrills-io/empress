@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext = mainDispatcher + job
 
-    private val empressApi by lazy { enthrone(SampleEmpress()) }
+    private val empressApi by lazy { enthrone(buildEmpress()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }
