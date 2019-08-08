@@ -33,6 +33,8 @@ object Ver {
 
 object Deps {
     const val appCompat = "androidx.appcompat:appcompat:1.1.0-rc01"
+    const val autoService = "com.google.auto.service:auto-service:1.0-rc6"
+    const val autoServiceAnnotations = "com.google.auto.service:auto-service-annotations:1.0-rc6"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val coroutinesAndroid =
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Ver.coroutines}"
@@ -42,6 +44,8 @@ object Deps {
     const val fragment = "androidx.fragment:fragment:1.1.0-rc03"
     const val fragmentTesting = "androidx.fragment:fragment-testing:1.1.0-rc03"
     const val junit = "junit:junit:4.12"
+    const val kotlinPoet = "com.squareup:kotlinpoet:1.3.0"
+    const val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect:${Ver.kotlin}"
     const val kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Ver.kotlin}"
     const val robolectric = "org.robolectric:robolectric:4.3"
     const val testRunner = "androidx.test:runner:1.1.0"

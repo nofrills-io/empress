@@ -35,10 +35,10 @@ class EmpressBackend<Event, Patch : Any, Request> constructor(
     storedPatches: Collection<Patch>?
 ) : EmpressApi<Event, Patch> {
 
+    private val idProducer = RequestIdProducer()
+
     /** If interruption was requested, the mutex will be locked. */
     private val interruption = Mutex()
-
-    private val idProducer = RequestIdProducer()
 
     private val modelHolder = ModelHolder(
         if (storedPatches == null) {

@@ -30,6 +30,10 @@ internal class ModelHolder<Patch : Any>(private var model: Model<Patch>) {
         }
     }
 
+    /** Updates the model.
+     * @param updater Function which takes current model and returns a new, updated one.
+     * @return A new, updated model.
+     */
     suspend fun update(updater: (Model<Patch>) -> Model<Patch>): Model<Patch> {
         return mutex.withLock {
             model = updater(model)
