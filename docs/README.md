@@ -1,4 +1,5 @@
 [![API docs](https://img.shields.io/badge/API-docs-%2346C800.svg)](https://nofrills.io/empress/dokka/empress/index.html)
+[![Release](https://jitpack.io/v/nofrills-io/empress.svg)](https://jitpack.io/#nofrills-io/empress)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/nofrills-io/empress/blob/master/LICENSE)
 
 # Empress — Android framework for ruling your app
@@ -8,7 +9,15 @@ It's targeted to be used with Android's activities and fragments, but you can al
 
 ### Install
 
-TODO
+```kotlin
+repositories {
+    maven { url("https://jitpack.io") }
+}
+
+dependencies {
+    implementation("com.github.nofrills-io:empress:<empress_version>")
+}
+```
 
 ### Sample usage
 
