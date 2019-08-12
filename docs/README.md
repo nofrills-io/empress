@@ -1,6 +1,7 @@
-# Empress
+[![API docs](https://img.shields.io/badge/API-docs-%2346C800.svg)](https://nofrills.io/empress/dokka/empress/index.html)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/nofrills-io/empress/blob/master/LICENSE)
 
-### Android framework for ruling your app
+# Empress — Android framework for ruling your app
 
 Empress is a framework for managing application state and its representation in UI.
 It's targeted to be used with Android's activities and fragments, but you can also use it standalone.
@@ -14,7 +15,7 @@ TODO
 ### Sample usage
 
 Let's say you need to build an app to count things, and send the final value to a server
-(full example in [sample](sample)).
+(full example in `sample` app module).
 
 1. First, define your events, patches (model) and requests:
 
@@ -132,4 +133,4 @@ private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
 
 ## License
 
-This project is published under Apache License, Version 2.0 (see the [LICENSE](../LICENSE) file for details).
+This project is published under Apache License, Version 2.0 (see the [LICENSE](https://github.com/nofrills-io/empress/blob/master/LICENSE) file for details).
