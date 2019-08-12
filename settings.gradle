@@ -1,1 +1,3 @@
 include ':sample', ':empress_core', ':empress_android', ':test_support', ':empress_annotations', ':empress_compiler', ':empress_builder'
+
+enableFeaturePreview("GRADLE_METADATA")

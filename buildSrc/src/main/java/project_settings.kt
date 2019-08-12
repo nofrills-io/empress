@@ -21,10 +21,11 @@ object EmpressLib {
     val javaCompat = JavaVersion.VERSION_1_8
     const val jdkVersionNum = 8
     const val jvmTarget = "1.8"
+    const val mavPluginVersion = "1.0.4"
     const val minSdkVersion = 21
     const val targetSdkVersion = 28
     const val versionCode = 1
-    const val versionName = "0.0.1"
+    const val versionName = "0.1.0"
 }
 
 object Ver {

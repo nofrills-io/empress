@@ -98,3 +98,5 @@ tasks.withType(KotlinCompile::class).whenTaskAdded {
         jvmTarget = EmpressLib.jvmTarget
     }
 }
+
+apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")

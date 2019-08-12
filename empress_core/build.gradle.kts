@@ -33,3 +33,5 @@ tasks.withType(Test::class) {
         showStandardStreams = false
     }
 }
+
+apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")
