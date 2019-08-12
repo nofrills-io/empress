@@ -24,6 +24,7 @@ tasks.withType(KotlinCompile::class).all {
             "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-Xuse-experimental=kotlinx.coroutines.FlowPreview"
         )
+        jvmTarget = EmpressLib.jvmTarget
     }
 }
 

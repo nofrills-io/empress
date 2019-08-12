@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress.sample
+package io.nofrills.empress.test_support
 
 import io.nofrills.empress.Empress
 import io.nofrills.empress.builder.empressBuilder
-import io.nofrills.empress.test_support.Event
-import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.Request
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -31,7 +28,7 @@ fun buildEmpress(): Empress<Event, Patch, Request> {
 
         onEvent<Event.Decrement> {
             val counter = model.get<Patch.Counter>()
-            listOf(counter.copy(count = counter.count - 1)) // TODO change return type to single nullable patch; add another method `onEventMulti` (or something like this, which allows to return collection of patches); or any other way?
+            listOf(counter.copy(count = counter.count - 1))
         }
 
         onEvent<Event.Increment> {

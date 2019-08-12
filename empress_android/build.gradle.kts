@@ -22,7 +22,7 @@ android {
         targetSdkVersion(EmpressLib.targetSdkVersion)
         versionCode = EmpressLib.versionCode
         versionName = EmpressLib.versionName
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.benchmark.junit4.AndroidBenchmarkRunner"
     }
 
     buildTypes {
@@ -56,7 +56,11 @@ dependencies {
     testImplementation(Deps.junit)
     testImplementation(Deps.robolectric)
 
+    androidTestImplementation(project(":test_support"))
+    androidTestImplementation(Deps.benchmarkJunit)
+    androidTestImplementation(Deps.coroutinesTest)
     androidTestImplementation(Deps.espressoCore)
+    androidTestImplementation(Deps.testExtJunit)
     androidTestImplementation(Deps.testRunner)
 }
 
@@ -82,7 +86,9 @@ tasks.withType(KotlinCompile::class).whenTaskAdded {
     kotlinOptions {
         allWarningsAsErrors = true
         freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-Xuse-experimental=kotlinx.coroutines.FlowPreview"
         )
+        jvmTarget = EmpressLib.jvmTarget
     }
 }

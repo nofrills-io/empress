@@ -61,7 +61,6 @@ class EmpressBuilder<Event : Any, Patch : Any, Request : Any> {
 }
 
 fun <Event : Any, Patch : Any, Request : Any> empressBuilder(body: EmpressBuilder<Event, Patch, Request>.() -> Unit): Empress<Event, Patch, Request> {
-
     val builder = EmpressBuilder<Event, Patch, Request>()
     body(builder)
     return builder.empress

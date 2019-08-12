@@ -25,7 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.Event
 import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.SampleEmpress
+import io.nofrills.empress.test_support.buildEmpress
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.android.asCoroutineDispatcher

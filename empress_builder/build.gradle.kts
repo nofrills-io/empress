@@ -18,5 +18,6 @@ dependencies {
 tasks.withType(KotlinCompile::class).all {
     kotlinOptions {
         allWarningsAsErrors = true
+        jvmTarget = EmpressLib.jvmTarget
     }
 }
