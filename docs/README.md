@@ -106,7 +106,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
     // install our empress
-    empress = enthrone(CounterEmpress())
+    empress = enthrone(SampleEmpress())
     
     // pass events to empress
     decrement_button.setOnClickListener {
