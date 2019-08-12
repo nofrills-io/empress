@@ -6,8 +6,6 @@
 Empress is a framework for managing application state and its representation in UI.
 It's targeted to be used with Android's activities and fragments, but you can also use it standalone.
 
-[API docs](dokka/empress/index.html)
-
 ### Install
 
 TODO
