@@ -1,8 +1,9 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("android.extensions")
-    kotlin("kapt")
 }
 
 android {
@@ -41,13 +42,16 @@ dependencies {
     androidTestImplementation(Deps.espressoCore)
 
     implementation(project(":empress_android"))
-    implementation(project(":empress_annotations"))
     implementation(project(":test_support"))
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)
     implementation(Deps.kotlinStdLib)
 
-    kapt(project(":empress_compiler"))
-
     testImplementation(Deps.junit)
+}
+
+tasks.withType(KotlinCompile::class).whenTaskAdded {
+    kotlinOptions {
+        jvmTarget = EmpressLib.jvmTarget
+    }
 }

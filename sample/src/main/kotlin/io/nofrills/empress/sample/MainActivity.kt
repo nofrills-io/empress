@@ -25,7 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.Event
 import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.SampleEmpress
+import io.nofrills.empress.test_support.buildEmpress
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.android.asCoroutineDispatcher
@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext = mainDispatcher + job
 
-    private val empressApi by lazy { enthrone(SampleEmpress()) }
+    private val empressApi by lazy { enthrone(buildEmpress()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }

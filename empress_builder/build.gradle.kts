@@ -12,6 +12,7 @@ java {
 
 dependencies {
     implementation(Deps.kotlinStdLib)
+    implementation(project(":empress_core"))
 }
 
 tasks.withType(KotlinCompile::class).all {

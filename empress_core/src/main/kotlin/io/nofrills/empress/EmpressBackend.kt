@@ -17,6 +17,7 @@
 package io.nofrills.empress
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.flow.Flow
@@ -81,7 +82,7 @@ class EmpressBackend<Event, Patch : Any, Request> constructor(
         return modelHolder.get()
     }
 
-    override fun send(event: Event) = scope.launch {
+    override fun send(event: Event) = scope.launch(start = CoroutineStart.UNDISPATCHED) {
         processEvent(event)
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress.sample
+package io.nofrills.empress.test_support
 
 import io.nofrills.empress.Model
 import io.nofrills.empress.Requests
@@ -22,9 +22,6 @@ import io.nofrills.empress.annotation.EmpressModule
 import io.nofrills.empress.annotation.Initializer
 import io.nofrills.empress.annotation.OnEvent
 import io.nofrills.empress.annotation.OnRequest
-import io.nofrills.empress.test_support.Event
-import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.Request
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
