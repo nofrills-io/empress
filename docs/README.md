@@ -5,6 +5,8 @@
 Empress is a framework for managing application state and its representation in UI.
 It's targeted to be used with Android's activities and fragments, but you can also use it standalone.
 
+[API docs](../docs/dokka/empress/index.html)
+
 ### Install
 
 TODO
@@ -12,7 +14,7 @@ TODO
 ### Sample usage
 
 Let's say you need to build an app to count things, and send the final value to a server
-(full example in [sample](sample)).
+(full example in [sample](../sample)).
 
 1. First, define your events, patches (model) and requests:
 
@@ -130,4 +132,4 @@ private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
 
 ## License
 
-This project is published under Apache License, Version 2.0 (see the [LICENSE](LICENSE) file for details).
+This project is published under Apache License, Version 2.0 (see the [LICENSE](../LICENSE) file for details).

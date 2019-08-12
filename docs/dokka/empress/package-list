@@ -1,0 +1,6 @@
+$dokka.format:html
+$dokka.linkExtension:html
+$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.Fragment, io.nofrills.empress.Empress((io.nofrills.empress.android.enthrone.Event, io.nofrills.empress.android.enthrone.Patch, io.nofrills.empress.android.enthrone.Request)), kotlin.String, kotlin.Boolean, kotlinx.coroutines.CoroutineDispatcher)io.nofrills.empress.android/androidx.fragment.app.-fragment/enthrone.html
+$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.FragmentActivity, io.nofrills.empress.Empress((io.nofrills.empress.android.enthrone.Event, io.nofrills.empress.android.enthrone.Patch, io.nofrills.empress.android.enthrone.Request)), kotlin.String, kotlin.Boolean, kotlinx.coroutines.CoroutineDispatcher)io.nofrills.empress.android/androidx.fragment.app.-fragment-activity/enthrone.html
+io.nofrills.empress
+io.nofrills.empress.android

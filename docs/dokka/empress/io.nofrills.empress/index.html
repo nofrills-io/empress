@@ -1,0 +1,82 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>io.nofrills.empress - empress</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">empress</a>&nbsp;/&nbsp;<a href="./index.html">io.nofrills.empress</a><br/>
+<br/>
+<h2>Package io.nofrills.empress</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-empress/index.html">Empress</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Empress</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span></code>
+<p>The main interface that needs to be implemented.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-empress-api/index.html">EmpressApi</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Interface for interacting with a running <a href="-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-empress-backend/index.html">EmpressBackend</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-empress-api/index.html"><span class="identifier">EmpressApi</span></a><span class="symbol">&lt;</span><a href="-empress-backend/index.html#Event"><span class="identifier">Event</span></a><span class="symbol">,</span>&nbsp;<a href="-empress-backend/index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<p>Runs and manages an <a href="-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-model/index.html">Model</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Model</span><span class="symbol">&lt;</span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Represents state of your application.
+A model consists of a set of <a href="-model/index.html#Patch">patches</a>, where a <a href="-model/index.html#Patch">Patch</a> is usually
+defined as a sealed class, and each subclass of <a href="-model/index.html#Patch">Patch</a> is related to a single aspect of the state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-request-id/index.html">RequestId</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">RequestId</span></code>
+<p>Represents a running request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-requests/index.html">Requests</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">Requests</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span></code>
+<p>Allows to manage any additional asynchronous requests (e.g. downloading data from a server).</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-update/index.html">Update</a></p>
+</td>
+<td>
+<code><span class="keyword">data</span> <span class="keyword">class </span><span class="identifier">Update</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Represents an update in the <a href="-update/model.html">model</a>, that resulted from processing an <a href="-update/event.html">event</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

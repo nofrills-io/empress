@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Empress - empress</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress</a>&nbsp;/&nbsp;<a href="./index.html">Empress</a><br/>
+<br/>
+<h1>Empress</h1>
+<code><span class="keyword">interface </span><span class="identifier">Empress</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span></code>
+<p>The main interface that needs to be implemented.</p>
+<h3>Parameters</h3>
+<p><a name="Event"></a>
+<code>Event</code> - Signals an event for which we need to take some action.</p>
+<p><a name="Patch"></a>
+<code>Patch</code> - Represents application state. Usually modelled as a sealed class,
+where each subclass is relatively small, and is related to a single aspect of the app.</p>
+<p><a name="Request"></a>
+<code>Request</code> - Denotes an intent for asynchronously obtaining some kind of a resource.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="initializer.html">initializer</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">initializer</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><a href="index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<p>Initializer should return a collection of all possible patches.
+Forgetting to return an initializer for a particular <a href="index.html#Patch">patch subclass</a>,
+may result in an error in <a href="on-event.html">onEvent</a> method.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-event.html">onEvent</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onEvent</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.Empress$onEvent(io.nofrills.empress.Empress.Event, io.nofrills.empress.Model((io.nofrills.empress.Empress.Patch)), io.nofrills.empress.Requests((io.nofrills.empress.Empress.Event, io.nofrills.empress.Empress.Request)))/event">event</span><span class="symbol">:</span>&nbsp;<a href="index.html#Event"><span class="identifier">Event</span></a><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.Empress$onEvent(io.nofrills.empress.Empress.Event, io.nofrills.empress.Model((io.nofrills.empress.Empress.Patch)), io.nofrills.empress.Requests((io.nofrills.empress.Empress.Event, io.nofrills.empress.Empress.Request)))/model">model</span><span class="symbol">:</span>&nbsp;<a href="../-model/index.html"><span class="identifier">Model</span></a><span class="symbol">&lt;</span><a href="index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.Empress$onEvent(io.nofrills.empress.Empress.Event, io.nofrills.empress.Model((io.nofrills.empress.Empress.Patch)), io.nofrills.empress.Requests((io.nofrills.empress.Empress.Event, io.nofrills.empress.Empress.Request)))/requests">requests</span><span class="symbol">:</span>&nbsp;<a href="../-requests/index.html"><span class="identifier">Requests</span></a><span class="symbol">&lt;</span><a href="index.html#Event"><span class="identifier">Event</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#Request"><span class="identifier">Request</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><a href="index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<p>Handles an incoming <a href="on-event.html#io.nofrills.empress.Empress$onEvent(io.nofrills.empress.Empress.Event, io.nofrills.empress.Model((io.nofrills.empress.Empress.Patch)), io.nofrills.empress.Requests((io.nofrills.empress.Empress.Event, io.nofrills.empress.Empress.Request)))/event">event</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="on-request.html">onRequest</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">onRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.Empress$onRequest(io.nofrills.empress.Empress.Request)/request">request</span><span class="symbol">:</span>&nbsp;<a href="index.html#Request"><span class="identifier">Request</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="index.html#Event"><span class="identifier">Event</span></a></code>
+<p>Handles an incoming <a href="on-request.html#io.nofrills.empress.Empress$onRequest(io.nofrills.empress.Empress.Request)/request">request</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

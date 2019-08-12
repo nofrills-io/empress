@@ -1,0 +1,32 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>Model.from - empress</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress</a>&nbsp;/&nbsp;<a href="index.html">Model</a>&nbsp;/&nbsp;<a href="./from.html">from</a><br/>
+<br/>
+<h1>from</h1>
+<a name="io.nofrills.empress.Model.Companion$from(kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.Boolean)"></a>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">from</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.Model.Companion$from(kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.Boolean)/updatedPatches">updatedPatches</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><a href="from.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.Model.Companion$from(kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.Boolean)/skipDuplicates">skipDuplicates</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a>&nbsp;<span class="symbol">=</span>&nbsp;false<span class="symbol">)</span><span class="symbol">: </span><a href="index.html"><span class="identifier">Model</span></a><span class="symbol">&lt;</span><a href="from.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<p>Constructs a model from a collection of patches.
+All patches will be marked as updated.</p>
+<h3>Parameters</h3>
+<p><a name="updatedPatches"></a>
+<code>updatedPatches</code> - Collection of patches from which to create the model.</p>
+<p><a name="skipDuplicates"></a>
+<code>skipDuplicates</code> - If <code>true</code>, any duplicates in <a href="from.html#io.nofrills.empress.Model.Companion$from(kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.Boolean)/updatedPatches">updatedPatches</a> will be skipped;
+if <code>false</code> and duplicates are detected, an exception will be thrown.</p>
+<h3>Exceptions</h3>
+<p><a name="IllegalStateException"></a>
+<code>IllegalStateException</code> - In case <a href="from.html#io.nofrills.empress.Model.Companion$from(kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.Boolean)/skipDuplicates">skipDuplicates</a> is <code>false</code> and <a href="from.html#io.nofrills.empress.Model.Companion$from(kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.Boolean)/updatedPatches">updatedPatches</a> contains two or more instances of the same class.</p>
+<a name="io.nofrills.empress.Model.Companion$from(io.nofrills.empress.Model((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)))"></a>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">from</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.Model.Companion$from(io.nofrills.empress.Model((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)))/model">model</span><span class="symbol">:</span>&nbsp;<a href="index.html"><span class="identifier">Model</span></a><span class="symbol">&lt;</span><a href="from.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.Model.Companion$from(io.nofrills.empress.Model((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)))/updatedPatches">updatedPatches</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><a href="from.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;emptyList()<span class="symbol">)</span><span class="symbol">: </span><a href="index.html"><span class="identifier">Model</span></a><span class="symbol">&lt;</span><a href="from.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<p>Constructs a model from an existing one, but applying a collection of updated patches.
+Only patches from <a href="from.html#io.nofrills.empress.Model.Companion$from(io.nofrills.empress.Model((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)))/updatedPatches">updatedPatches</a> will be marked as updated.</p>
+<h3>Exceptions</h3>
+<p><a name="IllegalStateException"></a>
+<code>IllegalStateException</code> - In case <a href="from.html#io.nofrills.empress.Model.Companion$from(io.nofrills.empress.Model((io.nofrills.empress.Model.Companion.from.Patch)), kotlin.collections.Collection((io.nofrills.empress.Model.Companion.from.Patch)))/updatedPatches">updatedPatches</a> contains two or more instances of the same class.</p>
+</BODY>
+</HTML>

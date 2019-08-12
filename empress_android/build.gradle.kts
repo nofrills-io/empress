@@ -64,7 +64,7 @@ dependencies {
     androidTestImplementation(Deps.testRunner)
 }
 
-tasks.withType(DokkaTask::class) {
+val dokkaTasks = tasks.withType(DokkaTask::class) {
     externalDocumentationLink {
         url = URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
     }
@@ -74,6 +74,12 @@ tasks.withType(DokkaTask::class) {
             .filter { !it.path.contains("test", ignoreCase = true) }
     }
     moduleName = "empress"
+}
+
+tasks.register("publishDokka", Copy::class) {
+    dependsOn(dokkaTasks)
+    from(File(project.buildDir, "dokka"))
+    destinationDir = rootProject.file("docs/dokka")
 }
 
 gradle.taskGraph.beforeTask {
