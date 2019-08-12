@@ -33,7 +33,7 @@ import kotlinx.coroutines.sync.Mutex
 class EmpressBackend<Event, Patch : Any, Request> constructor(
     private val empress: Empress<Event, Patch, Request>,
     private val scope: CoroutineScope,
-    storedPatches: Collection<Patch>?
+    storedPatches: Collection<Patch>? = null
 ) : EmpressApi<Event, Patch> {
 
     private val idProducer = RequestIdProducer()
