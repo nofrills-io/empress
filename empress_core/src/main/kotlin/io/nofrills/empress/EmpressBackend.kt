@@ -94,6 +94,10 @@ class EmpressBackend<Event, Patch : Any, Request> constructor(
         return updates.isClosedForSend
     }
 
+    fun hasEqualClass(empressClass: Class<*>): Boolean {
+        return empress::class.java == empressClass
+    }
+
     private fun interruptIfNeeded() {
         if (interruption.isLocked && requestHolder.isEmpty()) {
             updates.close()
