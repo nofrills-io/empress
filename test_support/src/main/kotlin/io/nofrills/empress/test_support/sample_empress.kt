@@ -45,6 +45,10 @@ sealed class Request {
 }
 
 class SampleEmpress : Empress<Event, Patch, Request> {
+    override fun id(): String {
+        return "sample"
+    }
+
     override fun initializer(): Collection<Patch> = listOf(Patch.Counter(0), Patch.Sender(null))
 
     override fun onEvent(

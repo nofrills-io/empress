@@ -32,8 +32,8 @@ typealias PatchInitializer<P> = () -> P
 typealias EventHandler<E, Patch, Request> = EventHandlerContext<E, Patch, Request>.() -> Collection<Patch>
 typealias RequestHandler<Event, R> = suspend RequestHandlerContext<R>.() -> Event
 
-class EmpressBuilder<Event : Any, Patch : Any, Request : Any> {
-    internal val empress = EmpressFromBuilder<Event, Patch, Request>()
+class EmpressBuilder<Event : Any, Patch : Any, Request : Any>(id: String) {
+    internal val empress = EmpressFromBuilder<Event, Patch, Request>(id)
 
     inline fun <reified P : Patch> initializer(noinline body: () -> P) {
         initializer(body, P::class.java)
@@ -60,18 +60,25 @@ class EmpressBuilder<Event : Any, Patch : Any, Request : Any> {
     }
 }
 
-fun <Event : Any, Patch : Any, Request : Any> empressBuilder(body: EmpressBuilder<Event, Patch, Request>.() -> Unit): Empress<Event, Patch, Request> {
-    val builder = EmpressBuilder<Event, Patch, Request>()
+fun <Event : Any, Patch : Any, Request : Any> empressBuilder(
+    id: String,
+    body: EmpressBuilder<Event, Patch, Request>.() -> Unit
+): Empress<Event, Patch, Request> {
+    val builder = EmpressBuilder<Event, Patch, Request>(id)
     body(builder)
     return builder.empress
 }
 
-internal class EmpressFromBuilder<Event : Any, Patch : Any, Request : Any> :
+internal class EmpressFromBuilder<Event : Any, Patch : Any, Request : Any>(private val id: String) :
     Empress<Event, Patch, Request> {
     private val initializers = mutableMapOf<Class<out Patch>, PatchInitializer<Patch>>()
     private val eventHandlers =
         mutableMapOf<Class<out Event>, EventHandler<Event, Patch, Request>>()
     private val requestHandlers = mutableMapOf<Class<out Request>, RequestHandler<Event, Request>>()
+
+    override fun id(): String {
+        return id
+    }
 
     override fun initializer(): Collection<Patch> {
         return initializers.map { (_, f) -> f.invoke() }

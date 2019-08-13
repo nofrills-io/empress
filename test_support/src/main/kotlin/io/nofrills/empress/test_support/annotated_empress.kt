@@ -25,7 +25,7 @@ import io.nofrills.empress.annotation.OnRequest
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
-@EmpressModule(Event::class, Patch::class, Request::class)
+@EmpressModule("sample", Event::class, Patch::class, Request::class)
 class AnnotatedEmpress {
     @Initializer
     fun initialCounter() = Patch.Counter(0)

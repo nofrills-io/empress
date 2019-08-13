@@ -21,6 +21,7 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class EmpressModule(
+    val id: String,
     val events: KClass<*>,
     val patches: KClass<*>,
     val requests: KClass<*>

@@ -26,6 +26,12 @@ import kotlinx.coroutines.flow.Flow
  * @param Request Denotes an intent for asynchronously obtaining some kind of a resource.
  */
 interface Empress<Event, Patch : Any, Request> {
+    /** Returns an ID for this empress instance.
+     * Useful if you want to install more than one empress into an activity,
+     * or if you want to share the same model instance.
+     */
+    fun id(): String = javaClass.name
+
     /** Initializer should return a collection of all possible patches.
      * Forgetting to return an initializer for a particular [patch subclass][Patch],
      * may result in an error in [onEvent] method.
