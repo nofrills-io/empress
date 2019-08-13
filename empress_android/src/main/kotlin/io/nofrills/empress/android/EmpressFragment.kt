@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment
 import io.nofrills.empress.EmpressBackend
 import io.nofrills.empress.Empress
 import kotlinx.coroutines.*
+import java.lang.IllegalStateException
 import kotlin.coroutines.CoroutineContext
 
 internal class EmpressFragment<Event, Patch : Any, Request> : Fragment(), CoroutineScope {
@@ -69,6 +70,10 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment(), Corout
                 this@EmpressFragment,
                 storedPatches
             )
+        } else {
+            if (!empressBackend.hasEqualClass(empress::class.java)) {
+                throw IllegalStateException("Empress backend is already initialized with different Empress subclass")
+            }
         }
     }
 
