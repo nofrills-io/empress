@@ -44,18 +44,18 @@ class EmpressBuilder<Event : Any, Patch : Any, Request : Any> {
     }
 
     inline fun <reified E : Event> onEvent(noinline body: EventHandler<E, Patch, Request>) {
-        onEvent(body, E::class.java)
+        onEvent(E::class.java, body)
     }
 
-    fun <E : Event> onEvent(body: EventHandler<E, Patch, Request>, eventClass: Class<E>) {
+    fun <E : Event> onEvent(eventClass: Class<E>, body: EventHandler<E, Patch, Request>) {
         empress.addOnEvent(body, eventClass)
     }
 
     inline fun <reified R : Request> onRequest(noinline body: RequestHandler<Event, R>) {
-        onRequest(body, R::class.java)
+        onRequest(R::class.java, body)
     }
 
-    fun <R : Request> onRequest(body: RequestHandler<Event, R>, requestClass: Class<R>) {
+    fun <R : Request> onRequest(requestClass: Class<R>, body: RequestHandler<Event, R>) {
         empress.addOnRequest(body, requestClass)
     }
 }
