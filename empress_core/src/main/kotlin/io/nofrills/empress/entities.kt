@@ -16,6 +16,8 @@
 
 package io.nofrills.empress
 
+import java.lang.IllegalStateException
+
 /** Represents state of your application.
  * A model consists of a set of [patches][Patch], where a [Patch] is usually
  * defined as a sealed class, and each subclass of [Patch] is related to a single aspect of the state.
@@ -82,7 +84,7 @@ data class Model<Patch : Any> internal constructor(
 
     /** Returns a patch instance for the given class. */
     operator fun get(key: Class<out Patch>): Patch {
-        return patchMap.getValue(key)
+        return patchMap[key] ?: throw IllegalStateException("Patch ${key.name} was not initialized.")
     }
 
     /** Returns collection of recently updated patches. */
