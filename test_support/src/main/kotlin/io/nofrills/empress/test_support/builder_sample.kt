@@ -22,7 +22,7 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 fun buildEmpress(): Empress<Event, Patch, Request> {
-    return empressBuilder {
+    return empressBuilder("sample") {
         initializer { Patch.Counter(0) }
         initializer { Patch.Sender(null) }
 

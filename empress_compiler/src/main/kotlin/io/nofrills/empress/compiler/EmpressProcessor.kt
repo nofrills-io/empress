@@ -130,6 +130,7 @@ class EmpressProcessor : AbstractProcessor() {
             .addSuperinterface(empressInterface)
             .primaryConstructor(primaryConstructor)
             .addProperty(empressModuleProperty)
+            .addFunction(buildId(empressModule.id))
             .addFunction(buildPatchInitializer(initialPatches, patchRoot))
             .addFunction(buildEventHandler(eventRoot, patchRoot, requestRoot, eventHandlers))
             .addFunction(buildRequestHandler(eventRoot, requestRoot, requestHandlers))
@@ -144,6 +145,15 @@ class EmpressProcessor : AbstractProcessor() {
         val outFile = File(packageDir, "$className.kt")
         packageDir.mkdirs()
         outFile.writeText(fileSpec.toString())
+    }
+
+    private fun buildId(id: String): FunSpec {
+        return FunSpec
+            .builder(ID_METHOD_NAME)
+            .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+            .returns(String::class)
+            .addCode("return \"$id\"")
+            .build()
     }
 
     private fun buildPatchInitializer(
@@ -473,6 +483,7 @@ class EmpressProcessor : AbstractProcessor() {
 
         private const val EMPRESS_MODULE_FIELD = "empressModule"
 
+        private const val ID_METHOD_NAME = "id"
         private const val INITIALIZER_METHOD_NAME = "initializer"
 
         private const val ON_EVENT_METHOD_NAME = "onEvent"
