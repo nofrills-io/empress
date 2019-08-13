@@ -18,6 +18,13 @@ repositories {
 dependencies {
     implementation("com.github.nofrills-io:empress:<empress_version>")
 }
+
+// Note: skip `::class` if you're using Groovy instead of Kotlin
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).whenTaskAdded {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
 ```
 
 ### Sample usage
