@@ -18,11 +18,13 @@ package io.nofrills.empress.sample
 
 import android.app.Application
 import android.os.StrictMode
+import kotlinx.coroutines.Dispatchers
 
 class SampleApp : Application() {
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {
+            Dispatchers.Main // load main dispatcher before enabling strict mode to avoid the penalty
             StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build())
             StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build())
         }
