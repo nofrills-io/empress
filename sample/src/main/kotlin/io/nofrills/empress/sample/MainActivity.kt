@@ -17,35 +17,27 @@
 package io.nofrills.empress.sample
 
 import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.Event
 import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.buildEmpress
+import io.nofrills.empress.test_support.SampleEmpress
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.flow.collect
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), CoroutineScope {
-    private val job = Job()
-
-    private val mainDispatcher: CoroutineDispatcher by lazy { Handler().asCoroutineDispatcher() }
-
-    override val coroutineContext: CoroutineContext = mainDispatcher + job
-
-    private val empressApi by lazy { enthrone(buildEmpress()) }
+class MainActivity : AppCompatActivity() {
+    private val empressApi by lazy { enthrone(SampleEmpress()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
-        launch {
+        lifecycle.coroutineScope.launch {
             render(empressApi.modelSnapshot().all())
             empressApi.updates().collect { update ->
                 render(update.model.updated(), update.event)
@@ -53,11 +45,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
 
         setupButtonListeners()
-    }
-
-    override fun onDestroy() {
-        job.cancel()
-        super.onDestroy()
     }
 
     private fun setupButtonListeners() {
