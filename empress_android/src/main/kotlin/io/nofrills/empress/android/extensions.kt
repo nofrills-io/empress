@@ -25,8 +25,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
 /** Installs an empress instance into the [activity][this].
- * If you install more than one [Empress] into the same activity,
- * you need to use different [IDs][id] for each instance.
+ * If an empress with the same [id][Empress.id] was already installed,
+ * this method will return an existing instance.
  * @param empress Instance of [Empress] to install.
  * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
  * @param dispatcher A dispatcher to use for [empress].
@@ -41,6 +41,8 @@ fun <Event, Patch : Any, Request> FragmentActivity.enthrone(
 }
 
 /** Installs an empress instance into the [fragment][this].
+ * If an empress with the same [id][Empress.id] was already installed,
+ * this method will return an existing instance.
  * @param empress Instance of [Empress] to install.
  * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
  * @param dispatcher A dispatcher to use for [empress].
