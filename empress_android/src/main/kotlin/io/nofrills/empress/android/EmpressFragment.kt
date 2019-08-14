@@ -70,10 +70,8 @@ internal class EmpressFragment<Event, Patch : Any, Request> : Fragment(), Corout
                 this@EmpressFragment,
                 storedPatches
             )
-        } else {
-            if (!empressBackend.hasEqualClass(empress::class.java)) {
-                throw IllegalStateException("Empress backend is already initialized with different Empress subclass")
-            }
+        } else if (!empressBackend.hasEqualClass(empress::class.java)) {
+            throw IllegalStateException("Empress backend is already initialized with different Empress subclass")
         }
     }
 
