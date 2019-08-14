@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
 /** Runs and manages an [Empress] instance.
- * @param empress Empress interface that we want to run.
+ * @param empress Empress instance that we want to run.
  * @param scope A coroutine scope where events and requests will be processed.
  * @param storedPatches Patches that were previously stored, and should be used instead patches from [initializer][Empress.initializer].
  */
@@ -94,6 +94,7 @@ class EmpressBackend<Event, Patch : Any, Request> constructor(
         return updates.isClosedForSend
     }
 
+    /** Returns `true` if the internal [Empress] class is equal to the given [empressClass]. */
     fun hasEqualClass(empressClass: Class<*>): Boolean {
         return empress::class.java == empressClass
     }

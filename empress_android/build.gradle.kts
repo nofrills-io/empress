@@ -70,8 +70,9 @@ val dokkaTasks = tasks.withType(DokkaTask::class) {
     }
     jdkVersion = EmpressLib.jdkVersionNum
     kotlinTasks {
-        defaultKotlinTasks() + project(":empress_core").tasks.withType(KotlinCompile::class)
-            .filter { !it.path.contains("test", ignoreCase = true) }
+        defaultKotlinTasks() +
+                project(":empress_core").tasks.withType(KotlinCompile::class)
+                    .filter { !it.path.contains("test", ignoreCase = true) }
     }
     moduleName = "empress"
 }

@@ -18,6 +18,7 @@ package io.nofrills.empress.annotation
 
 import kotlin.reflect.KClass
 
+/** Marks a class that can be used to generate an `Empress` instance. */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
 annotation class EmpressModule(
@@ -27,14 +28,30 @@ annotation class EmpressModule(
     val requests: KClass<*>
 )
 
+/** Marks a function that returns initial value for a `Patch`
+ * The function cannot receive any parameters, and should return concrete subclass of a `Patch`.
+ */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Initializer
 
+/** Marks a function that handles an `Event`.
+ * The function can accept the following parameters:
+ * - `Event` (abstract or concrete)
+ * - `Model<Patch>`
+ * - concrete `Patch`
+ * - `Requests<Event, Request>`
+ * Its return type should be `Collection<Patch>`, or `Patch?` (nullable).
+ */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
 annotation class OnEvent(val event: KClass<*>)
 
+/** Marks a function that handles a `Request`.
+ * The function can accept the following parameters:
+ * - `Request` (abstract or concrete)
+ * Its return type should be always `Event`.
+ */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
 annotation class OnRequest(val request: KClass<*>)

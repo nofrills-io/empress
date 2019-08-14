@@ -43,6 +43,7 @@ import javax.tools.Diagnostic.Kind.ERROR
 import kotlin.coroutines.Continuation
 import kotlin.reflect.KClass
 
+/** Annotation processor for generating [Empress] instances. */
 @AutoService(Processor::class)
 class EmpressProcessor : AbstractProcessor() {
     override fun getSupportedAnnotationTypes(): MutableSet<String> {
