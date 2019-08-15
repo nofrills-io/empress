@@ -61,7 +61,8 @@ typealias Initializer<P> = InitializerContext.() -> P
  * @param body Specification for the new [Empress] instance.
  * @return New [Empress].
  */
-fun <Event : Any, Patch : Any, Request : Any> empressBuilder(
+@Suppress("FunctionName")
+fun <Event : Any, Patch : Any, Request : Any> Empress(
     id: String,
     body: EmpressBuilder<Event, Patch, Request>.() -> Unit
 ): Empress<Event, Patch, Request> {

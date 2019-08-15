@@ -17,12 +17,12 @@
 package io.nofrills.empress.test_support
 
 import io.nofrills.empress.Empress
-import io.nofrills.empress.builder.empressBuilder
+import io.nofrills.empress.builder.Empress
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 fun buildEmpress(): Empress<Event, Patch, Request> {
-    return empressBuilder("sample") {
+    return Empress("sample") {
         initializer { Patch.Counter(0) }
         initializer { Patch.Sender(null) }
 
