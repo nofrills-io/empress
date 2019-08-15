@@ -48,6 +48,7 @@ dependencies {
     implementation(Deps.constraintLayout)
     implementation(Deps.kotlinStdLib)
 
+    testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
 }
 
