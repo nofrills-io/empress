@@ -20,11 +20,15 @@ import io.nofrills.empress.Empress
 import io.nofrills.empress.Model
 import io.nofrills.empress.Requests
 
+@DslMarker
+annotation class EmpressDslMarker
+
 /** Context for handling events.
  * @param event Event that has been triggered.
  * @param model Current model.
  * @param requests Allows to create or cancel requests.
  */
+@EmpressDslMarker
 class EventHandlerContext<Event, Patch : Any, Request>(
     val event: Event,
     val model: Model<Patch>,
@@ -34,10 +38,11 @@ class EventHandlerContext<Event, Patch : Any, Request>(
 /** Context for handling requests.
  * @param request Request to handle.
  */
+@EmpressDslMarker
 class RequestHandlerContext<Request>(val request: Request)
 
-/** Creates an initial patch value. */
-typealias PatchInitializer<P> = () -> P
+@EmpressDslMarker
+object InitializerContext
 
 /** Handles an event.
  * Event handler should return a collection of patches that have changed.
@@ -47,6 +52,9 @@ typealias EventHandler<E, Patch, Request> = EventHandlerContext<E, Patch, Reques
 
 /** Handles (executes) a request. */
 typealias RequestHandler<Event, R> = suspend RequestHandlerContext<R>.() -> Event
+
+/** Creates an initial patch value. */
+typealias Initializer<P> = InitializerContext.() -> P
 
 /** Builds an [Empress] instance.
  * @param id ID for [Empress] instance.
@@ -63,16 +71,17 @@ fun <Event : Any, Patch : Any, Request : Any> empressBuilder(
 }
 
 /** Allows to build an [Empress] instance. */
+@EmpressDslMarker
 class EmpressBuilder<Event : Any, Patch : Any, Request : Any> internal constructor(private val id: String) {
     private val builderData = EmpressBuilderData<Event, Patch, Request>()
 
     /** Defines an initializer for a [Patch]. */
-    inline fun <reified P : Patch> initializer(noinline body: () -> P) {
+    inline fun <reified P : Patch> initializer(noinline body: Initializer<P>) {
         initializer(body, P::class.java)
     }
 
     /** @see initializer */
-    fun <P : Patch> initializer(body: () -> P, patchClass: Class<P>) {
+    fun <P : Patch> initializer(body: Initializer<P>, patchClass: Class<P>) {
         builderData.addInitializer(body, patchClass)
     }
 
@@ -107,13 +116,13 @@ class EmpressBuilder<Event : Any, Patch : Any, Request : Any> internal construct
 }
 
 private class EmpressBuilderData<Event, Patch : Any, Request> {
-    internal val initializers = mutableMapOf<Class<out Patch>, PatchInitializer<Patch>>()
+    internal val initializers = mutableMapOf<Class<out Patch>, Initializer<Patch>>()
     internal val eventHandlers =
         mutableMapOf<Class<out Event>, EventHandler<Event, Patch, Request>>()
     internal val requestHandlers =
         mutableMapOf<Class<out Request>, RequestHandler<Event, Request>>()
 
-    internal fun <P : Patch> addInitializer(initializer: () -> P, patchCls: Class<P>) {
+    internal fun <P : Patch> addInitializer(initializer: Initializer<P>, patchCls: Class<P>) {
         if (initializers.put(patchCls, initializer) != null) {
             throw IllegalStateException("Initializer for $patchCls was already added.")
         }
@@ -142,7 +151,7 @@ private class EmpressBuilderData<Event, Patch : Any, Request> {
 
 private class EmpressFromBuilder<Event : Any, Patch : Any, Request : Any>(
     private val id: String,
-    private val initializers: Collection<PatchInitializer<Patch>>,
+    private val initializers: Collection<Initializer<Patch>>,
     private val eventHandlers: Map<Class<out Event>, EventHandler<Event, Patch, Request>>,
     private val requestHandlers: Map<Class<out Request>, RequestHandler<Event, Request>>
 ) : Empress<Event, Patch, Request> {
@@ -152,7 +161,7 @@ private class EmpressFromBuilder<Event : Any, Patch : Any, Request : Any>(
     }
 
     override fun initializer(): Collection<Patch> {
-        return initializers.map { it.invoke() }
+        return initializers.map { it.invoke(InitializerContext) }
     }
 
     override fun onEvent(
