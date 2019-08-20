@@ -150,8 +150,8 @@ private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
 The core modules (`empress_core` and `empress_android`) are stable and tested,
 but considered alpha, and their public API may change without backwards compatibility.
 
-Modules `empress_builder`, `empress_annotations` and `empress_compiler` are experimental
-and are not published on jitpack repository.
+Module `empress_builder` is experimental
+and is not published on jitpack repository.
 
 ## License
 

@@ -4,7 +4,6 @@ plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("android.extensions")
-    kotlin("kapt")
 }
 
 android {
@@ -42,11 +41,8 @@ androidExtensions {
 
 dependencies {
     implementation(project(":empress_android"))
-    implementation(project(":empress_annotations"))
     implementation(project(":empress_builder"))
     implementation(Deps.fragment)
-
-    kapt(project(":empress_compiler"))
 }
 
 tasks.withType(KotlinCompile::class).whenTaskAdded {

@@ -1,12 +1,9 @@
-import java.net.URL
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("android.extensions")
-    id("org.jetbrains.dokka-android") version "0.9.18"
 }
 
 android {
@@ -62,25 +59,6 @@ dependencies {
     androidTestImplementation(Deps.espressoCore)
     androidTestImplementation(Deps.testExtJunit)
     androidTestImplementation(Deps.testRunner)
-}
-
-val dokkaTasks = tasks.withType(DokkaTask::class) {
-    externalDocumentationLink {
-        url = URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
-    }
-    jdkVersion = EmpressLib.jdkVersionNum
-    kotlinTasks {
-        defaultKotlinTasks() +
-                project(":empress_core").tasks.withType(KotlinCompile::class)
-                    .filter { !it.path.contains("test", ignoreCase = true) }
-    }
-    moduleName = "empress"
-}
-
-tasks.register("publishDokka", Copy::class) {
-    dependsOn(dokkaTasks)
-    from(File(project.buildDir, "dokka"))
-    destinationDir = rootProject.file("docs/dokka")
 }
 
 gradle.taskGraph.beforeTask {

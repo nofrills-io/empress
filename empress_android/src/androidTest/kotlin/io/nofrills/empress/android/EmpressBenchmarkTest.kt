@@ -42,26 +42,8 @@ class EmpressBenchmarkTest {
     }
 
     @Test
-    fun annotationBuilder() {
-        benchmarkRule.measureRepeated {
-            Empress_AnnotatedEmpress(AnnotatedEmpress())
-        }
-    }
-
-    @Test
     fun dslBuilderSending() {
         val empress = buildEmpress()
-        benchmarkRule.measureRepeated {
-            val scope = TestCoroutineScope()
-            val api = EmpressBackend(empress, scope, null)
-            runApiTest(api)
-            scope.cleanupTestCoroutines()
-        }
-    }
-
-    @Test
-    fun annotationBuilderSending() {
-        val empress = Empress_AnnotatedEmpress(AnnotatedEmpress())
         benchmarkRule.measureRepeated {
             val scope = TestCoroutineScope()
             val api = EmpressBackend(empress, scope, null)
