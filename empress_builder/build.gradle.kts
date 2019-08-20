@@ -1,5 +1,5 @@
+import org.jetbrains.dokka.gradle.DokkaAndroidTask
 import java.net.URL
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -25,18 +25,24 @@ tasks.withType(KotlinCompile::class).all {
     }
 }
 
-val dokkaTasks = tasks.withType(DokkaTask::class) {
+val dokkaTasks = tasks.withType(DokkaAndroidTask::class) {
     externalDocumentationLink {
         url = URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
     }
     jdkVersion = EmpressLib.jdkVersionNum
     val getTasks: (String) -> List<Task> = { projectPath ->
         project(projectPath).tasks.withType(KotlinCompile::class)
-            .filter { !it.path.contains("test", ignoreCase = true) }
+            .filter { !it.name.contains("test", ignoreCase = true) }
+            .filter { !it.name.contains("debug", ignoreCase = true) }
     }
     kotlinTasks {
         defaultKotlinTasks() + getTasks(":empress_core") + getTasks(":empress_android")
     }
+    includes = listOf(
+        "${rootProject.projectDir}/empress_core/module_doc.md",
+        "${rootProject.projectDir}/empress_android/module_doc.md",
+        "${rootProject.projectDir}/empress_builder/module_doc.md"
+    )
     moduleName = "empress"
 }
 

@@ -20,6 +20,7 @@ import io.nofrills.empress.Empress
 import io.nofrills.empress.Model
 import io.nofrills.empress.Requests
 
+/** DSL Marker for [EmpressBuilder]. */
 @DslMarker
 annotation class EmpressDslMarker
 
@@ -41,6 +42,7 @@ class EventHandlerContext<Event, Patch : Any, Request>(
 @EmpressDslMarker
 class RequestHandlerContext<Request>(val request: Request)
 
+/** Context for patch initializers. */
 @EmpressDslMarker
 object InitializerContext
 
