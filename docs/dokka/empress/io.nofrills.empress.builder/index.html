@@ -1,0 +1,138 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>io.nofrills.empress.builder - empress</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">empress</a>&nbsp;/&nbsp;<a href="./index.html">io.nofrills.empress.builder</a><br/>
+<br/>
+<h2>Package io.nofrills.empress.builder</h2>
+<p>Simple DSL for defining an Empress.</p>
+<p>By using the <a href="-empress.html">io.nofrills.empress.builder.Empress</a> builder function, you can quickly
+define your custom implementation of <a href="../io.nofrills.empress/-empress/index.html">io.nofrills.empress.Empress</a> interface. For example:</p>
+<pre><code class="lang-kotlin">val empress = Empress("myEmpress") {
+    initializer { /* return initial value for one of your Patch subclasses */ }
+    initializer { /* another initializer */ }
+
+    onEvent&lt;Event.MyEvent&gt; {
+        // handle an event
+        // return a list of patches that have changed (or an empty list if nothing's changed)
+    }
+
+    onEvent&lt;Event.AnotherEvent&gt; {
+        // handle another event
+    }
+
+    onRequest&lt;Request.SomeRequest&gt; {
+        // handle a request
+        // you can use suspending functions here
+        // return an event
+    }
+}
+</code></pre>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-empress-builder/index.html">EmpressBuilder</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EmpressBuilder</span><span class="symbol">&lt;</span><span class="identifier">Event</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Allows to build an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-event-handler-context/index.html">EventHandlerContext</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EventHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span></code>
+<p>Context for handling events.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-initializer-context.html">InitializerContext</a></p>
+</td>
+<td>
+<code><span class="keyword">object </span><span class="identifier">InitializerContext</span></code>
+<p>Context for patch initializers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-request-handler-context/index.html">RequestHandlerContext</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">RequestHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">Request</span><span class="symbol">&gt;</span></code>
+<p>Context for handling requests.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Annotations</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-empress-dsl-marker/index.html">EmpressDslMarker</a></p>
+</td>
+<td>
+<code><span class="keyword">annotation</span> <span class="keyword">class </span><span class="identifier">EmpressDslMarker</span></code>
+<p>DSL Marker for <a href="-empress-builder/index.html">EmpressBuilder</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Type Aliases</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-event-handler.html">EventHandler</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">EventHandler</span><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">, </span><span class="identifier">Patch</span><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;<a href="-event-handler-context/index.html"><span class="identifier">EventHandlerContext</span></a><span class="symbol">&lt;</span><a href="-event-handler.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="-event-handler.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">,</span>&nbsp;<a href="-event-handler.html#Request"><span class="identifier">Request</span></a><span class="symbol">&gt;</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><a href="-event-handler.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<p>Handles an event.
+Event handler should return a collection of patches that have changed.
+If nothing has changed, it should return an empty collection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-initializer.html">Initializer</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">Initializer</span><span class="symbol">&lt;</span><span class="identifier">P</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;<a href="-initializer-context.html"><span class="identifier">InitializerContext</span></a><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="-initializer.html#P"><span class="identifier">P</span></a></code>
+<p>Creates an initial patch value.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-request-handler.html">RequestHandler</a></p>
+</td>
+<td>
+<code><span class="keyword">typealias </span><span class="identifier">RequestHandler</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">R</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="keyword">suspend </span><a href="-request-handler-context/index.html"><span class="identifier">RequestHandlerContext</span></a><span class="symbol">&lt;</span><a href="-request-handler.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="-request-handler.html#Event"><span class="identifier">Event</span></a></code>
+<p>Handles (executes) a request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-empress.html">Empress</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Event</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span> <span class="identifier">Empress</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.builder$Empress(kotlin.String, kotlin.Function1((io.nofrills.empress.builder.EmpressBuilder((io.nofrills.empress.builder.Empress.Event, io.nofrills.empress.builder.Empress.Patch, io.nofrills.empress.builder.Empress.Request)), kotlin.Unit)))/id">id</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.builder$Empress(kotlin.String, kotlin.Function1((io.nofrills.empress.builder.EmpressBuilder((io.nofrills.empress.builder.Empress.Event, io.nofrills.empress.builder.Empress.Patch, io.nofrills.empress.builder.Empress.Request)), kotlin.Unit)))/body">body</span><span class="symbol">:</span>&nbsp;<a href="-empress-builder/index.html"><span class="identifier">EmpressBuilder</span></a><span class="symbol">&lt;</span><a href="-empress.html#Event"><span class="identifier">Event</span></a><span class="symbol">,</span>&nbsp;<a href="-empress.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">,</span>&nbsp;<a href="-empress.html#Request"><span class="identifier">Request</span></a><span class="symbol">&gt;</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../io.nofrills.empress/-empress/index.html"><span class="identifier">Empress</span></a><span class="symbol">&lt;</span><a href="-empress.html#Event"><span class="identifier">Event</span></a><span class="symbol">,</span>&nbsp;<a href="-empress.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">,</span>&nbsp;<a href="-empress.html#Request"><span class="identifier">Request</span></a><span class="symbol">&gt;</span></code>
+<p>Builds an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
