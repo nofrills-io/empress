@@ -8,6 +8,29 @@
 <a href="../index.html">empress</a>&nbsp;/&nbsp;<a href="./index.html">io.nofrills.empress</a><br/>
 <br/>
 <h2>Package io.nofrills.empress</h2>
+<p>Core functionality.</p>
+<h2>Usage</h2>
+<p>First, you need to define three (sealed) classes: <code>Event</code>, <code>Patch</code> and <code>Request</code>
+(though you can call them whatever you want).
+Have a look at <a href="-empress/index.html">io.nofrills.empress.Empress</a> interface, "<em>Parameters</em>" section for short
+description about what each class is supposed to do.</p>
+<p>Then, define and implement an <code>Empress</code> interface:</p>
+<pre><code class="lang-kotlin">class MyEmpress : Empress&lt;Event, Patch, Request&gt; {
+    // implementation
+}
+</code></pre>
+<p><em>Note</em>: Instead of implementing <a href="-empress/index.html">io.nofrills.empress.Empress</a> interface,
+you can also use an <a href="../io.nofrills.empress.builder/index.html">Empress DSL</a> builder function.</p>
+<p>Once you have defined your <a href="-empress/index.html">io.nofrills.empress.Empress</a>, you need a way to run it.
+If you want to use it with <strong>Android</strong> activity or fragment, refer to <a href="../io.nofrills.empress.android/index.html">io.nofrills.empress.android</a>.</p>
+<p>Otherwise, for standalone usage (e.g. in a unit test)
+you should use <a href="-empress-backend/index.html">io.nofrills.empress.EmpressBackend</a> like below:</p>
+<pre><code class="lang-kotlin">val empress = MyEmpress()
+val coroutineScope = ... // e.g. TestCoroutineScope or your activity's scope
+val api: EmpressApi&lt;Event, Patch&gt; = EmpressBackend(empress, scope)
+</code></pre>
+<p>Finally you can send events and listen for updates using <a href="-empress-api/index.html">EmpressApi</a> interface
+(which is implemented by <a href="-empress-backend/index.html">EmpressBackend</a>).</p>
 <h3>Types</h3>
 <table>
 <tbody>
