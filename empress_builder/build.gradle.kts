@@ -16,11 +16,16 @@ java {
 dependencies {
     implementation(Deps.kotlinStdLib)
     implementation(project(":empress_core"))
+    testImplementation(Deps.junit)
+    testImplementation(Deps.coroutinesTest)
 }
 
 tasks.withType(KotlinCompile::class).all {
     kotlinOptions {
         allWarningsAsErrors = true
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+        )
         jvmTarget = EmpressLib.jvmTarget
     }
 }
