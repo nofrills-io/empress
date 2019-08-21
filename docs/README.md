@@ -41,10 +41,11 @@ sealed class Event {
     object Decrement : Event()
     object Increment : Event()
     object SendCounter : Event()
+    object CounterSent : Event()
 }
 
-// Very often you'd use a single class to represent your model.
-// However in empress your model is defined as a set of subclasses. 
+// In empress your model is defined as a set of subclasses,
+// where each subclass is responsible for single aspect of application state. 
 sealed class Patch {
     // In case our process is temporarily killed by the OS, we can make sure
     // our state will be brought back, by implementing `Parcelable`
@@ -62,45 +63,56 @@ sealed class Request {
 }
 ```
 
-2. Next, define your empress, by implementing an interface:
+2. Next, define your empress. You can either implement an [Empress](dokka/empress/io.nofrills.empress/-empress/index.html) interface directly,
+or use [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
 
 ```kotlin
-class SampleEmpress : Empress<Event, Patch, Request> {
-    override fun initializer(): Collection<Patch> {
-        // return initial values for all of your patches — it represents starting state of your application
-        return listOf(Patch.Counter(0), Patch.Sender(null))
+val empress = Empress("sampleEmpress") {
+    initializer { Patch.Counter(0) }
+    initializer { Patch.Sender(null) }
+
+    onEvent<Event.Decrement> {
+        val counter = model.get<Patch.Counter>()
+        // return a collection of patches that have changed
+        listOf(counter.copy(count = counter.count - 1))
+    }
+
+    onEvent<Event.Increment> {
+        val counter = model.get<Patch.Counter>()
+        listOf(counter.copy(count = counter.count + 1))
     }
     
-    override fun onEvent(
-        event: Event,
-        model: Model<Patch>,
-        requests: Requests<Event, Request>
-    ): Collection<Patch> {
-        // Here, we return only patches that have changed.
-        // If nothing has changed, we could return an empty list.
-        val counter: Patch.Counter = model.get()
-        return when (event) {
-            Event.Decrement -> listOf(counter.copy(count = counter.count - 1))
-            Event.Increment -> listOf(counter.copy(count = counter.count + 1))
-            Event.SendCounter -> run {
-                // We need to make an asynchronous request to send the counter value.
-                // For that we create an instance of `Request.SendCounter` and pass it down.
-                val requestId = requests.post(Request.SendCounter(counter.count))
-                listOf(Patch.Sender(requestId))
-            }
+    onEvent<Event.SendCounter> {
+        val sender = model.get<Patch.Sender>()
+        if (sender.requestId != null) {
+            // Counter value is already being sent,
+            // so we return an empty collection, since there's nothing to be done.
+            listOf()
+            
+            // Alternatively, we could cancel current request 
+            // (using requests.cancel(sender.requestId)) 
+            // and then create a new one.
+        } else {
+            // We create a request and queue it..
+            val requestId = requests.post(Request.SendCounter(counter.count))
+            
+            // ..while returning an updated patch.
+            listOf(Patch.Sender(requestId))
         }
     }
     
-    override suspend fun onRequest(request: Request): Event {
-        // Handle the requests. This function is off the main thread,
-        // and is suspendable, so you can call remote servers, read files etc.
-        // At the end, you return an event (which can contain a payload, e.g. server response)
-        return when (request) {
-            is Request.SendCounter -> run {
-                delay(abs(request.counterValue) * 1000L)
-                Event.CounterSent
-            }
+    onEvent<Event.CounterSent> {
+        val sender = model.get<Patch.Sender>()
+        if (sender.requestId == null) {
+            listOf()
+        } else {
+            listOf(Patch.Sender(null))
         }
+    }
+
+    onRequest<Request.SendCounter> {
+        delay(abs(request.counterValue) * 1000L)
+        Event.CounterSent
     }
 }
 ```
@@ -108,28 +120,28 @@ class SampleEmpress : Empress<Event, Patch, Request> {
 3. In your `Activity` or `Fragment`, attach your empress, send events and listen for updates:
 
 ```kotlin
-private lateinit var empress: EmpressApi<Event, Patch>
+private lateinit var api: EmpressApi<Event, Patch>
 
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
     // install our empress
-    empress = enthrone(SampleEmpress())
+    api = enthrone(empress)
     
     // pass events to empress
     decrement_button.setOnClickListener {
-        empress.send(Event.Decrement)
+        api.send(Event.Decrement)
     }
     increment_button.setOnClickListener {
-        empress.send(Event.Decrement)
+        api.send(Event.Decrement)
     }
 
     launch {
         // first, we can render the whole UI
-        render(empress.modelSnapshot().all())
+        render(api.modelSnapshot().all())
 
         // then we listen for updates and render only the updated patches
-        empress.updates().collect { update ->
+        api.updates().collect { update ->
             render(update.model.updated(), update.event)
         }
     }
