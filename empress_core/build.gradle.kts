@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java-library")
     kotlin("jvm")
+    id("jacoco")
 }
 
 java {
@@ -32,6 +33,10 @@ tasks.withType(Test::class) {
     testLogging {
         showStandardStreams = false
     }
+}
+
+tasks.named("check") {
+    dependsOn(tasks.withType(JacocoReport::class))
 }
 
 apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")

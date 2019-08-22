@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java-library")
     kotlin("jvm")
+    id("jacoco")
     id("org.jetbrains.dokka-android") version "0.9.18"
 }
 
@@ -28,6 +29,10 @@ tasks.withType(KotlinCompile::class).all {
         )
         jvmTarget = EmpressLib.jvmTarget
     }
+}
+
+tasks.named("check") {
+    dependsOn(tasks.withType(JacocoReport::class))
 }
 
 val dokkaTasks = tasks.withType(DokkaAndroidTask::class) {
