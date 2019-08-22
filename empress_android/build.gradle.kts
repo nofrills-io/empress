@@ -94,7 +94,7 @@ val jacocoTestReport = tasks.register("jacocoTestReport", JacocoReport::class) {
     reports {
         csv.isEnabled = false
         html.isEnabled = true
-        xml.isEnabled = false
+        xml.isEnabled = true
     }
 
     val fileFilter = listOf(
