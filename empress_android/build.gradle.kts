@@ -89,7 +89,7 @@ tasks.withType(Test::class) {
 val jacocoTestReport = tasks.register("jacocoTestReport", JacocoReport::class) {
     group = "Verification"
     description = "Generates code coverage report."
-    dependsOn("testDebugUnitTest")
+    dependsOn(tasks.withType(Test::class))
 
     reports {
         csv.isEnabled = false

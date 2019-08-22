@@ -31,6 +31,10 @@ tasks.withType(KotlinCompile::class).all {
     }
 }
 
+tasks.withType(JacocoReport::class) {
+    dependsOn(tasks.withType(Test::class))
+}
+
 tasks.named("check") {
     dependsOn(tasks.withType(JacocoReport::class))
 }
