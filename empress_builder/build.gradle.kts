@@ -33,6 +33,10 @@ tasks.withType(KotlinCompile::class).all {
 
 tasks.withType(JacocoReport::class) {
     dependsOn(tasks.withType(Test::class))
+    reports {
+        html.isEnabled = true
+        xml.isEnabled = true
+    }
 }
 
 tasks.named("check") {
