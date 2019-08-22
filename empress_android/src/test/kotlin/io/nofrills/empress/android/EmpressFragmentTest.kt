@@ -23,17 +23,20 @@ import androidx.fragment.app.testing.launchFragment
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import io.nofrills.empress.Empress
 import io.nofrills.empress.Model
 import io.nofrills.empress.RequestId
+import io.nofrills.empress.Requests
 import io.nofrills.empress.test_support.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.IllegalStateException
 
 @RunWith(RobolectricTestRunner::class)
 class EmpressFragmentTest {
@@ -108,6 +111,48 @@ class EmpressFragmentTest {
         }
     }
 
+    @Test
+    fun doubleEnthrone() {
+        val scenario = launchFragment<Fragment>()
+        scenario.onFragment { fragment ->
+            val backend = fragment.enthrone(SampleEmpress())
+            assertSame(backend, fragment.enthrone(SampleEmpress()))
+        }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun doubleEnthroneWithInvalidEmpressInFragment() {
+        val scenario = launchFragment<Fragment>()
+        scenario.onFragment { fragment ->
+            fragment.enthrone(SampleEmpress("my_empress"))
+            fragment.enthrone(EmptyEmpress("my_empress"))
+        }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun doubleEnthroneWithInvalidEmpressInActivity() {
+        val intent = SampleActivity.newIntent(
+            InstrumentationRegistry.getInstrumentation().context,
+            false,
+            SampleActivity.DispatcherType.SINGLE
+        )
+        val activityScenario: ActivityScenario<SampleActivity> = ActivityScenario.launch(intent)
+        val scenario = Scenario.FromActivity(activityScenario)
+        scenario.onScenario { activity ->
+            activity.enthrone(EmptyEmpress(SampleEmpress::class.java.name))
+        }
+    }
+
+    @Test
+    fun twoEmpressesWithDistinctIds() {
+        val scenario = launchFragment<Fragment>()
+        scenario.onFragment { fragment ->
+            val api1 = fragment.enthrone(SampleEmpress("empress1"))
+            val api2 = fragment.enthrone(SampleEmpress("empress2"))
+            assertNotSame(api1, api2)
+        }
+    }
+
     private fun testWithActivity(retainEmpressInstance: Boolean, finalModel: Model<Patch>) {
         val intent = SampleActivity.newIntent(
             InstrumentationRegistry.getInstrumentation().context,
@@ -162,7 +207,7 @@ class EmpressFragmentTest {
     }
 
     /** Generic scenario that can be used with Activities and Fragments. */
-    internal sealed class Scenario<T> {
+    private sealed class Scenario<T> {
         abstract fun moveToState(newState: Lifecycle.State)
         abstract fun onScenario(fn: (T) -> Unit)
         abstract fun recreate()
@@ -195,6 +240,26 @@ class EmpressFragmentTest {
             override fun recreate() {
                 activityScenario.recreate()
             }
+        }
+    }
+
+    private class EmptyEmpress(private val id: String? = null) : Empress<Event, Patch, Request> {
+        override fun id(): String {
+            return id ?: super.id()
+        }
+
+        override fun initializer(): Collection<Patch> = emptyList()
+
+        override fun onEvent(
+            event: Event,
+            model: Model<Patch>,
+            requests: Requests<Event, Request>
+        ): Collection<Patch> {
+            return emptyList()
+        }
+
+        override suspend fun onRequest(request: Request): Event {
+            error("mock")
         }
     }
 }

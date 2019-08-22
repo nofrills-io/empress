@@ -43,6 +43,8 @@ class EmpressBackendTest {
 
     @Test
     fun simpleUsage() = usingTestScope { tested ->
+        assertEquals("io.nofrills.empress.TestEmpress", empress.id())
+        assertTrue(tested.hasEqualClass(TestEmpress::class.java))
         assertEquals(baseModel, tested.modelSnapshot())
 
         val deferredUpdates = async {
@@ -109,10 +111,8 @@ class EmpressBackendTest {
         val updates = deferredUpdates.await()
 
         assertEquals(1, updates.size)
-        assertEquals(
-            Update<Event, Patch>(Model.from(baseModel, listOf(Patch.Counter(1))), Event.Decrement),
-            updates[0]
-        )
+        assertEquals(Model.from(baseModel, listOf(Patch.Counter(1))), updates[0].model)
+        assertEquals(Event.Decrement, updates[0].event)
     }
 
     @Test
@@ -291,6 +291,26 @@ class EmpressBackendTest {
                 model3,
                 Event.Loaded
             ), updates[3]
+        )
+    }
+
+    @Test
+    fun cancelNonExistentRequest() = usingTestScope { tested ->
+        val deferredUpdates = async {
+            tested.updates().toList()
+        }
+
+        launch {
+            tested.send(Event.CancelSending)
+            tested.interrupt()
+        }
+
+        val updates = deferredUpdates.await()
+        assertEquals(
+            Update(
+                Model.from(baseModel, emptyList()),
+                Event.CancelSending
+            ), updates[0]
         )
     }
 
