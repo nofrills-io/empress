@@ -52,7 +52,7 @@ class EmpressBuilderTest {
             }
 
             onRequest<Request.Send> {
-                delay(1000)
+                delay(request.payload)
                 Event.Sent
             }
         }
@@ -84,7 +84,7 @@ class EmpressBuilderTest {
 
         assertEquals(
             listOf(Patch.Sender(RequestId(1))),
-            tested.onEvent(Event.Submit("hello"), model, MockRequests())
+            tested.onEvent(Event.Submit(3), model, MockRequests())
         )
     }
 
@@ -96,7 +96,7 @@ class EmpressBuilderTest {
 
     @Test
     fun requestHandlers() = scope.runBlockingTest {
-        assertEquals(Event.Sent, tested.onRequest(Request.Send("hello")))
+        assertEquals(Event.Sent, tested.onRequest(Request.Send(1)))
     }
 
     @Test(expected = NoSuchElementException::class)
@@ -131,7 +131,7 @@ class EmpressBuilderTest {
 
 internal sealed class Event {
     object Click : Event()
-    data class Submit(val payload: String) : Event()
+    data class Submit(val payload: Long) : Event()
     object Sent : Event()
 }
 
@@ -141,7 +141,7 @@ internal sealed class Patch {
 }
 
 internal sealed class Request {
-    data class Send(val payload: String) : Request()
+    data class Send(val payload: Long) : Request()
     object Unhandled : Request()
 }
 
