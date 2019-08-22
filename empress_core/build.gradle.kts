@@ -35,6 +35,10 @@ tasks.withType(Test::class) {
     }
 }
 
+tasks.withType(JacocoReport::class) {
+    dependsOn(tasks.withType(Test::class))
+}
+
 tasks.named("check") {
     dependsOn(tasks.withType(JacocoReport::class))
 }
