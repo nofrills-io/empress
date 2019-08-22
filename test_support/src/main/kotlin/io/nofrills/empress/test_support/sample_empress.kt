@@ -44,7 +44,11 @@ sealed class Request {
     object GetFailure : Request()
 }
 
-class SampleEmpress : Empress<Event, Patch, Request> {
+class SampleEmpress(private val id: String? = null) : Empress<Event, Patch, Request> {
+    override fun id(): String {
+        return id ?: super.id()
+    }
+
     override fun initializer(): Collection<Patch> = listOf(Patch.Counter(0), Patch.Sender(null))
 
     override fun onEvent(

@@ -102,6 +102,12 @@ class ModelTest {
         Model.from(source, updates)
     }
 
+    @Test(expected = IllegalStateException::class)
+    fun withUninitializedPatch() {
+        val model: Model<Patch> = Model.from(listOf(Patch.Info("a")))
+        model.get<Patch.Network>()
+    }
+
     internal sealed class Patch {
         data class Info(val name: String) : Patch()
         data class Network(val isSending: Boolean) : Patch()
