@@ -1,9 +1,11 @@
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("android.extensions")
+    id("jacoco")
 }
 
 android {
@@ -77,5 +79,53 @@ tasks.withType(KotlinCompile::class).whenTaskAdded {
         jvmTarget = EmpressLib.jvmTarget
     }
 }
+
+tasks.withType(Test::class) {
+    extensions.configure(JacocoTaskExtension::class) {
+        isIncludeNoLocationClasses = true
+    }
+}
+
+val jacocoTestReport = tasks.register("jacocoTestReport", JacocoReport::class) {
+    group = "Verification"
+    description = "Generates code coverage report."
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        csv.isEnabled = false
+        html.isEnabled = true
+        xml.isEnabled = false
+    }
+
+    val fileFilter = listOf(
+        "**/*Test*.*",
+        "**/AutoValue_*.*",
+        "**/*JavascriptBridge.class",
+        "**/R.class",
+        "**/R$*.class",
+        "**/Manifest*.*",
+        "android/**/*.*",
+        "**/BuildConfig.*",
+        "**/*\$ViewBinder*.*",
+        "**/*\$ViewInjector*.*",
+        "**/Lambda$*.class",
+        "**/Lambda.class",
+        "**/*Lambda.class",
+        "**/*Lambda*.class",
+        "**/*\$InjectAdapter.class",
+        "**/*\$ModuleAdapter.class",
+        "**/*\$ViewInjector*.class"
+    )
+    val kotlinDebugTree = fileTree("$buildDir/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val mainSrc = "${project.projectDir}/src/main/kotlin"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(kotlinDebugTree))
+    executionData.setFrom(fileTree(buildDir) {
+        include(setOf("jacoco/testDebugUnitTest.exec"))
+    })
+}
+
+tasks.named("check").dependsOn(jacocoTestReport)
 
 apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")
