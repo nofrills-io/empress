@@ -20,6 +20,7 @@ import io.nofrills.empress.Empress
 import io.nofrills.empress.Model
 import io.nofrills.empress.RequestId
 import io.nofrills.empress.Requests
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -30,6 +31,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import java.lang.IllegalStateException
 
+@ExperimentalCoroutinesApi
 class EmpressBuilderTest {
     private lateinit var scope: TestCoroutineScope
     private lateinit var tested: Empress<Event, Patch, Request>

@@ -25,6 +25,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class EmpressBackendTest {
     private val baseModel = Model.from(
         listOf(

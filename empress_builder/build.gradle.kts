@@ -24,9 +24,6 @@ dependencies {
 tasks.withType(KotlinCompile::class).all {
     kotlinOptions {
         allWarningsAsErrors = true
-        freeCompilerArgs = freeCompilerArgs + listOf(
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
-        )
         jvmTarget = EmpressLib.jvmTarget
     }
 }

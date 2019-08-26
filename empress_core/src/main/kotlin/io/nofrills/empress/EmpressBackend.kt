@@ -16,13 +16,10 @@
 
 package io.nofrills.empress
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
 /** Runs and manages an [Empress] instance.
@@ -30,6 +27,7 @@ import kotlinx.coroutines.sync.Mutex
  * @param scope A coroutine scope where events and requests will be processed.
  * @param storedPatches Patches that were previously stored, and should be used instead patches from [initializer][Empress.initializer].
  */
+@UseExperimental(ExperimentalCoroutinesApi::class)
 class EmpressBackend<Event, Patch : Any, Request> constructor(
     private val empress: Empress<Event, Patch, Request>,
     private val scope: CoroutineScope,
@@ -65,6 +63,8 @@ class EmpressBackend<Event, Patch : Any, Request> constructor(
     }
 
     private val updates = BroadcastChannel<Update<Event, Patch>>(UPDATES_CHANNEL_CAPACITY)
+
+    @UseExperimental(FlowPreview::class)
     private val updatesFlow: Flow<Update<Event, Patch>> = updates.asFlow()
 
     init {

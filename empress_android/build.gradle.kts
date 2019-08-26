@@ -72,10 +72,6 @@ gradle.taskGraph.beforeTask {
 tasks.withType(KotlinCompile::class).whenTaskAdded {
     kotlinOptions {
         allWarningsAsErrors = true
-        freeCompilerArgs = freeCompilerArgs + listOf(
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-Xuse-experimental=kotlinx.coroutines.FlowPreview"
-        )
         jvmTarget = EmpressLib.jvmTarget
     }
 }
