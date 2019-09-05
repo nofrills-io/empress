@@ -21,7 +21,7 @@ dependencies {
     testImplementation(Deps.coroutinesTest)
 }
 
-tasks.withType(KotlinCompile::class).all {
+tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         allWarningsAsErrors = true
         jvmTarget = EmpressLib.jvmTarget

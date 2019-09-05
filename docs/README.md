@@ -21,7 +21,7 @@ dependencies {
 }
 
 // Note: skip `::class` if you're using Groovy instead of Kotlin
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).whenTaskAdded {
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).configureEach {
     kotlinOptions {
         jvmTarget = "1.8"
     }

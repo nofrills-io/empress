@@ -45,7 +45,7 @@ dependencies {
     implementation(Deps.fragment)
 }
 
-tasks.withType(KotlinCompile::class).whenTaskAdded {
+tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         jvmTarget = EmpressLib.jvmTarget
     }

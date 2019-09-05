@@ -52,7 +52,7 @@ dependencies {
     testImplementation(Deps.junit)
 }
 
-tasks.withType(KotlinCompile::class).whenTaskAdded {
+tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + listOf(
             "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"

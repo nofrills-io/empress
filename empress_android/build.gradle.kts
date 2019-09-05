@@ -69,7 +69,7 @@ gradle.taskGraph.beforeTask {
     }
 }
 
-tasks.withType(KotlinCompile::class).whenTaskAdded {
+tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         allWarningsAsErrors = true
         jvmTarget = EmpressLib.jvmTarget
