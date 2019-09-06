@@ -16,110 +16,71 @@
 
 package io.nofrills.empress
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.sync.Mutex
 
 /** Runs and manages an [Empress] instance.
  * @param empress Empress instance that we want to run.
- * @param scope A coroutine scope where events and requests will be processed.
- * @param storedPatches Patches that were previously stored, and should be used instead patches from [initializer][Empress.initializer].
+ * @param eventHandlerScope A coroutine scope where events will be processed.
+ * @param requestHandlerScope A coroutine scope where requests will be processed.
+ * @param storedModels Models that were previously stored, and should be used instead models from [initializer][Empress.initialize].
  */
-@UseExperimental(ExperimentalCoroutinesApi::class)
-class EmpressBackend<Event, Patch : Any, Request> constructor(
-    private val empress: Empress<Event, Patch, Request>,
-    private val scope: CoroutineScope,
-    storedPatches: Collection<Patch>? = null
-) : EmpressApi<Event, Patch> {
+@UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
+class EmpressBackend<E : Any, M : Any, R : Any> constructor(
+    private val empress: Empress<E, M, R>,
+    eventHandlerScope: CoroutineScope,
+    requestHandlerScope: CoroutineScope,
+    storedModels: Collection<M>? = null
+) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope),
+    EmpressApi<E, M> {
 
-    private val idProducer = RequestIdProducer()
+    private val modelsMap = AtomicItem(makeModelMap(storedModels ?: emptyList(), empress))
 
-    /** If interruption was requested, the mutex will be locked. */
-    private val interruption = Mutex()
+    private val updates = BroadcastChannel<Update<E, M>>(UPDATES_CHANNEL_CAPACITY)
 
-    private val modelHolder = ModelHolder(
-        if (storedPatches == null) {
-            Model.from(empress.initializer())
-        } else {
-            Model.from(
-                storedPatches + empress.initializer(),
-                skipDuplicates = true
-            )
-        }
-    )
+    private val updatesFlow: Flow<Update<E, M>> = updates.asFlow()
 
-    private val requestHolder = RequestHolder()
-
-    private val requests: Requests<Event, Request> by lazy {
-        RequestsImpl(
-            idProducer,
-            empress::onRequest,
-            requestHolder,
-            scope,
-            this::processEvent
-        )
+    override suspend fun models(): Models<M> {
+        return ModelsImpl(modelsMap.get())
     }
 
-    private val updates = BroadcastChannel<Update<Event, Patch>>(UPDATES_CHANNEL_CAPACITY)
-
-    @UseExperimental(FlowPreview::class)
-    private val updatesFlow: Flow<Update<Event, Patch>> = updates.asFlow()
-
-    init {
-        scope.coroutineContext[Job]?.invokeOnCompletion {
-            updates.close(it)
-        }
-    }
-
-    override fun interrupt() {
-        interruption.tryLock()
-        interruptIfNeeded()
-    }
-
-    override suspend fun modelSnapshot(): Model<Patch> {
-        return modelHolder.get()
-    }
-
-    override fun send(event: Event) = scope.launch(start = CoroutineStart.UNDISPATCHED) {
-        processEvent(event)
-    }
-
-    override fun updates(): Flow<Update<Event, Patch>> {
+    override fun updates(): Flow<Update<E, M>> {
         return updatesFlow
     }
 
-    internal fun areChannelsClosed(): Boolean {
-        return updates.isClosedForSend
-    }
-
-    /** Returns `true` if the internal [Empress] class is equal to the given [empressClass]. */
-    fun hasEqualClass(empressClass: Class<*>): Boolean {
-        return empress::class.java == empressClass
-    }
-
-    private fun interruptIfNeeded() {
-        if (interruption.isLocked && requestHolder.isEmpty()) {
-            updates.close()
+    override suspend fun processEvent(event: E) {
+        lateinit var updated: Collection<M>
+        val map = modelsMap.update {
+            updated = empress.onEvent(event, ModelsImpl(it), requestCommander)
+            it.toMutableMap().apply { putAll(makeModelMap(updated)) }
         }
+        updates.send(UpdateImpl(ModelsImpl(map), event, updated))
     }
 
-    private suspend fun processEvent(event: Event) {
-        val model = modelHolder.update { model ->
-            val updatedPatches = empress.onEvent(event, model, requests)
-            Model.from(model, updatedPatches)
-        }
-        updates.send(Update(model, event))
+    override fun areChannelsClosedForSend(): Boolean {
+        return super.areChannelsClosedForSend() && updates.isClosedForSend
+    }
 
-        interruptIfNeeded()
+    override fun closeChannels() {
+        updates.close()
+        super.closeChannels()
+    }
 
-        requestHolder.snapshot()
-            .filter { !it.isActive && !it.isCompleted }
-            .forEach { it.start() }
+    override suspend fun modelSnapshot(): Models<M> {
+        return models()
     }
 
     companion object {
         private const val UPDATES_CHANNEL_CAPACITY = 16
     }
+
+    private class UpdateImpl<E : Any, M : Any>(
+        override val all: Models<M>,
+        override val event: E,
+        override val updated: Collection<M>
+    ) : Update<E, M>
 }

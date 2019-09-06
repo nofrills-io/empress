@@ -16,40 +16,20 @@
 
 package io.nofrills.empress
 
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
-internal class ModelHolder<Patch : Any>(private var model: Model<Patch>) {
-    private val mutex: Mutex = Mutex()
+internal data class RequestIdImpl constructor(private val id: Int) : RequestId
 
-    suspend fun get(): Model<Patch> {
-        return mutex.withLock {
-            model
-        }
-    }
-
-    /** Updates the model.
-     * @param updater Function which takes current model and returns a new, updated one.
-     * @return A new, updated model.
-     */
-    suspend fun update(updater: (Model<Patch>) -> Model<Patch>): Model<Patch> {
-        return mutex.withLock {
-            model = updater(model)
-            model
-        }
-    }
-}
-
-/** Default implementation for handling requests. */
-internal class RequestsImpl<Event, Request> constructor(
+internal class RequestCommanderImpl<E : Any, R : Any> constructor(
     private val idProducer: RequestIdProducer,
-    private val onRequest: suspend (Request) -> Event,
+    private val requestHandler: RequestHandler<E, R>,
     private val requestHolder: RequestHolder,
     private val scope: CoroutineScope,
-    private val sendEvent: suspend (Event) -> Unit
-) : Requests<Event, Request> {
+    private val sendEvent: suspend (E) -> Unit
+) : RequestCommander<R> {
     override fun cancel(requestId: RequestId?): Boolean {
         requestId ?: return false
         val requestJob = requestHolder.pop(requestId) ?: return false
@@ -59,19 +39,18 @@ internal class RequestsImpl<Event, Request> constructor(
         return true
     }
 
-    override fun post(request: Request): RequestId {
+    override fun post(request: R): RequestId {
         val requestId = idProducer.getNextRequestId()
-        val job = scope.launch(start = CoroutineStart.LAZY) {
-            val eventFromRequest = onRequest(request)
+        val job = scope.launch {
+            val eventFromRequest = requestHandler.onRequest(request)
             if (requestHolder.pop(requestId) != null) {
                 sendEvent(eventFromRequest)
             }
         }
+        requestHolder.push(requestId, job)
         job.invokeOnCompletion {
-            // make sure to clean up, in case there were errors in handling the request
             requestHolder.pop(requestId)
         }
-        requestHolder.push(requestId, job)
         return requestId
     }
 }
@@ -98,11 +77,6 @@ internal class RequestHolder {
     fun push(requestId: RequestId, requestJob: Job) {
         requestMap[requestId] = requestJob
     }
-
-    /** Returns current list of [jobs][Job] for currently running or scheduled requests. */
-    fun snapshot(): Sequence<Job> {
-        return requestMap.values.asSequence()
-    }
 }
 
 /** Generates identifiers for requests. */
@@ -112,6 +86,6 @@ internal class RequestIdProducer {
     /** Returns a unique ID for a request. */
     fun getNextRequestId(): RequestId {
         nextRequestId += 1
-        return RequestId(nextRequestId)
+        return RequestIdImpl(nextRequestId)
     }
 }

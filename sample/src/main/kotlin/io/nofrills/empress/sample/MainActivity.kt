@@ -23,9 +23,6 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
-import io.nofrills.empress.test_support.Event
-import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.SampleEmpress
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -38,9 +35,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         lifecycle.coroutineScope.launch {
-            render(empressApi.modelSnapshot().all())
+            render(empressApi.models().all())
             empressApi.updates().collect { update ->
-                render(update.model.updated(), update.event)
+                render(update.updated, update.event)
             }
         }
 
@@ -49,37 +46,37 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupButtonListeners() {
         decrement_button.setOnClickListener {
-            empressApi.send(Event.Decrement)
+            empressApi.post(Event.Decrement)
         }
         increment_button.setOnClickListener {
-            empressApi.send(Event.Increment)
+            empressApi.post(Event.Increment)
         }
         send_button.setOnClickListener {
-            empressApi.send(Event.SendCounter)
+            empressApi.post(Event.SendCounter)
         }
         cancel_button.setOnClickListener {
-            empressApi.send(Event.CancelSendingCounter)
+            empressApi.post(Event.CancelSendingCounter)
         }
     }
 
-    private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
-        for (patch in patches) {
+    private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
+        for (patch in models) {
             when (patch) {
-                is Patch.Counter -> renderCount(patch)
-                is Patch.Sender -> renderProgress(patch, sourceEvent)
+                is Model.Counter -> renderCount(patch)
+                is Model.Sender -> renderProgress(patch, sourceEvent)
             }
         }
     }
 
-    private fun renderProgress(patch: Patch.Sender, sourceEvent: Event? = null) {
-        if (patch.requestId == null) {
+    private fun renderProgress(sender: Model.Sender, sourceEvent: Event? = null) {
+        if (sender.requestId == null) {
             if (sourceEvent is Event.CounterSent) {
                 showToast(R.string.counter_sent)
             } else if (sourceEvent is Event.CancelSendingCounter) {
                 showToast(R.string.send_counter_cancelled)
             }
         }
-        progress_bar.visibility = if (patch.requestId != null) {
+        progress_bar.visibility = if (sender.requestId != null) {
             View.VISIBLE
         } else {
             View.GONE
@@ -92,7 +89,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderCount(patch: Patch.Counter) {
-        counter_value.text = patch.count.toString()
+    private fun renderCount(counter: Model.Counter) {
+        counter_value.text = counter.count.toString()
     }
 }

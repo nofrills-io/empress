@@ -42,7 +42,6 @@ dependencies {
     androidTestImplementation(Deps.espressoCore)
 
     implementation(project(":empress_android"))
-    implementation(project(":test_support"))
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-alpha03")
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)

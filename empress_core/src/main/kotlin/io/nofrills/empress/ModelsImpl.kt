@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress.test_support
+package io.nofrills.empress
 
-import io.nofrills.empress.EmpressApi
+import kotlin.reflect.KClass
 
-interface WithEmpress {
-    val api: EmpressApi<Event, Patch>
+internal class ModelsImpl<M : Any> constructor(private val modelMap: Map<Class<out M>, M>) :
+    Models<M> {
+    override fun all(): Collection<M> {
+        return modelMap.values
+    }
+
+    override fun <T : M> get(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return modelMap.getValue(modelClass) as T
+    }
+
+    override fun <T : M> get(modelClass: KClass<T>): T {
+        return get(modelClass.java)
+    }
 }

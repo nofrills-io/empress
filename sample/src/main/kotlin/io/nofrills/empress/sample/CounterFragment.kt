@@ -24,15 +24,12 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.EmpressApi
 import io.nofrills.empress.android.enthrone
-import io.nofrills.empress.test_support.Event
-import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.SampleEmpress
 import kotlinx.android.synthetic.main.fragment_counter.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class CounterFragment : Fragment() {
-    private lateinit var api: EmpressApi<Event, Patch>
+    private lateinit var api: EmpressApi<Event, Model>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,16 +50,16 @@ class CounterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         lifecycle.coroutineScope.launch {
-            renderCount(api.modelSnapshot().get())
+            renderCount(api.models()[Model.Counter::class])
             api.updates().collect {
-                it.model.updated()
-                    .filterIsInstance<Patch.Counter>()
+                it.updated
+                    .filterIsInstance<Model.Counter>()
                     .forEach(this@CounterFragment::renderCount)
             }
         }
     }
 
-    private fun renderCount(counter: Patch.Counter) {
+    private fun renderCount(counter: Model.Counter) {
         counter_text_view.text = counter.count.toString()
     }
 }

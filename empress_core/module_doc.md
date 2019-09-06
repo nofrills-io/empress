@@ -4,10 +4,12 @@ Core functionality.
 
 ## Usage
 
-First, you need to define three (sealed) classes: `Event`, `Patch` and `Request`
+First, you need to define three (usually `sealed`) classes: `Event`, `Model` and `Request`
 (though you can call them whatever you want).
-Have a look at [io.nofrills.empress.Empress] interface, "_Parameters_" section for short
-description about what each class is supposed to do.
+
+- Event — signals an event for which we need to take some action
+- Model — represents application state. Usually modelled as a sealed class, where each subclass is relatively small, and is related to a single aspect of the app.
+- Request — denotes an intent for asynchronously obtaining some kind of a resource
 
 Then, define and implement an `Empress` interface:
 

@@ -18,19 +18,19 @@ package io.nofrills.empress
 
 import kotlinx.coroutines.CoroutineScope
 
-internal class EmpressBackendTest :
-    RulerBackendTest<EmpressBackend<Event, Model, Request>, Empress<Event, Model, Request>>() {
+internal class EmperorBackendTest :
+    RulerBackendTest<EmperorBackend<Event, Model, Request>, Emperor<Event, Model, Request>>() {
 
-    override fun makeRuler(initializeWithDuplicate: Boolean): Empress<Event, Model, Request> {
-        return TestEmpress(initializeWithDuplicate)
+    override fun makeRuler(initializeWithDuplicate: Boolean): Emperor<Event, Model, Request> {
+        return TestEmperor(initializeWithDuplicate)
     }
 
     override fun makeBackend(
-        ruler: Empress<Event, Model, Request>,
+        ruler: Emperor<Event, Model, Request>,
         eventHandlerScope: CoroutineScope,
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<Model>?
-    ): EmpressBackend<Event, Model, Request> {
-        return EmpressBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
+    ): EmperorBackend<Event, Model, Request> {
+        return EmperorBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
     }
 }

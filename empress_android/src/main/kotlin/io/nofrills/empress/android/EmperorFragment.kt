@@ -16,19 +16,19 @@
 
 package io.nofrills.empress.android
 
-import io.nofrills.empress.Empress
-import io.nofrills.empress.EmpressBackend
+import io.nofrills.empress.Emperor
+import io.nofrills.empress.EmperorBackend
 import kotlinx.coroutines.CoroutineScope
 
-internal class EmpressFragment<E : Any, M : Any, R : Any> :
-    RulerFragment<E, M, R, EmpressBackend<E, M, R>, Empress<E, M, R>>() {
+internal class EmperorFragment<E : Any, M : Any, R : Any> :
+    RulerFragment<E, M, R, EmperorBackend<E, M, R>, Emperor<E, M, R>>() {
     override fun makeRulerBackend(
-        ruler: Empress<E, M, R>,
+        ruler: Emperor<E, M, R>,
         eventHandlerScope: CoroutineScope,
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<M>?
-    ): EmpressBackend<E, M, R> {
-        return EmpressBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
+    ): EmperorBackend<E, M, R> {
+        return EmperorBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
     }
 
     override suspend fun getRulerModels(): Collection<M> {
