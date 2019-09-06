@@ -18,88 +18,90 @@ package io.nofrills.empress
 
 import kotlinx.coroutines.delay
 
+private const val REQUEST_DELAY_MS = 100L
+
 internal sealed class Event {
-    object Decrement : Event()
-    object Increment : Event()
-
-    data class Load(val delayMillis: Long) : Event()
-    object Loaded : Event()
-
-    data class Send(val delayMillis: Long) : Event()
-    object CancelSending : Event()
-    object CounterSent : Event()
-
-    object GetEventFailure : Event()
-    object GetEventFailureWithRequest : Event()
+    object OnIncrement : Event()
+    object OnCalculateClicked : Event()
+    object Calculated : Event()
+    object MakeUnhandledRequest : Event()
+    object Unhandled : Event()
 }
 
-internal sealed class Patch {
-    data class Counter(val count: Int) : Patch()
-    data class Loader(val requestId: RequestId? = null) : Patch()
-    data class Sender(val requestId: RequestId? = null) : Patch()
+internal sealed class Model {
+    data class Counter(var count: Int) : Model()
 }
 
 internal sealed class Request {
-    data class Load(val delayMillis: Long) : Request()
-    data class Send(val delayMillis: Long) : Request()
-    object Fail : Request()
+    object Calculate : Request()
+    object Unhandled : Request()
 }
 
-internal class TestEmpress : Empress<Event, Patch, Request> {
-    override fun initializer(): Collection<Patch> = listOf(
-        Patch.Counter(0),
-        Patch.Loader(null),
-        Patch.Sender(null)
-    )
-
-    override fun onEvent(
-        event: Event,
-        model: Model<Patch>,
-        requests: Requests<Event, Request>
-    ): Collection<Patch> {
-        return when (event) {
-            Event.Decrement -> listOf(model.get<Patch.Counter>().let { it.copy(count = it.count - 1) })
-            Event.Increment -> listOf(model.get<Patch.Counter>().let { it.copy(count = it.count + 1) })
-            is Event.Load -> run {
-                val requestId = requests.post(Request.Load(event.delayMillis))
-                listOf(Patch.Loader(requestId))
-            }
-            Event.Loaded -> listOf(Patch.Loader(null))
-            is Event.Send -> run<Collection<Patch>> {
-                val requestId = requests.post(Request.Send(event.delayMillis))
-                listOf(Patch.Sender(requestId))
-            }
-            Event.CancelSending -> run {
-                val sender = model.get<Patch.Sender>()
-                if (requests.cancel(sender.requestId)) {
-                    listOf(Patch.Sender(null))
-                } else {
-                    emptyList()
-                }
-            }
-            Event.CounterSent -> listOf(Patch.Sender(null))
-            Event.GetEventFailure -> throw EventTrouble()
-            Event.GetEventFailureWithRequest -> run {
-                requests.post(Request.Fail)
-                emptyList<Patch>()
-            }
+internal abstract class TestRuler(private val initializeWithDuplicate: Boolean = false) :
+    Ruler<Event, Model, Request> {
+    override fun initialize(): Collection<Model> {
+        if (initializeWithDuplicate) {
+            return listOf(Model.Counter(3), Model.Counter(5))
         }
+        return listOf(Model.Counter(0))
     }
 
     override suspend fun onRequest(request: Request): Event {
         return when (request) {
-            is Request.Load -> run {
-                delay(request.delayMillis)
-                Event.Loaded
+            Request.Calculate -> {
+                delay(REQUEST_DELAY_MS)
+                Event.Calculated
             }
-            is Request.Send -> run {
-                delay(request.delayMillis)
-                Event.CounterSent
-            }
-            Request.Fail -> throw RequestTrouble()
+            else -> error("Unknown request $request")
         }
     }
 }
 
-class EventTrouble : Throwable()
-class RequestTrouble : Throwable()
+internal class TestEmpress(initializeWithDuplicate: Boolean = false) :
+    Empress<Event, Model, Request>, TestRuler(initializeWithDuplicate) {
+    override fun onEvent(
+        event: Event,
+        models: Models<Model>,
+        requests: RequestCommander<Request>
+    ): Collection<Model> {
+        return when (event) {
+            Event.OnIncrement -> {
+                val counter = models[Model.Counter::class]
+                listOf(counter.copy(count = counter.count + 1))
+            }
+            Event.OnCalculateClicked -> {
+                requests.post(Request.Calculate)
+                emptyList()
+            }
+            Event.Calculated -> emptyList()
+            Event.MakeUnhandledRequest -> {
+                requests.post(Request.Unhandled)
+                emptyList()
+            }
+            else -> error("Unknown event $event")
+        }
+    }
+}
+
+internal class TestEmperor(initializeWithDuplicate: Boolean = false) :
+    Emperor<Event, Model, Request>, TestRuler(initializeWithDuplicate) {
+    override fun onEvent(
+        event: Event,
+        models: Models<Model>,
+        requests: RequestCommander<Request>
+    ) {
+        return when (event) {
+            Event.OnIncrement -> models[Model.Counter::class].count += 1
+            Event.OnCalculateClicked -> {
+                requests.post(Request.Calculate)
+                Unit
+            }
+            Event.Calculated -> Unit
+            Event.MakeUnhandledRequest -> {
+                requests.post(Request.Unhandled)
+                Unit
+            }
+            else -> error("Unknown event $event")
+        }
+    }
+}

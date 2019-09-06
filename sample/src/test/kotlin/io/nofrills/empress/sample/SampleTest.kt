@@ -18,9 +18,6 @@ package io.nofrills.empress.sample
 
 import io.nofrills.empress.EmpressApi
 import io.nofrills.empress.EmpressBackend
-import io.nofrills.empress.test_support.Event
-import io.nofrills.empress.test_support.Patch
-import io.nofrills.empress.test_support.SampleEmpress
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -32,12 +29,12 @@ import org.junit.Test
 
 class SampleTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: EmpressApi<Event, Patch>
+    private lateinit var tested: EmpressApi<Event, Model>
 
     @Before
     fun setUp() {
         scope = TestCoroutineScope()
-        tested = EmpressBackend(SampleEmpress(), scope)
+        tested = EmpressBackend(SampleEmpress(), scope, scope)
     }
 
     @After
@@ -49,13 +46,13 @@ class SampleTest {
     fun example() = scope.runBlockingTest {
         val deferredUpdates = async { tested.updates().toCollection(mutableListOf()) }
 
-        Assert.assertEquals(Patch.Counter(0), tested.modelSnapshot().get<Patch.Counter>())
+        Assert.assertEquals(Model.Counter(0), tested.models()[Model.Counter::class])
 
-        tested.send(Event.Increment)
-        tested.send(Event.Increment)
-        Assert.assertEquals(Patch.Counter(2), tested.modelSnapshot().get<Patch.Counter>())
+        tested.post(Event.Increment)
+        tested.post(Event.Increment)
+        Assert.assertEquals(Model.Counter(2), tested.models()[Model.Counter::class])
 
-        tested.send(Event.SendCounter)
+        tested.post(Event.SendCounter)
 
         tested.interrupt()
 

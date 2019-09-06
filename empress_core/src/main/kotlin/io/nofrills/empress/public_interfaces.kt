@@ -18,77 +18,96 @@ package io.nofrills.empress
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlin.reflect.KClass
 
-/** The main interface that needs to be implemented.
- * @param Event Signals an event for which we need to take some action.
- * @param Patch Represents application state. Usually modelled as a sealed class,
- *  where each subclass is relatively small, and is related to a single aspect of the app.
- * @param Request Denotes an intent for asynchronously obtaining some kind of a resource.
- */
-interface Empress<Event, Patch : Any, Request> {
-    /** Returns an ID for this empress instance.
-     * Useful if you want to install more than one empress into an activity,
-     * or if you want to share the same model instance.
-     */
-    fun id(): String = javaClass.name
+interface Models<M : Any> {
+    fun all(): Collection<M>
+    operator fun <T : M> get(modelClass: Class<T>): T
+    operator fun <T : M> get(modelClass: KClass<T>): T
+}
 
-    /** Initializer should return a collection of all possible patches.
-     * Forgetting to return an initializer for a particular [patch subclass][Patch],
-     * may result in an error in [onEvent] method.
-     */
-    fun initializer(): Collection<Patch>
+interface ModelInitializer<M : Any> {
+    /** Initializer should return a collection of all possible models. */
+    fun initialize(): Collection<M>
+}
 
+interface ImmutableEventHandler<E : Any, M : Any, R : Any> {
     /** Handles an incoming [event].
      * @param event An event that was triggered.
-     * @param model Current model.
+     * @param models Set of current models.
      * @param requests Allows to post new requests or cancel existing ones.
      * @return A collection of updated patches. You should only return patches that have changed.
      *  If nothing has changed, you can return an empty collection. Based on updated patches,
      *  a new [update][Update] will be sent.
      */
-    fun onEvent(
-        event: Event,
-        model: Model<Patch>,
-        requests: Requests<Event, Request>
-    ): Collection<Patch>
+    fun onEvent(event: E, models: Models<M>, requests: RequestCommander<R>): Collection<M>
+}
 
+interface MutableEventHandler<E : Any, M : Any, R : Any> {
+    fun onEvent(event: E, models: Models<M>, requests: RequestCommander<R>)
+}
+
+interface EventCommander<E : Any> {
+    fun events(): Flow<E>
+
+    /** Sends an [event] for processing. */
+    fun post(event: E): Job
+}
+
+/** Represents a running request. */
+interface RequestId
+
+interface RequestCommander<R : Any> {
+    fun cancel(requestId: RequestId?): Boolean
+    fun post(request: R): RequestId
+}
+
+interface RequestHandler<E : Any, R : Any> {
     /** Handles an incoming [request].
-     * @return An event with the result, that will be fed back to [onEvent] method.
+     * @return An event with the result, that will be fed back to an event handler.
      */
-    suspend fun onRequest(request: Request): Event
+    suspend fun onRequest(request: R): E
+}
+
+interface Ruler<E : Any, M : Any, R : Any> : ModelInitializer<M>, RequestHandler<E, R> {
+    /** Returns an ID for this instance.
+     * Useful if you want to install more than one rulers into an activity,
+     * or if you want to share the same model instance.
+     */
+    fun id(): String = javaClass.name
+}
+
+interface RulerApi {
+    fun interrupt()
+    // TODO possibly include "models" method
+}
+
+interface Emperor<E : Any, M : Any, R : Any> : Ruler<E, M, R>, MutableEventHandler<E, M, R>
+
+interface EmperorApi<E : Any, M : Any> : EventCommander<E>, RulerApi {
+    fun models(): Models<M>
+}
+
+interface Empress<E : Any, M : Any, R : Any> : Ruler<E, M, R>, ImmutableEventHandler<E, M, R>
+
+/** Represents an update, that resulted from processing an [event].
+ * @property all Set of all models
+ * @property event Event that triggered the update.
+ * @property updated Models that were updated as a result of processing an event.
+ */
+interface Update<E : Any, M : Any> {
+    val all: Models<M>
+    val event: E
+    val updated: Collection<M>
 }
 
 /** Interface for interacting with a running [Empress] instance. */
-interface EmpressApi<Event, Patch : Any> {
-    /** Interrupts processing of events.
-     * Calling this will cause the completion of the [flow][Flow] returned by [updates].
-     * Usually only needed in tests.
-     */
-    fun interrupt()
-
+interface EmpressApi<E : Any, M : Any> : EventCommander<E>, RulerApi {
     /** Return current snapshot of the model.
      * Usually you want to obtain whole model when starting the application.
      */
-    suspend fun modelSnapshot(): Model<Patch>
+    suspend fun models(): Models<M>
 
-    /** Sends an [event] for processing. */
-    fun send(event: Event): Job
-
-    /** Allows to listen for [updates][Update].
-     * When receiving an update, you can check [Model.updated] to see which patches have changed.
-     */
-    fun updates(): Flow<Update<Event, Patch>>
-}
-
-/** Allows to manage any additional asynchronous requests (e.g. downloading data from a server). */
-interface Requests<Event, Request> {
-    /** Cancels a request with given [requestId].
-     * @return True if the request has been cancelled; false if [requestId] was null, or the request has already completed.
-     */
-    fun cancel(requestId: RequestId?): Boolean
-
-    /** Posts a [request] to be executed asynchronously.
-     * @return An id that can be used to [cancel] the request.
-     */
-    fun post(request: Request): RequestId
+    /** Allows to listen for [updates][Update]. */
+    fun updates(): Flow<Update<E, M>>
 }
