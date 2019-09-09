@@ -69,8 +69,10 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
         return handledEventsFlow
     }
 
-    override fun post(event: E) = eventHandlerScope.launch(start = CoroutineStart.UNDISPATCHED) {
-        sendEvent(event)
+    override fun post(event: E) {
+        eventHandlerScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            sendEvent(event)
+        }
     }
 
     internal open fun areChannelsClosedForSend(): Boolean {
