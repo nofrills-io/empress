@@ -16,10 +16,7 @@
 
 package io.nofrills.empress.builder
 
-import io.nofrills.empress.Empress
-import io.nofrills.empress.Model
-import io.nofrills.empress.RequestId
-import io.nofrills.empress.Requests
+import io.nofrills.empress.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -30,6 +27,7 @@ import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
 import java.lang.IllegalStateException
+import kotlin.reflect.KClass
 
 @ExperimentalCoroutinesApi
 class EmpressBuilderTest {
@@ -44,7 +42,7 @@ class EmpressBuilderTest {
             initializer { Patch.Sender(null) }
 
             onEvent<Event.Click> {
-                val counter = model.get<Patch.Counter>()
+                val counter = models[Patch.Counter::class]
                 listOf(counter.copy(count = counter.count + 1))
             }
 
@@ -72,12 +70,12 @@ class EmpressBuilderTest {
 
     @Test
     fun initializers() {
-        assertEquals(listOf(Patch.Counter(0), Patch.Sender(null)), tested.initializer())
+        assertEquals(listOf(Patch.Counter(0), Patch.Sender(null)), tested.initialize())
     }
 
     @Test
     fun eventHandlers() {
-        val model = Model.from(tested.initializer())
+        val model = MockModels(tested.initialize())
 
         assertEquals(
             listOf(Patch.Counter(1)),
@@ -85,14 +83,14 @@ class EmpressBuilderTest {
         )
 
         assertEquals(
-            listOf(Patch.Sender(RequestId(1))),
+            listOf(Patch.Sender(MockRequestId(1))),
             tested.onEvent(Event.Submit(3), model, MockRequests())
         )
     }
 
     @Test(expected = NoSuchElementException::class)
     fun unhandledEvent() {
-        val model = Model.from(tested.initializer())
+        val model = MockModels(tested.initialize())
         tested.onEvent(Event.Sent, model, MockRequests())
     }
 
@@ -147,7 +145,25 @@ internal sealed class Request {
     object Unhandled : Request()
 }
 
-internal class MockRequests : Requests<Event, Request> {
+internal class MockModels<M : Any>(private val models: Collection<M>) : Models<M> {
+    override fun all(): Collection<M> {
+        return models
+    }
+
+    override fun <T : M> get(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return models.find { it::class.java == modelClass } as T?
+            ?: error("Could not find $modelClass")
+    }
+
+    override fun <T : M> get(modelClass: KClass<T>): T {
+        return get(modelClass.java)
+    }
+}
+
+internal data class MockRequestId(private val id: Int) : RequestId
+
+internal class MockRequests : RequestCommander<Request> {
     private var nextRequestNum = 0
 
     override fun cancel(requestId: RequestId?): Boolean {
@@ -156,6 +172,6 @@ internal class MockRequests : Requests<Event, Request> {
 
     override fun post(request: Request): RequestId {
         nextRequestNum += 1
-        return RequestId(nextRequestNum)
+        return MockRequestId(nextRequestNum)
     }
 }
