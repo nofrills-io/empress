@@ -14,7 +14,7 @@ First, you need to define three (usually `sealed`) classes: `Event`, `Model` and
 Then, define and implement an `Empress` interface:
 
 ```kotlin
-class MyEmpress : Empress<Event, Patch, Request> {
+class MyEmpress : Empress<Event, Model, Request> {
     // implementation
 }
 ```
@@ -26,12 +26,12 @@ Once you have defined your [io.nofrills.empress.Empress], you need a way to run 
 If you want to use it with __Android__ activity or fragment, refer to [io.nofrills.empress.android].
 
 Otherwise, for standalone usage (e.g. in a unit test)
-you should use [io.nofrills.empress.EmpressBackend] like below:
+you should use [io.nofrills.empress.backend.EmpressBackend] like below:
 
 ```kotlin
 val empress = MyEmpress()
 val coroutineScope = ... // e.g. TestCoroutineScope or your activity's scope
-val api: EmpressApi<Event, Patch> = EmpressBackend(empress, scope)
+val api: EmpressApi<Event, Model> = EmpressBackend(empress, scope)
 ```
 
 Finally you can send events and listen for updates using [EmpressApi] interface

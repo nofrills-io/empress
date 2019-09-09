@@ -16,6 +16,8 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.internal.RequestHolder
+import io.nofrills.empress.internal.RequestIdImpl
 import kotlinx.coroutines.Job
 import org.junit.Assert.*
 import org.junit.Before

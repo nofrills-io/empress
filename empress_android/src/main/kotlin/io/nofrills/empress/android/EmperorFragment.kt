@@ -17,7 +17,7 @@
 package io.nofrills.empress.android
 
 import io.nofrills.empress.Emperor
-import io.nofrills.empress.EmperorBackend
+import io.nofrills.empress.backend.EmperorBackend
 import kotlinx.coroutines.CoroutineScope
 
 internal class EmperorFragment<E : Any, M : Any, R : Any> :
@@ -28,7 +28,12 @@ internal class EmperorFragment<E : Any, M : Any, R : Any> :
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<M>?
     ): EmperorBackend<E, M, R> {
-        return EmperorBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
+        return EmperorBackend(
+            ruler,
+            eventHandlerScope,
+            requestHandlerScope,
+            storedModels
+        )
     }
 
     override suspend fun getRulerModels(): Collection<M> {

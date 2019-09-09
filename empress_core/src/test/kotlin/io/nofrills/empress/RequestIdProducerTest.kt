@@ -16,6 +16,7 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.internal.RequestIdProducer
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test

@@ -16,76 +16,25 @@
 
 package io.nofrills.empress
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
+/** Represents a running request. */
+interface RequestId
 
-internal data class RequestIdImpl constructor(private val id: Int) : RequestId
+/** Manages requests. */
+interface RequestCommander<R : Any> {
+    /** Cancels a request
+     * @param requestId An id of a request.
+     * @return True if request was cancelled; false if [requestId] was null, or the request was already completed.
+     */
+    fun cancel(requestId: RequestId?): Boolean
 
-internal class RequestCommanderImpl<E : Any, R : Any> constructor(
-    private val idProducer: RequestIdProducer,
-    private val requestHandler: RequestHandler<E, R>,
-    private val requestHolder: RequestHolder,
-    private val scope: CoroutineScope,
-    private val sendEvent: suspend (E) -> Unit
-) : RequestCommander<R> {
-    override fun cancel(requestId: RequestId?): Boolean {
-        requestId ?: return false
-        val requestJob = requestHolder.pop(requestId) ?: return false
-
-        // Since we have a non-null requestJob, it means it hasn't been completed yet
-        requestJob.cancel()
-        return true
-    }
-
-    override fun post(request: R): RequestId {
-        val requestId = idProducer.getNextRequestId()
-        val job = scope.launch {
-            val eventFromRequest = requestHandler.onRequest(request)
-            if (requestHolder.pop(requestId) != null) {
-                sendEvent(eventFromRequest)
-            }
-        }
-        requestHolder.push(requestId, job)
-        job.invokeOnCompletion {
-            requestHolder.pop(requestId)
-        }
-        return requestId
-    }
+    /** Posts a new [request] for execution. */
+    fun post(request: R): RequestId
 }
 
-/** Manages currently active requests. */
-internal class RequestHolder {
-    private val requestMap: MutableMap<RequestId, Job> = ConcurrentHashMap()
-
-    /** Checks if there are active requests.
-     * @return True if there are no running or scheduled requests.
+/** Handles requests. */
+interface RequestHandler<E : Any, R : Any> {
+    /** Handles an incoming [request].
+     * @return An event with the result, that will be fed back to an event handler.
      */
-    fun isEmpty(): Boolean {
-        return requestMap.isEmpty()
-    }
-
-    /** Removes a request from the manager.
-     * @return A [job][Job] for the request or null if the request was not found or has already completed.
-     */
-    fun pop(requestId: RequestId): Job? {
-        return requestMap.remove(requestId)
-    }
-
-    /** Stores a [job][Job] associated with [requestId]. */
-    fun push(requestId: RequestId, requestJob: Job) {
-        requestMap[requestId] = requestJob
-    }
-}
-
-/** Generates identifiers for requests. */
-internal class RequestIdProducer {
-    private var nextRequestId: Int = 0
-
-    /** Returns a unique ID for a request. */
-    fun getNextRequestId(): RequestId {
-        nextRequestId += 1
-        return RequestIdImpl(nextRequestId)
-    }
+    suspend fun onRequest(request: R): E
 }

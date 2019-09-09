@@ -18,18 +18,20 @@ package io.nofrills.empress
 
 import kotlin.reflect.KClass
 
-internal data class ModelsImpl<M : Any> constructor(private val modelMap: Map<Class<out M>, M>) :
-    Models<M> {
-    override fun all(): Collection<M> {
-        return modelMap.values
-    }
+/** Allows to access the models. */
+interface Models<M : Any> {
+    /** Returns all models. */
+    fun all(): Collection<M>
 
-    override fun <T : M> get(modelClass: Class<T>): T {
-        @Suppress("UNCHECKED_CAST")
-        return modelMap.getValue(modelClass) as T
-    }
+    /** Returns a model with the given [modelClass]. */
+    operator fun <T : M> get(modelClass: Class<T>): T
 
-    override fun <T : M> get(modelClass: KClass<T>): T {
-        return get(modelClass.java)
-    }
+    /** Returns a model with the given [modelClass]. */
+    operator fun <T : M> get(modelClass: KClass<T>): T
+}
+
+/** Initializes the models. */
+interface ModelInitializer<M : Any> {
+    /** Initializer should return a collection of all possible models. */
+    fun initialize(): Collection<M>
 }

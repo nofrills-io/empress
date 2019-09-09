@@ -16,6 +16,8 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.backend.EmpressBackend
+import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toList
@@ -35,7 +37,12 @@ internal class EmpressBackendTest :
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<Model>?
     ): EmpressBackend<Event, Model, Request> {
-        return EmpressBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
+        return EmpressBackend(
+            ruler,
+            eventHandlerScope,
+            requestHandlerScope,
+            storedModels
+        )
     }
 
     @Test

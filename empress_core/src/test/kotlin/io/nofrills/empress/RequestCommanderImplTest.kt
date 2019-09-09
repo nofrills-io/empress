@@ -16,6 +16,10 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.internal.RequestCommanderImpl
+import io.nofrills.empress.internal.RequestHolder
+import io.nofrills.empress.internal.RequestIdImpl
+import io.nofrills.empress.internal.RequestIdProducer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.TestCoroutineScope
 import org.junit.After

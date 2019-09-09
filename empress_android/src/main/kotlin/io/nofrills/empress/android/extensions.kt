@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import io.nofrills.empress.*
+import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
@@ -71,6 +72,15 @@ fun <E : Any, M : Any, R : Any> Fragment.enthrone(
     ) { EmpressFragment<E, M, R>() }
 }
 
+/** Installs an [emperor] instance into the [activity][this].
+ * If an emperor with the same [id][Emperor.id] was already installed,
+ * this method will return an existing instance.
+ * @param emperor Instance of [Emperor] to install.
+ * @param eventDispatcher A dispatcher to use for handling events in [emperor].
+ * @param requestDispatcher A dispatcher to use for handling requests in [emperor].
+ * @param retainInstance If true, the [emperor] instance will be retained during configuration changes.
+ * @return An instance of [EmperorApi] for communicating with [emperor].
+ */
 fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
     emperor: Emperor<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
@@ -86,6 +96,15 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
     ) { EmperorFragment<E, M, R>() }
 }
 
+/** Installs an [emperor] instance into the [fragment][this].
+ * If an emperor with the same [id][Emperor.id] was already installed,
+ * this method will return an existing instance.
+ * @param emperor Instance of [Emperor] to install.
+ * @param eventDispatcher A dispatcher to use for handling events in [emperor].
+ * @param requestDispatcher A dispatcher to use for handling requests in [emperor].
+ * @param retainInstance If true, the [emperor] instance will be retained during configuration changes.
+ * @return An instance of [EmperorApi] for communicating with [emperor].
+ */
 fun <E : Any, M : Any, R : Any> Fragment.enthrone(
     emperor: Emperor<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,

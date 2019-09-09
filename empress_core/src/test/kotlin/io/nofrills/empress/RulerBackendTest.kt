@@ -16,6 +16,7 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestCoroutineScope

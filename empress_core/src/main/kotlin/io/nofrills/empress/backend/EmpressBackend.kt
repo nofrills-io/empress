@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress
+package io.nofrills.empress.backend
 
+import io.nofrills.empress.Empress
+import io.nofrills.empress.EmpressApi
+import io.nofrills.empress.Models
+import io.nofrills.empress.Update
+import io.nofrills.empress.internal.AtomicItem
+import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -27,7 +33,7 @@ import kotlinx.coroutines.flow.asFlow
  * @param empress Empress instance that we want to run.
  * @param eventHandlerScope A coroutine scope where events will be processed.
  * @param requestHandlerScope A coroutine scope where requests will be processed.
- * @param storedModels Models that were previously stored, and should be used instead models from [initializer][Empress.initialize].
+ * @param storedModels Models that were previously stored, which will be used instead of the ones initialized in [initialize][io.nofrills.empress.ModelInitializer.initialize] function.
  */
 @UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class EmpressBackend<E : Any, M : Any, R : Any> constructor(
@@ -35,8 +41,7 @@ class EmpressBackend<E : Any, M : Any, R : Any> constructor(
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>? = null
-) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope),
-    EmpressApi<E, M> {
+) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope), EmpressApi<E, M> {
 
     private val modelsMap = AtomicItem(makeModelMap(storedModels ?: emptyList(), empress))
 
@@ -55,8 +60,13 @@ class EmpressBackend<E : Any, M : Any, R : Any> constructor(
     override suspend fun processEvent(event: E) {
         lateinit var updated: Collection<M>
         val map = modelsMap.update {
-            updated = empress.onEvent(event, ModelsImpl(it), requestCommander)
-            it.toMutableMap().apply { putAll(makeModelMap(updated)) }
+            updated = empress.onEvent(
+                event,
+                ModelsImpl(it), requestCommander
+            )
+            it.toMutableMap().apply {
+                putAll(makeModelMap(updated))
+            }
         }
         updates.send(UpdateImpl(ModelsImpl(map), event, updated))
     }
