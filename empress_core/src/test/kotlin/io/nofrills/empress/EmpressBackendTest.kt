@@ -17,6 +17,10 @@
 package io.nofrills.empress
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.toList
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 internal class EmpressBackendTest :
     RulerBackendTest<EmpressBackend<Event, Model, Request>, Empress<Event, Model, Request>>() {
@@ -32,5 +36,28 @@ internal class EmpressBackendTest :
         storedModels: Collection<Model>?
     ): EmpressBackend<Event, Model, Request> {
         return EmpressBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
+    }
+
+    @Test
+    fun updates() = usingTestScope { tested ->
+        val deferredUpdates = async {
+            tested.updates().toList()
+        }
+
+        tested.post(Event.Increment)
+        tested.interrupt()
+
+        val updates = deferredUpdates.await()
+        assertEquals(1, updates.size)
+        assertEquals(
+            ModelsImpl(
+                mapOf(
+                    Model.Counter::class.java to Model.Counter(1),
+                    Model.Sender::class.java to Model.Sender(null)
+                )
+            ), updates[0].all
+        )
+        assertEquals(Event.Increment, updates[0].event)
+        assertEquals(listOf(Model.Counter(1)), updates[0].updated)
     }
 }
