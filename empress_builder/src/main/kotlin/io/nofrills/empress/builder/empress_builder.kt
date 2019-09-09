@@ -16,9 +16,7 @@
 
 package io.nofrills.empress.builder
 
-import io.nofrills.empress.Empress
-import io.nofrills.empress.Model
-import io.nofrills.empress.Requests
+import io.nofrills.empress.*
 
 /** DSL Marker for [EmpressBuilder]. */
 @DslMarker
@@ -26,21 +24,21 @@ annotation class EmpressDslMarker
 
 /** Context for handling events.
  * @param event Event that has been triggered.
- * @param model Current model.
+ * @param models Current models.
  * @param requests Allows to create or cancel requests.
  */
 @EmpressDslMarker
-class EventHandlerContext<Event, Patch : Any, Request>(
-    val event: Event,
-    val model: Model<Patch>,
-    val requests: Requests<Event, Request>
+class EventHandlerContext<E : Any, M : Any, R : Any>(
+    val event: E,
+    val models: Models<M>,
+    val requests: RequestCommander<R>
 )
 
 /** Context for handling requests.
- * @param request Request to handle.
+ * @param request A request to handle.
  */
 @EmpressDslMarker
-class RequestHandlerContext<Request>(val request: Request)
+class RequestHandlerContext<R>(val request: R)
 
 /** Context for patch initializers. */
 @EmpressDslMarker
@@ -50,13 +48,13 @@ object InitializerContext
  * Event handler should return a collection of patches that have changed.
  * If nothing has changed, it should return an empty collection.
  */
-typealias EventHandler<E, Patch, Request> = EventHandlerContext<E, Patch, Request>.() -> Collection<Patch>
+typealias EventHandler<E, M, R> = EventHandlerContext<E, M, R>.() -> Collection<M>
 
 /** Handles (executes) a request. */
-typealias RequestHandler<Event, R> = suspend RequestHandlerContext<R>.() -> Event
+typealias RequestHandler<E, R> = suspend RequestHandlerContext<R>.() -> E
 
-/** Creates an initial patch value. */
-typealias Initializer<P> = InitializerContext.() -> P
+/** Creates an initial model value. */
+typealias Initializer<M> = InitializerContext.() -> M
 
 /** Builds an [Empress] instance.
  * @param id ID for [Empress] instance.
@@ -64,51 +62,51 @@ typealias Initializer<P> = InitializerContext.() -> P
  * @return New [Empress].
  */
 @Suppress("FunctionName")
-fun <Event : Any, Patch : Any, Request : Any> Empress(
+fun <E : Any, M : Any, R : Any> Empress(
     id: String,
-    body: EmpressBuilder<Event, Patch, Request>.() -> Unit
-): Empress<Event, Patch, Request> {
-    val builder = EmpressBuilder<Event, Patch, Request>(id)
+    body: EmpressBuilder<E, M, R>.() -> Unit
+): Empress<E, M, R> {
+    val builder = EmpressBuilder<E, M, R>(id)
     body(builder)
     return builder.build()
 }
 
 /** Allows to build an [Empress] instance. */
 @EmpressDslMarker
-class EmpressBuilder<Event : Any, Patch : Any, Request : Any> internal constructor(private val id: String) {
-    private val builderData = EmpressBuilderData<Event, Patch, Request>()
+class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) {
+    private val builderData = EmpressBuilderData<E, M, R>()
 
-    /** Defines an initializer for a [Patch]. */
-    inline fun <reified P : Patch> initializer(noinline body: Initializer<P>) {
+    /** Defines an initializer for a [M]. */
+    inline fun <reified P : M> initializer(noinline body: Initializer<P>) {
         initializer(body, P::class.java)
     }
 
     /** @see initializer */
-    fun <P : Patch> initializer(body: Initializer<P>, patchClass: Class<P>) {
+    fun <P : M> initializer(body: Initializer<P>, patchClass: Class<P>) {
         builderData.addInitializer(body, patchClass)
     }
 
-    /** Defines event handler for an [Event]. */
-    inline fun <reified E : Event> onEvent(noinline body: EventHandler<E, Patch, Request>) {
-        onEvent(E::class.java, body)
+    /** Defines event handler for an [E]. */
+    inline fun <reified Ev : E> onEvent(noinline body: EventHandler<Ev, M, R>) {
+        onEvent(Ev::class.java, body)
     }
 
     /** @see onEvent */
-    fun <E : Event> onEvent(eventClass: Class<E>, body: EventHandler<E, Patch, Request>) {
+    fun <Ev : E> onEvent(eventClass: Class<Ev>, body: EventHandler<Ev, M, R>) {
         builderData.addOnEvent(body, eventClass)
     }
 
-    /** Defines request handler for a [Request]. */
-    inline fun <reified R : Request> onRequest(noinline body: RequestHandler<Event, R>) {
-        onRequest(R::class.java, body)
+    /** Defines request handler for a [R]. */
+    inline fun <reified Rq : R> onRequest(noinline body: RequestHandler<E, Rq>) {
+        onRequest(Rq::class.java, body)
     }
 
     /** @see onRequest */
-    fun <R : Request> onRequest(requestClass: Class<R>, body: RequestHandler<Event, R>) {
+    fun <Rq : R> onRequest(requestClass: Class<Rq>, body: RequestHandler<E, Rq>) {
         builderData.addOnRequest(body, requestClass)
     }
 
-    internal fun build(): Empress<Event, Patch, Request> {
+    internal fun build(): Empress<E, M, R> {
         return EmpressFromBuilder(
             id,
             builderData.initializers.values,
@@ -118,65 +116,63 @@ class EmpressBuilder<Event : Any, Patch : Any, Request : Any> internal construct
     }
 }
 
-private class EmpressBuilderData<Event, Patch : Any, Request> {
-    internal val initializers = mutableMapOf<Class<out Patch>, Initializer<Patch>>()
-    internal val eventHandlers =
-        mutableMapOf<Class<out Event>, EventHandler<Event, Patch, Request>>()
-    internal val requestHandlers =
-        mutableMapOf<Class<out Request>, RequestHandler<Event, Request>>()
+private class EmpressBuilderData<E : Any, M : Any, R : Any> {
+    internal val initializers = mutableMapOf<Class<out M>, Initializer<M>>()
+    internal val eventHandlers = mutableMapOf<Class<out E>, EventHandler<E, M, R>>()
+    internal val requestHandlers = mutableMapOf<Class<out R>, RequestHandler<E, R>>()
 
-    internal fun <P : Patch> addInitializer(initializer: Initializer<P>, patchCls: Class<P>) {
-        if (initializers.put(patchCls, initializer) != null) {
-            throw IllegalStateException("Initializer for $patchCls was already added.")
+    internal fun <P : M> addInitializer(initializer: Initializer<P>, patchCls: Class<P>) {
+        check(initializers.put(patchCls, initializer) == null) {
+            "Initializer for $patchCls was already added."
         }
     }
 
-    internal fun <E : Event> addOnEvent(
-        onEvent: EventHandler<E, Patch, Request>,
-        eventCls: Class<E>
+    internal fun <Ev : E> addOnEvent(
+        onEvent: EventHandler<Ev, M, R>,
+        eventCls: Class<Ev>
     ) {
         @Suppress("UNCHECKED_CAST")
-        if (eventHandlers.put(eventCls, onEvent as EventHandler<Event, Patch, Request>) != null) {
-            throw IllegalStateException("Handler for $eventCls was already added.")
+        check(eventHandlers.put(eventCls, onEvent as EventHandler<E, M, R>) == null) {
+            "Handler for $eventCls was already added."
         }
     }
 
-    internal fun <R : Request> addOnRequest(
-        onRequest: RequestHandler<Event, R>,
-        requestCls: Class<R>
+    internal fun <Rq : R> addOnRequest(
+        onRequest: RequestHandler<E, Rq>,
+        requestCls: Class<Rq>
     ) {
         @Suppress("UNCHECKED_CAST")
-        if (requestHandlers.put(requestCls, onRequest as RequestHandler<Event, Request>) != null) {
-            throw IllegalStateException("Handler for $requestCls was already added.")
+        check(requestHandlers.put(requestCls, onRequest as RequestHandler<E, R>) == null) {
+            "Handler for $requestCls was already added."
         }
     }
 }
 
-private class EmpressFromBuilder<Event : Any, Patch : Any, Request : Any>(
+private class EmpressFromBuilder<E : Any, M : Any, R : Any>(
     private val id: String,
-    private val initializers: Collection<Initializer<Patch>>,
-    private val eventHandlers: Map<Class<out Event>, EventHandler<Event, Patch, Request>>,
-    private val requestHandlers: Map<Class<out Request>, RequestHandler<Event, Request>>
-) : Empress<Event, Patch, Request> {
+    private val initializers: Collection<Initializer<M>>,
+    private val eventHandlers: Map<Class<out E>, EventHandler<E, M, R>>,
+    private val requestHandlers: Map<Class<out R>, RequestHandler<E, R>>
+) : Empress<E, M, R> {
 
     override fun id(): String {
         return id
     }
 
-    override fun initializer(): Collection<Patch> {
+    override fun initialize(): Collection<M> {
         return initializers.map { it.invoke(InitializerContext) }
     }
 
     override fun onEvent(
-        event: Event,
-        model: Model<Patch>,
-        requests: Requests<Event, Request>
-    ): Collection<Patch> {
-        val eventHandlerContext = EventHandlerContext(event, model, requests)
+        event: E,
+        models: Models<M>,
+        requests: RequestCommander<R>
+    ): Collection<M> {
+        val eventHandlerContext = EventHandlerContext(event, models, requests)
         return eventHandlers.getValue(event::class.java).invoke(eventHandlerContext)
     }
 
-    override suspend fun onRequest(request: Request): Event {
+    override suspend fun onRequest(request: R): E {
         val requestHandlerContext = RequestHandlerContext(request)
         return requestHandlers.getValue(request::class.java).invoke(requestHandlerContext)
     }
