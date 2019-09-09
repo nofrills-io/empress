@@ -18,7 +18,7 @@ package io.nofrills.empress
 
 import kotlin.reflect.KClass
 
-internal class ModelsImpl<M : Any> constructor(private val modelMap: Map<Class<out M>, M>) :
+internal data class ModelsImpl<M : Any> constructor(private val modelMap: Map<Class<out M>, M>) :
     Models<M> {
     override fun all(): Collection<M> {
         return modelMap.values

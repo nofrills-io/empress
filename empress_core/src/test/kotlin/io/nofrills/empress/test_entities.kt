@@ -21,19 +21,28 @@ import kotlinx.coroutines.delay
 private const val REQUEST_DELAY_MS = 100L
 
 internal sealed class Event {
-    object OnIncrement : Event()
-    object OnCalculateClicked : Event()
+    object CalculateClicked : Event()
     object Calculated : Event()
+    object CancelSending : Event()
+    object Decrement : Event()
+    object Increment : Event()
+    data class Load(val delayMs: Long) : Event()
+    object Loaded : Event()
     object MakeUnhandledRequest : Event()
+    data class Send(val delayMs: Long) : Event()
+    object Sent : Event()
     object Unhandled : Event()
 }
 
 internal sealed class Model {
     data class Counter(var count: Int) : Model()
+    data class Sender(var requestId: RequestId?) : Model()
 }
 
 internal sealed class Request {
     object Calculate : Request()
+    data class Load(val delayMs: Long) : Request()
+    data class Send(val delayMs: Long) : Request()
     object Unhandled : Request()
 }
 
@@ -41,9 +50,9 @@ internal abstract class TestRuler(private val initializeWithDuplicate: Boolean =
     Ruler<Event, Model, Request> {
     override fun initialize(): Collection<Model> {
         if (initializeWithDuplicate) {
-            return listOf(Model.Counter(3), Model.Counter(5))
+            return listOf(Model.Counter(3), Model.Counter(5), Model.Sender(null))
         }
-        return listOf(Model.Counter(0))
+        return listOf(Model.Counter(0), Model.Sender(null))
     }
 
     override suspend fun onRequest(request: Request): Event {
@@ -52,7 +61,15 @@ internal abstract class TestRuler(private val initializeWithDuplicate: Boolean =
                 delay(REQUEST_DELAY_MS)
                 Event.Calculated
             }
-            else -> error("Unknown request $request")
+            is Request.Load -> {
+                delay(request.delayMs)
+                Event.Loaded
+            }
+            is Request.Send -> {
+                delay(request.delayMs)
+                Event.Sent
+            }
+            Request.Unhandled -> throw UnknownRequest
         }
     }
 }
@@ -65,20 +82,43 @@ internal class TestEmpress(initializeWithDuplicate: Boolean = false) :
         requests: RequestCommander<Request>
     ): Collection<Model> {
         return when (event) {
-            Event.OnIncrement -> {
-                val counter = models[Model.Counter::class]
-                listOf(counter.copy(count = counter.count + 1))
-            }
-            Event.OnCalculateClicked -> {
+            Event.CalculateClicked -> {
                 requests.post(Request.Calculate)
                 emptyList()
             }
             Event.Calculated -> emptyList()
+            Event.CancelSending -> {
+                val sender = models[Model.Sender::class]
+                requests.cancel(sender.requestId)
+                listOf(sender.copy(requestId = null))
+            }
+            Event.Decrement -> {
+                val counter = models[Model.Counter::class]
+                listOf(counter.copy(count = counter.count - 1))
+            }
+            Event.Increment -> {
+                val counter = models[Model.Counter::class]
+                listOf(counter.copy(count = counter.count + 1))
+            }
+            is Event.Load -> {
+                requests.post(Request.Load(event.delayMs))
+                emptyList()
+            }
+            Event.Loaded -> emptyList()
             Event.MakeUnhandledRequest -> {
                 requests.post(Request.Unhandled)
                 emptyList()
             }
-            else -> error("Unknown event $event")
+            is Event.Send -> {
+                val sender = models[Model.Sender::class]
+                val requestId = requests.post(Request.Send(event.delayMs))
+                listOf(sender.copy(requestId = requestId))
+            }
+            Event.Sent -> {
+                val sender = models[Model.Sender::class]
+                listOf(sender.copy(requestId = null))
+            }
+            Event.Unhandled -> throw UnknownEvent
         }
     }
 }
@@ -91,17 +131,36 @@ internal class TestEmperor(initializeWithDuplicate: Boolean = false) :
         requests: RequestCommander<Request>
     ) {
         return when (event) {
-            Event.OnIncrement -> models[Model.Counter::class].count += 1
-            Event.OnCalculateClicked -> {
+            Event.CalculateClicked -> {
                 requests.post(Request.Calculate)
                 Unit
             }
             Event.Calculated -> Unit
+            Event.CancelSending -> {
+                val sender = models[Model.Sender::class]
+                requests.cancel(sender.requestId)
+                Unit
+            }
+            Event.Decrement -> models[Model.Counter::class].count -= 1
+            Event.Increment -> models[Model.Counter::class].count += 1
+            is Event.Load -> {
+                requests.post(Request.Load(event.delayMs))
+                Unit
+            }
+            Event.Loaded -> Unit
             Event.MakeUnhandledRequest -> {
                 requests.post(Request.Unhandled)
                 Unit
             }
-            else -> error("Unknown event $event")
+            is Event.Send -> {
+                val sender = models[Model.Sender::class]
+                sender.requestId = requests.post(Request.Send(event.delayMs))
+            }
+            Event.Sent -> models[Model.Sender::class].requestId = null
+            Event.Unhandled -> throw UnknownEvent
         }
     }
 }
+
+internal object UnknownEvent : Throwable()
+internal object UnknownRequest : Throwable()
