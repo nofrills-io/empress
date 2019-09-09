@@ -17,7 +17,14 @@
 package io.nofrills.empress
 
 /** Allows to define __mutable__ models, event and request handlers. */
-interface Emperor<E : Any, M : Any, R : Any> : Ruler<E, M, R>, MutableEventHandler<E, M, R>
+interface Emperor<E : Any, M : Any, R : Any> : Ruler<E, M, R> {
+    /** Handles an incoming [event].
+     * @param event An event that was triggered.
+     * @param models Current models.
+     * @param requests Allows to post new requests or cancel existing ones.
+     */
+    fun onEvent(event: E, models: Models<M>, requests: RequestCommander<R>)
+}
 
 /** Allows to manage an [Emperor] instance. */
 interface EmperorApi<E : Any, M : Any> : EventCommander<E>, RulerApi {
