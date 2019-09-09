@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress
+package io.nofrills.empress.backend
 
+import io.nofrills.empress.Emperor
+import io.nofrills.empress.EmperorApi
+import io.nofrills.empress.Models
+import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 
 /** Runs and manages an [Emperor] instance.
  * @param emperor Emperor instance that we want to run.
  * @param eventHandlerScope A coroutine scope where events will be processed.
  * @param requestHandlerScope A coroutine scope where requests will be processed.
- * @param storedModels Models that were previously stored, and should be used instead models from [initialize][Emperor.initialize].
+ * @param storedModels Models that were previously stored, which will be used instead of the ones initialized in [initialize][io.nofrills.empress.ModelInitializer.initialize] function.
  */
-@UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class EmperorBackend<E : Any, M : Any, R : Any> constructor(
     private val emperor: Emperor<E, M, R>,
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>?
-) : RulerBackend<E, M, R>(emperor, eventHandlerScope, requestHandlerScope),
-    EmperorApi<E, M> {
+) : RulerBackend<E, M, R>(emperor, eventHandlerScope, requestHandlerScope), EmperorApi<E, M> {
 
     private val models = ModelsImpl(makeModelMap(storedModels ?: emptyList(), emperor))
 

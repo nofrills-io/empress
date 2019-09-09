@@ -17,7 +17,7 @@
 package io.nofrills.empress.sample
 
 import io.nofrills.empress.EmpressApi
-import io.nofrills.empress.EmpressBackend
+import io.nofrills.empress.backend.EmpressBackend
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.TestCoroutineScope

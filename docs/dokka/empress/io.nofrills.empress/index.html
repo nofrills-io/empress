@@ -24,7 +24,7 @@ you can also use an <a href="../io.nofrills.empress.builder/index.html">Empress 
 <p>Once you have defined your <a href="-empress/index.html">io.nofrills.empress.Empress</a>, you need a way to run it.
 If you want to use it with <strong>Android</strong> activity or fragment, refer to <a href="../io.nofrills.empress.android/index.html">io.nofrills.empress.android</a>.</p>
 <p>Otherwise, for standalone usage (e.g. in a unit test)
-you should use <a href="-empress-backend/index.html">io.nofrills.empress.EmpressBackend</a> like below:</p>
+you should use <a href="-empress-backend/index.html">io.nofrills.empress.backend.EmpressBackend</a> like below:</p>
 <pre><code class="lang-kotlin">val empress = MyEmpress()
 val coroutineScope = ... // e.g. TestCoroutineScope or your activity's scope
 val api: EmpressApi&lt;Event, Patch&gt; = EmpressBackend(empress, scope)

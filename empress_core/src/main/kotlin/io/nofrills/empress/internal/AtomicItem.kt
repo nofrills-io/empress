@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress
+package io.nofrills.empress.internal
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

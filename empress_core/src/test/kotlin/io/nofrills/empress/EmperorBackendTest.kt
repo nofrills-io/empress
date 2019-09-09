@@ -16,6 +16,7 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.backend.EmperorBackend
 import kotlinx.coroutines.CoroutineScope
 
 internal class EmperorBackendTest :
@@ -31,6 +32,11 @@ internal class EmperorBackendTest :
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<Model>?
     ): EmperorBackend<Event, Model, Request> {
-        return EmperorBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
+        return EmperorBackend(
+            ruler,
+            eventHandlerScope,
+            requestHandlerScope,
+            storedModels
+        )
     }
 }

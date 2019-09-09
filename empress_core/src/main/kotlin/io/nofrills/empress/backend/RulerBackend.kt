@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress
+package io.nofrills.empress.backend
 
+import io.nofrills.empress.EventCommander
+import io.nofrills.empress.Models
+import io.nofrills.empress.ModelInitializer
+import io.nofrills.empress.RequestCommander
+import io.nofrills.empress.Ruler
+import io.nofrills.empress.RulerApi
+import io.nofrills.empress.internal.RequestCommanderImpl
+import io.nofrills.empress.internal.RequestHolder
+import io.nofrills.empress.internal.RequestIdProducer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
@@ -23,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.sync.Mutex
 
+/** Common backend for running and managing a [Ruler]. */
 @UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
 abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
     private val ruler: Ruler<E, M, R>,
@@ -40,12 +50,13 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
 
     private val requestHolder = RequestHolder()
 
-    protected val requestCommander: RequestCommander<R> = RequestCommanderImpl(
-        RequestIdProducer(),
-        ruler,
-        requestHolder,
-        requestHandlerScope
-    ) { sendEvent(it) }
+    internal val requestCommander: RequestCommander<R> =
+        RequestCommanderImpl(
+            RequestIdProducer(),
+            ruler,
+            requestHolder,
+            requestHandlerScope
+        ) { sendEvent(it) }
 
     init {
         eventHandlerScope.coroutineContext[Job]?.invokeOnCompletion {
@@ -66,9 +77,9 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
         return eventChannel.isClosedForSend && handledEvents.isClosedForSend
     }
 
-    /** Returns `true` if the internal [Empress] class is equal to the given [empressClass]. */
-    fun hasEqualClass(empressClass: Class<*>): Boolean {
-        return ruler::class.java == empressClass
+    /** Returns `true` if the internal [Ruler] class is equal to the given [rulerClass]. */
+    fun hasEqualClass(rulerClass: Class<*>): Boolean {
+        return ruler::class.java == rulerClass
     }
 
     internal fun hasEqualId(id: String): Boolean {
@@ -104,7 +115,8 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
     }
 
     internal abstract suspend fun modelSnapshot(): Models<M>
-    protected abstract suspend fun processEvent(event: E)
+
+    internal abstract suspend fun processEvent(event: E)
 
     companion object {
         private const val HANDLED_EVENTS_CHANNEL_CAPACITY = 16

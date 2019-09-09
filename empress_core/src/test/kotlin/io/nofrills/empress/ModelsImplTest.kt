@@ -16,6 +16,7 @@
 
 package io.nofrills.empress
 
+import io.nofrills.empress.internal.ModelsImpl
 import org.junit.Assert.*
 import org.junit.Test
 
