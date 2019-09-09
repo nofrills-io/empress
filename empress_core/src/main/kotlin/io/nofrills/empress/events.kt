@@ -16,7 +16,6 @@
 
 package io.nofrills.empress
 
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 
 /** Event handler for models with immutable fields. */
@@ -48,5 +47,5 @@ interface EventCommander<E : Any> {
     fun events(): Flow<E>
 
     /** Sends an [event] for processing. */
-    fun post(event: E): Job
+    fun post(event: E)
 }
