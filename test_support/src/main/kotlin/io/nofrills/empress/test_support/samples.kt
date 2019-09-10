@@ -1,7 +1,7 @@
 package io.nofrills.empress.test_support
 
 import android.os.Parcelable
-import io.nofrills.empress.Emperor
+import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.Empress
 import io.nofrills.empress.Models
 import io.nofrills.empress.RequestCommander
@@ -52,7 +52,7 @@ class SampleEmpress(private val id: String? = null) : Empress<Event, Model, Requ
 }
 
 
-class SampleEmperor(private val id: String? = null) : Emperor<Event, Model, Request> {
+class SampleMutableEmpress(private val id: String? = null) : MutableEmpress<Event, Model, Request> {
     override fun id(): String {
         return id ?: super.id()
     }

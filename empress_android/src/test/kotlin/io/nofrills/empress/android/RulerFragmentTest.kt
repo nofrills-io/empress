@@ -8,10 +8,9 @@ import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
-import io.nofrills.empress.Emperor
+import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.Models
 import io.nofrills.empress.RequestCommander
-import io.nofrills.empress.Ruler
 import io.nofrills.empress.test_support.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -49,26 +48,26 @@ class RulerFragmentTest {
     fun doubleEnthrone() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val backend = fragment.enthrone(SampleEmperor())
-            assertSame(backend, fragment.enthrone(SampleEmperor()))
+            val backend = fragment.enthrone(SampleMutableEmpress())
+            assertSame(backend, fragment.enthrone(SampleMutableEmpress()))
         }
     }
 
     @Test(expected = IllegalStateException::class)
-    fun doubleEnthroneWithInvalidEmperorInFragment() {
+    fun doubleEnthroneWithInvalidMutableEmpressInFragment() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            fragment.enthrone(SampleEmperor("my_empress"))
-            fragment.enthrone(EmptyEmperor("my_empress"))
+            fragment.enthrone(SampleMutableEmpress("my_empress"))
+            fragment.enthrone(EmptyMutableEmpress("my_empress"))
         }
     }
 
     @Test(expected = IllegalStateException::class)
-    fun doubleEnthroneWithInvalidEmperorInActivity() {
+    fun doubleEnthroneWithInvalidMutableEmpressInActivity() {
         val intent = SampleActivity.newIntent(InstrumentationRegistry.getInstrumentation().context)
         val activityScenario: ActivityScenario<SampleActivity> = ActivityScenario.launch(intent)
         activityScenario.onActivity { activity ->
-            activity.enthrone(EmptyEmperor(SampleEmperor::class.java.name))
+            activity.enthrone(EmptyMutableEmpress(SampleMutableEmpress::class.java.name))
         }
     }
 
@@ -76,8 +75,8 @@ class RulerFragmentTest {
     fun twoEmperorsWithDistinctIds() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val api1 = fragment.enthrone(SampleEmperor("empress1"))
-            val api2 = fragment.enthrone(SampleEmperor("empress2"))
+            val api1 = fragment.enthrone(SampleMutableEmpress("empress1"))
+            val api2 = fragment.enthrone(SampleMutableEmpress("empress2"))
             assertNotSame(api1, api2)
         }
     }
@@ -87,10 +86,10 @@ class RulerFragmentTest {
         finalCounterValue: Int
     ) {
         scenario.onScenario {
-            it.emperorApi.post(Event.Increment)
+            it.mutableEmpressApi.post(Event.Increment)
             it.empressApi.post(Event.Increment)
-            assertEquals(1, it.emperorApi.models()[Model.Counter::class].count)
-            assertEquals(1, it.emperorApi.models()[Model.ParcelableCounter::class].count)
+            assertEquals(1, it.mutableEmpressApi.models()[Model.Counter::class].count)
+            assertEquals(1, it.mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
 
             runBlocking {
                 assertEquals(1, it.empressApi.models()[Model.Counter::class].count)
@@ -99,8 +98,8 @@ class RulerFragmentTest {
         }
         scenario.recreate()
         scenario.onScenario {
-            assertEquals(finalCounterValue, it.emperorApi.models()[Model.Counter::class].count)
-            assertEquals(1, it.emperorApi.models()[Model.ParcelableCounter::class].count)
+            assertEquals(finalCounterValue, it.mutableEmpressApi.models()[Model.Counter::class].count)
+            assertEquals(1, it.mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
 
             runBlocking {
                 assertEquals(finalCounterValue, it.empressApi.models()[Model.Counter::class].count)
@@ -157,7 +156,7 @@ class RulerFragmentTest {
         }
     }
 
-    private class EmptyEmperor(private val id: String? = null) : Emperor<Event, Model, Request> {
+    private class EmptyMutableEmpress(private val id: String? = null) : MutableEmpress<Event, Model, Request> {
         override fun id(): String {
             return id ?: super.id()
         }

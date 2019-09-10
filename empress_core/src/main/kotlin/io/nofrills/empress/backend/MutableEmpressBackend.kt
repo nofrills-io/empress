@@ -16,33 +16,33 @@
 
 package io.nofrills.empress.backend
 
-import io.nofrills.empress.Emperor
-import io.nofrills.empress.EmperorApi
+import io.nofrills.empress.MutableEmpress
+import io.nofrills.empress.MutableEmpressApi
 import io.nofrills.empress.Models
 import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
 
-/** Runs and manages an [Emperor] instance.
- * @param emperor Emperor instance that we want to run.
+/** Runs and manages an [MutableEmpress] instance.
+ * @param mutableEmpress MutableEmpress instance that we want to run.
  * @param eventHandlerScope A coroutine scope where events will be processed.
  * @param requestHandlerScope A coroutine scope where requests will be processed.
  * @param storedModels Models that were previously stored, which will be used instead of the ones initialized in [initialize][io.nofrills.empress.ModelInitializer.initialize] function.
  */
-class EmperorBackend<E : Any, M : Any, R : Any> constructor(
-    private val emperor: Emperor<E, M, R>,
+class MutableEmpressBackend<E : Any, M : Any, R : Any> constructor(
+    private val mutableEmpress: MutableEmpress<E, M, R>,
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>?
-) : RulerBackend<E, M, R>(emperor, eventHandlerScope, requestHandlerScope), EmperorApi<E, M> {
+) : RulerBackend<E, M, R>(mutableEmpress, eventHandlerScope, requestHandlerScope), MutableEmpressApi<E, M> {
 
-    private val models = ModelsImpl(makeModelMap(storedModels ?: emptyList(), emperor))
+    private val models = ModelsImpl(makeModelMap(storedModels ?: emptyList(), mutableEmpress))
 
     override fun models(): Models<M> {
         return models
     }
 
     override suspend fun processEvent(event: E) {
-        emperor.onEvent(event, models, requestCommander)
+        mutableEmpress.onEvent(event, models, requestCommander)
     }
 
     override suspend fun modelSnapshot(): Models<M> {

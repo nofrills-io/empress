@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress.android
+package io.nofrills.empress
 
-import io.nofrills.empress.Emperor
-import io.nofrills.empress.backend.EmperorBackend
+import io.nofrills.empress.backend.MutableEmpressBackend
 import kotlinx.coroutines.CoroutineScope
 
-internal class EmperorFragment<E : Any, M : Any, R : Any> :
-    RulerFragment<E, M, R, EmperorBackend<E, M, R>, Emperor<E, M, R>>() {
-    override fun makeRulerBackend(
-        ruler: Emperor<E, M, R>,
+internal class MutableEmpressBackendTest :
+    RulerBackendTest<MutableEmpressBackend<Event, Model, Request>, MutableEmpress<Event, Model, Request>>() {
+
+    override fun makeRuler(initializeWithDuplicate: Boolean): MutableEmpress<Event, Model, Request> {
+        return TestMutableEmpress(initializeWithDuplicate)
+    }
+
+    override fun makeBackend(
+        ruler: MutableEmpress<Event, Model, Request>,
         eventHandlerScope: CoroutineScope,
         requestHandlerScope: CoroutineScope,
-        storedModels: Collection<M>?
-    ): EmperorBackend<E, M, R> {
-        return EmperorBackend(
+        storedModels: Collection<Model>?
+    ): MutableEmpressBackend<Event, Model, Request> {
+        return MutableEmpressBackend(
             ruler,
             eventHandlerScope,
             requestHandlerScope,
             storedModels
         )
-    }
-
-    override suspend fun getRulerModels(): Collection<M> {
-        return backend.models().all()
     }
 }

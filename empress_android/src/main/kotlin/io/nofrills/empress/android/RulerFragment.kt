@@ -69,7 +69,7 @@ internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBacken
             val requestHandlerScope = CoroutineScope(requestDispatcher + job)
             backend = makeRulerBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
         } else check(backend.hasEqualClass(ruler::class.java)) {
-            "EmperorBackend is already initialized with different Emperor subclass."
+            "Backend is already initialized with a different Empress subclass."
         }
     }
 
