@@ -16,7 +16,7 @@
 
 package io.nofrills.empress.builder
 
-import io.nofrills.empress.Empress
+import io.nofrills.empress.MutableEmpress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -27,25 +27,24 @@ import org.junit.Before
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
-class EmpressBuilderTest {
+class MutableEmpressBuilderTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: Empress<Event, Model, Request>
+    private lateinit var tested: MutableEmpress<Event, Model, Request>
 
     @Before
     fun setUp() {
         scope = TestCoroutineScope()
-        tested = Empress("empressTest") {
+        tested = MutableEmpress("mutableEmpressTest") {
             initializer { Model.Counter(0) }
             initializer { Model.Sender(null) }
 
             onEvent<Event.Click> {
-                val counter = models[Model.Counter::class]
-                listOf(counter.copy(count = counter.count + 1))
+                models[Model.Counter::class].count += 1
             }
 
             onEvent<Event.Submit> {
                 val requestId = requests.post(Request.Send(event.payload))
-                listOf(Model.Sender(requestId))
+                models[Model.Sender::class].requestId = requestId
             }
 
             onRequest<Request.Send> {
@@ -62,7 +61,7 @@ class EmpressBuilderTest {
 
     @Test
     fun hasCorrectId() {
-        assertEquals("empressTest", tested.id())
+        assertEquals("mutableEmpressTest", tested.id())
     }
 
     @Test
@@ -72,23 +71,25 @@ class EmpressBuilderTest {
 
     @Test
     fun eventHandlers() {
-        val model = MockModels(tested.initialize())
+        val models = MockModels(tested.initialize())
 
+        tested.onEvent(Event.Click, models, MockRequests())
         assertEquals(
-            listOf(Model.Counter(1)),
-            tested.onEvent(Event.Click, model, MockRequests())
+            Model.Counter(1),
+            models[Model.Counter::class]
         )
 
+        tested.onEvent(Event.Submit(3), models, MockRequests())
         assertEquals(
-            listOf(Model.Sender(MockRequestId(1))),
-            tested.onEvent(Event.Submit(3), model, MockRequests())
+            Model.Sender(MockRequestId(1)),
+            models[Model.Sender::class]
         )
     }
 
     @Test(expected = NoSuchElementException::class)
     fun unhandledEvent() {
-        val model = MockModels(tested.initialize())
-        tested.onEvent(Event.Sent, model, MockRequests())
+        val models = MockModels(tested.initialize())
+        tested.onEvent(Event.Sent, models, MockRequests())
     }
 
     @Test
@@ -103,7 +104,7 @@ class EmpressBuilderTest {
 
     @Test(expected = IllegalStateException::class)
     fun duplicateInitializer() {
-        Empress<Event, Model, Request>("test") {
+        MutableEmpress<Event, Model, Request>("test") {
             initializer { Model.Counter(0) }
             initializer { Model.Counter(1) }
         }
@@ -111,15 +112,15 @@ class EmpressBuilderTest {
 
     @Test(expected = IllegalStateException::class)
     fun duplicateEventHandler() {
-        Empress<Event, Model, Request>("test") {
-            onEvent<Event.Click> { listOf() }
-            onEvent<Event.Click> { listOf() }
+        MutableEmpress<Event, Model, Request>("test") {
+            onEvent<Event.Click> { }
+            onEvent<Event.Click> { }
         }
     }
 
     @Test(expected = IllegalStateException::class)
     fun duplicateRequestHandler() {
-        Empress<Event, Model, Request>("test") {
+        MutableEmpress<Event, Model, Request>("test") {
             onRequest<Request.Send> { Event.Sent }
             onRequest<Request.Send> { Event.Sent }
         }
