@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
-import io.nofrills.empress.EmperorApi
+import io.nofrills.empress.MutableEmpressApi
 import io.nofrills.empress.EmpressApi
 import io.nofrills.empress.android.enthrone
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +12,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
 
 class SampleActivity : FragmentActivity(), WithRuler {
-    override lateinit var emperorApi: EmperorApi<Event, Model>
+    override lateinit var mutableEmpressApi: MutableEmpressApi<Event, Model>
     override lateinit var empressApi: EmpressApi<Event, Model>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,11 +23,11 @@ class SampleActivity : FragmentActivity(), WithRuler {
             null
         }
 
-        enthroneEmpressApi(retainInstance)
-        enthroneEmperorApi(retainInstance)
+        enthroneEmpress(retainInstance)
+        enthroneMutableEmpress(retainInstance)
     }
 
-    private fun enthroneEmpressApi(retainInstance: Boolean?) {
+    private fun enthroneEmpress(retainInstance: Boolean?) {
         empressApi = if (retainInstance != null) {
             enthrone(
                 SampleEmpress(),
@@ -40,16 +40,16 @@ class SampleActivity : FragmentActivity(), WithRuler {
         }
     }
 
-    private fun enthroneEmperorApi(retainInstance: Boolean?) {
-        emperorApi = if (retainInstance != null) {
+    private fun enthroneMutableEmpress(retainInstance: Boolean?) {
+        mutableEmpressApi = if (retainInstance != null) {
             enthrone(
-                SampleEmperor(),
+                SampleMutableEmpress(),
                 retainInstance = retainInstance,
                 eventDispatcher = Dispatchers.Main,
                 requestDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
             )
         } else {
-            enthrone(SampleEmperor())
+            enthrone(SampleMutableEmpress())
         }
     }
 

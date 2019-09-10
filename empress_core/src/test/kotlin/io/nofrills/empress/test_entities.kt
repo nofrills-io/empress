@@ -123,8 +123,8 @@ internal class TestEmpress(initializeWithDuplicate: Boolean = false) :
     }
 }
 
-internal class TestEmperor(initializeWithDuplicate: Boolean = false) :
-    Emperor<Event, Model, Request>, TestRuler(initializeWithDuplicate) {
+internal class TestMutableEmpress(initializeWithDuplicate: Boolean = false) :
+    MutableEmpress<Event, Model, Request>, TestRuler(initializeWithDuplicate) {
     override fun onEvent(
         event: Event,
         models: Models<Model>,

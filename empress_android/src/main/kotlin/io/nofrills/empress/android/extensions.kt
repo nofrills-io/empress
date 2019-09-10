@@ -72,52 +72,52 @@ fun <E : Any, M : Any, R : Any> Fragment.enthrone(
     ) { EmpressFragment<E, M, R>() }
 }
 
-/** Installs an [emperor] instance into the [activity][this].
- * If an emperor with the same [id][Emperor.id] was already installed,
+/** Installs an [mutableEmpress] instance into the [activity][this].
+ * If an mutableEmpress with the same [id][MutableEmpress.id] was already installed,
  * this method will return an existing instance.
- * @param emperor Instance of [Emperor] to install.
- * @param eventDispatcher A dispatcher to use for handling events in [emperor].
- * @param requestDispatcher A dispatcher to use for handling requests in [emperor].
- * @param retainInstance If true, the [emperor] instance will be retained during configuration changes.
- * @return An instance of [EmperorApi] for communicating with [emperor].
+ * @param mutableEmpress Instance of [MutableEmpress] to install.
+ * @param eventDispatcher A dispatcher to use for handling events in [mutableEmpress].
+ * @param requestDispatcher A dispatcher to use for handling requests in [mutableEmpress].
+ * @param retainInstance If true, the [mutableEmpress] instance will be retained during configuration changes.
+ * @return An instance of [MutableEmpressApi] for communicating with [mutableEmpress].
  */
 fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
-    emperor: Emperor<E, M, R>,
+    mutableEmpress: MutableEmpress<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
-): EmperorApi<E, M> {
+): MutableEmpressApi<E, M> {
     return getRulerBackendInstance(
-        emperor,
+        mutableEmpress,
         supportFragmentManager,
         eventDispatcher = eventDispatcher,
         requestDispatcher = requestDispatcher,
         retainInstance = retainInstance
-    ) { EmperorFragment<E, M, R>() }
+    ) { MutableEmpressFragment<E, M, R>() }
 }
 
-/** Installs an [emperor] instance into the [fragment][this].
- * If an emperor with the same [id][Emperor.id] was already installed,
+/** Installs an [mutableEmpress] instance into the [fragment][this].
+ * If an mutableEmpress with the same [id][MutableEmpress.id] was already installed,
  * this method will return an existing instance.
- * @param emperor Instance of [Emperor] to install.
- * @param eventDispatcher A dispatcher to use for handling events in [emperor].
- * @param requestDispatcher A dispatcher to use for handling requests in [emperor].
- * @param retainInstance If true, the [emperor] instance will be retained during configuration changes.
- * @return An instance of [EmperorApi] for communicating with [emperor].
+ * @param mutableEmpress Instance of [MutableEmpress] to install.
+ * @param eventDispatcher A dispatcher to use for handling events in [mutableEmpress].
+ * @param requestDispatcher A dispatcher to use for handling requests in [mutableEmpress].
+ * @param retainInstance If true, the [mutableEmpress] instance will be retained during configuration changes.
+ * @return An instance of [MutableEmpressApi] for communicating with [mutableEmpress].
  */
 fun <E : Any, M : Any, R : Any> Fragment.enthrone(
-    emperor: Emperor<E, M, R>,
+    mutableEmpress: MutableEmpress<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
-): EmperorApi<E, M> {
+): MutableEmpressApi<E, M> {
     return getRulerBackendInstance(
-        emperor,
+        mutableEmpress,
         childFragmentManager,
         eventDispatcher = eventDispatcher,
         requestDispatcher = requestDispatcher,
         retainInstance = retainInstance
-    ) { EmperorFragment<E, M, R>() }
+    ) { MutableEmpressFragment<E, M, R>() }
 }
 
 private fun <E : Any, M : Any, R : Any, B : RulerBackend<E, M, R>, RL : Ruler<E, M, R>, F : RulerFragment<E, M, R, B, RL>> getRulerBackendInstance(

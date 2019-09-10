@@ -2,7 +2,7 @@ package io.nofrills.empress.test_support
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import io.nofrills.empress.EmperorApi
+import io.nofrills.empress.MutableEmpressApi
 import io.nofrills.empress.EmpressApi
 import io.nofrills.empress.android.enthrone
 import kotlinx.coroutines.Dispatchers
@@ -10,18 +10,18 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
 
 class SampleFragment : Fragment(), WithRuler {
-    override lateinit var emperorApi: EmperorApi<Event, Model>
+    override lateinit var mutableEmpressApi: MutableEmpressApi<Event, Model>
     override lateinit var empressApi: EmpressApi<Event, Model>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val retainInstance = arguments?.getBoolean(RETAIN_ARG) ?: false
 
-        enthroneEmpressApi(retainInstance)
-        enthroneEmperorApi(retainInstance)
+        enthroneEmpress(retainInstance)
+        enthroneMutableEmpress(retainInstance)
     }
 
-    private fun enthroneEmpressApi(retainInstance: Boolean?) {
+    private fun enthroneEmpress(retainInstance: Boolean?) {
         empressApi = if (retainInstance != null) {
             enthrone(
                 SampleEmpress(),
@@ -34,16 +34,16 @@ class SampleFragment : Fragment(), WithRuler {
         }
     }
 
-    private fun enthroneEmperorApi(retainInstance: Boolean?) {
-        emperorApi = if (retainInstance != null) {
+    private fun enthroneMutableEmpress(retainInstance: Boolean?) {
+        mutableEmpressApi = if (retainInstance != null) {
             enthrone(
-                SampleEmperor(),
+                SampleMutableEmpress(),
                 retainInstance = retainInstance,
                 eventDispatcher = Dispatchers.Main,
                 requestDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
             )
         } else {
-            enthrone(SampleEmperor())
+            enthrone(SampleMutableEmpress())
         }
     }
 

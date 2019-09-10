@@ -33,7 +33,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).configure
 Let's say you need to build an app to count things, and send the final value to a server
 (full example in `sample` app module).
 
-1. First, define your events, patches (model) and requests:
+1. First, define your events, model and requests:
 
 ```kotlin
 
@@ -46,8 +46,9 @@ sealed class Event {
 }
 
 // In empress your model is defined as a set of subclasses,
-// where each subclass is responsible for single aspect of application state. 
-sealed class Patch {
+// where each subclass is responsible for single aspect of application state.
+// Your model should be either fully immutable, or fully mutable.
+sealed class Model {
     // In case our process is temporarily killed by the OS, we can make sure
     // our state will be brought back, by implementing `Parcelable`
     @Parcelize
@@ -64,8 +65,12 @@ sealed class Request {
 }
 ```
 
-2. Next, define your empress. You can either implement an [Empress](dokka/empress/io.nofrills.empress/-empress/index.html) interface directly,
-or use [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
+2. Next, define your empress. For immutable models, implement [Empress](dokka/empress/io.nofrills.empress/-empress/index.html)
+interface.
+
+Alternatively, for mutable models, use [MutableEmpress](dokka/empress/io.nofrills.empress/-mutable-empress/index.html)
+
+You can also use an [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
 
 ```kotlin
 val empress = Empress("sampleEmpress") {
