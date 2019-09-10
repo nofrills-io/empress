@@ -52,11 +52,11 @@ sealed class Model {
     // In case our process is temporarily killed by the OS, we can make sure
     // our state will be brought back, by implementing `Parcelable`
     @Parcelize
-    data class Counter(val count: Int) : Patch(), Parcelable
+    data class Counter(val count: Int) : Model(), Parcelable
 
     // In this case it doesn't make sense to implement `Parcelable`,
     // because if our process gets killed, our async request will also die
-    data class Sender(val requestId: RequestId?) : Patch()
+    data class Sender(val requestId: RequestId?) : Model()
 }
 
 sealed class Request {
@@ -65,31 +65,31 @@ sealed class Request {
 }
 ```
 
-2. Next, define your empress. For immutable models, implement [Empress](dokka/empress/io.nofrills.empress/-empress/index.html)
-interface.
+2. Next, define your empress.
 
-Alternatively, for mutable models, use [MutableEmpress](dokka/empress/io.nofrills.empress/-mutable-empress/index.html)
+For __immutable__ models, implement [Empress](dokka/empress/io.nofrills.empress/-empress/index.html)
+interface. Alternatively, for __mutable__ models, use [MutableEmpress](dokka/empress/io.nofrills.empress/-mutable-empress/index.html)
 
 You can also use an [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
 
 ```kotlin
 val empress = Empress("sampleEmpress") {
-    initializer { Patch.Counter(0) }
-    initializer { Patch.Sender(null) }
+    initializer { Model.Counter(0) }
+    initializer { Model.Sender(null) }
 
     onEvent<Event.Decrement> {
-        val counter = model.get<Patch.Counter>()
-        // return a collection of patches that have changed
+        val counter = models[Model.Counter::class]
+        // return a collection of models that have changed
         listOf(counter.copy(count = counter.count - 1))
     }
 
     onEvent<Event.Increment> {
-        val counter = model.get<Patch.Counter>()
+        val counter = models[Model.Counter::class]
         listOf(counter.copy(count = counter.count + 1))
     }
-    
+
     onEvent<Event.SendCounter> {
-        val sender = model.get<Patch.Sender>()
+        val sender = models[Model.Sender::class]
         if (sender.requestId != null) {
             // Counter value is already being sent,
             // so we return an empty collection, since there's nothing to be done.
@@ -102,17 +102,17 @@ val empress = Empress("sampleEmpress") {
             // We create a request and queue it..
             val requestId = requests.post(Request.SendCounter(counter.count))
             
-            // ..while returning an updated patch.
-            listOf(Patch.Sender(requestId))
+            // ..while returning an updated model.
+            listOf(Model.Sender(requestId))
         }
     }
-    
+
     onEvent<Event.CounterSent> {
-        val sender = model.get<Patch.Sender>()
+        val sender = model[Model.Sender::class]
         if (sender.requestId == null) {
             listOf()
         } else {
-            listOf(Patch.Sender(null))
+            listOf(Model.Sender(null))
         }
     }
 
@@ -126,7 +126,7 @@ val empress = Empress("sampleEmpress") {
 3. In your `Activity` or `Fragment`, attach your empress, send events and listen for updates:
 
 ```kotlin
-private lateinit var api: EmpressApi<Event, Patch>
+private lateinit var api: EmpressApi<Event, Model>
 
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -146,18 +146,18 @@ override fun onCreate(savedInstanceState: Bundle?) {
         // first, we can render the whole UI
         render(api.modelSnapshot().all())
 
-        // then we listen for updates and render only the updated patches
+        // then we listen for updates and render only the updated models
         api.updates().collect { update ->
-            render(update.model.updated(), update.event)
+            render(update.updated, update.event)
         }
     }
 }
 
-private fun render(patches: Collection<Patch>, sourceEvent: Event? = null) {
-    for (patch in patches) {
-        when (patch) {
-            is Patch.Counter -> text_view.text = patch.count.toString()
-            is Patch.Sender -> updateProgress(showLoader = patch.requestId != null)
+private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
+    for (model in models) {
+        when (model) {
+            is Model.Counter -> text_view.text = model.count.toString()
+            is Model.Sender -> updateProgress(showLoader = model.requestId != null)
         }
     }
 }
