@@ -50,6 +50,11 @@ object InitializerContext
  */
 typealias EventHandler<E, M, R> = EventHandlerContext<E, M, R>.() -> Collection<M>
 
+/** Handles an event.
+ * Intended for mutable models.
+ */
+typealias MutableEventHandler<E, M, R> = EventHandlerContext<E, M, R>.() -> Unit
+
 /** Handles (executes) a request. */
 typealias RequestHandler<E, R> = suspend RequestHandlerContext<R>.() -> E
 
@@ -71,29 +76,34 @@ fun <E : Any, M : Any, R : Any> Empress(
     return builder.build()
 }
 
+/** Builds an [MutableEmpress] instance.
+ * @param id ID for [MutableEmpress] instance.
+ * @param body Specification for the new [MutableEmpress] instance.
+ * @return New [MutableEmpress].
+ */
+@Suppress("FunctionName")
+fun <E : Any, M : Any, R : Any> MutableEmpress(
+    id: String,
+    body: MutableEmpressBuilder<E, M, R>.() -> Unit
+): MutableEmpress<E, M, R> {
+    val builder = MutableEmpressBuilder<E, M, R>(id)
+    body(builder)
+    return builder.build()
+}
+
 /** Allows to build an [Empress] instance. */
 @EmpressDslMarker
-class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) {
-    private val builderData = EmpressBuilderData<E, M, R>()
+abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> internal constructor() {
+    internal val builderData = EmpressBuilderData<E, M, R>()
 
-    /** Defines an initializer for a [M]. */
-    inline fun <reified P : M> initializer(noinline body: Initializer<P>) {
-        initializer(body, P::class.java)
+    /** Defines an initializer for a [Md] model. */
+    inline fun <reified Md : M> initializer(noinline body: Initializer<Md>) {
+        initializer(body, Md::class.java)
     }
 
     /** @see initializer */
-    fun <P : M> initializer(body: Initializer<P>, patchClass: Class<P>) {
+    fun <Md : M> initializer(body: Initializer<Md>, patchClass: Class<Md>) {
         builderData.addInitializer(body, patchClass)
-    }
-
-    /** Defines event handler for an [E]. */
-    inline fun <reified Ev : E> onEvent(noinline body: EventHandler<Ev, M, R>) {
-        onEvent(Ev::class.java, body)
-    }
-
-    /** @see onEvent */
-    fun <Ev : E> onEvent(eventClass: Class<Ev>, body: EventHandler<Ev, M, R>) {
-        builderData.addOnEvent(body, eventClass)
     }
 
     /** Defines request handler for a [R]. */
@@ -106,7 +116,25 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val
         builderData.addOnRequest(body, requestClass)
     }
 
-    internal fun build(): Empress<E, M, R> {
+    internal abstract fun build(): RL
+}
+
+/** Allows to build an [Empress] instance. */
+@EmpressDslMarker
+class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) :
+    RulerBuilder<E, M, R, Empress<E, M, R>>() {
+
+    /** Defines event handler for an [E]. */
+    inline fun <reified Ev : E> onEvent(noinline body: EventHandler<Ev, M, R>) {
+        onEvent(Ev::class.java, body)
+    }
+
+    /** @see onEvent */
+    fun <Ev : E> onEvent(eventClass: Class<Ev>, body: EventHandler<Ev, M, R>) {
+        builderData.addOnEvent(body, eventClass)
+    }
+
+    override fun build(): Empress<E, M, R> {
         return EmpressFromBuilder(
             id,
             builderData.initializers.values,
@@ -116,12 +144,38 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val
     }
 }
 
-private class EmpressBuilderData<E : Any, M : Any, R : Any> {
+/** Allows to build an [Empress] instance. */
+@EmpressDslMarker
+class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) :
+    RulerBuilder<E, M, R, MutableEmpress<E, M, R>>() {
+
+    /** Defines event handler for an [E]. */
+    inline fun <reified Ev : E> onEvent(noinline body: MutableEventHandler<Ev, M, R>) {
+        onEvent(Ev::class.java, body)
+    }
+
+    /** @see onEvent */
+    fun <Ev : E> onEvent(eventClass: Class<Ev>, body: MutableEventHandler<Ev, M, R>) {
+        builderData.addOnMutableEvent(body, eventClass)
+    }
+
+    override fun build(): MutableEmpress<E, M, R> {
+        return MutableEmpressFromBuilder(
+            id,
+            builderData.initializers.values,
+            builderData.mutableEventHandlers,
+            builderData.requestHandlers
+        )
+    }
+}
+
+internal class EmpressBuilderData<E : Any, M : Any, R : Any> {
     internal val initializers = mutableMapOf<Class<out M>, Initializer<M>>()
     internal val eventHandlers = mutableMapOf<Class<out E>, EventHandler<E, M, R>>()
+    internal val mutableEventHandlers = mutableMapOf<Class<out E>, MutableEventHandler<E, M, R>>()
     internal val requestHandlers = mutableMapOf<Class<out R>, RequestHandler<E, R>>()
 
-    internal fun <P : M> addInitializer(initializer: Initializer<P>, patchCls: Class<P>) {
+    internal fun <Md : M> addInitializer(initializer: Initializer<Md>, patchCls: Class<Md>) {
         check(initializers.put(patchCls, initializer) == null) {
             "Initializer for $patchCls was already added."
         }
@@ -133,6 +187,16 @@ private class EmpressBuilderData<E : Any, M : Any, R : Any> {
     ) {
         @Suppress("UNCHECKED_CAST")
         check(eventHandlers.put(eventCls, onEvent as EventHandler<E, M, R>) == null) {
+            "Handler for $eventCls was already added."
+        }
+    }
+
+    internal fun <Ev : E> addOnMutableEvent(
+        onEvent: MutableEventHandler<Ev, M, R>,
+        eventCls: Class<Ev>
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        check(mutableEventHandlers.put(eventCls, onEvent as MutableEventHandler<E, M, R>) == null) {
             "Handler for $eventCls was already added."
         }
     }
@@ -170,6 +234,36 @@ private class EmpressFromBuilder<E : Any, M : Any, R : Any>(
     ): Collection<M> {
         val eventHandlerContext = EventHandlerContext(event, models, requests)
         return eventHandlers.getValue(event::class.java).invoke(eventHandlerContext)
+    }
+
+    override suspend fun onRequest(request: R): E {
+        val requestHandlerContext = RequestHandlerContext(request)
+        return requestHandlers.getValue(request::class.java).invoke(requestHandlerContext)
+    }
+}
+
+private class MutableEmpressFromBuilder<E : Any, M : Any, R : Any>(
+    private val id: String,
+    private val initializers: Collection<Initializer<M>>,
+    private val eventHandlers: Map<Class<out E>, MutableEventHandler<E, M, R>>,
+    private val requestHandlers: Map<Class<out R>, RequestHandler<E, R>>
+) : MutableEmpress<E, M, R> {
+
+    override fun id(): String {
+        return id
+    }
+
+    override fun initialize(): Collection<M> {
+        return initializers.map { it.invoke(InitializerContext) }
+    }
+
+    override fun onEvent(
+        event: E,
+        models: Models<M>,
+        requests: RequestCommander<R>
+    ) {
+        val eventHandlerContext = EventHandlerContext(event, models, requests)
+        eventHandlers.getValue(event::class.java).invoke(eventHandlerContext)
     }
 
     override suspend fun onRequest(request: R): E {
