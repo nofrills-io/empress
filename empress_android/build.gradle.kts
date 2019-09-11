@@ -52,6 +52,7 @@ dependencies {
     debugImplementation(Deps.fragmentTesting)
 
     testImplementation(project(":test_support"))
+    testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
     testImplementation(Deps.robolectric)
 

@@ -1,47 +1,47 @@
 package io.nofrills.empress.android
 
 import android.app.Activity
-import android.content.Intent
-import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragment
 import androidx.test.core.app.ActivityScenario
-import androidx.test.platform.app.InstrumentationRegistry
-import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.Models
+import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.RequestCommander
 import io.nofrills.empress.test_support.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class RulerFragmentTest {
     @Test
     fun retainedActivity() {
-        val scenario = activityScenario(true)
-        recreationTest(scenario, 1)
+        val scenario = activityScenario()
+        recreationTest(scenario, true, 1)
     }
 
     @Test
     fun unretainedActivity() {
-        val scenario = activityScenario(false)
-        recreationTest(scenario, 0)
+        val scenario = activityScenario()
+        recreationTest(scenario, false, 0)
     }
 
     @Test
     fun retainedFragment() {
-        val scenario = fragmentScenario(true)
-        recreationTest(scenario, 1)
+        val scenario = fragmentScenario()
+        recreationTest(scenario, true, 1)
     }
 
     @Test
     fun unretainedFragment() {
-        val scenario = fragmentScenario(false)
-        recreationTest(scenario, 0)
+        val scenario = fragmentScenario()
+        recreationTest(scenario, false, 0)
     }
 
     @Test
@@ -64,9 +64,9 @@ class RulerFragmentTest {
 
     @Test(expected = IllegalStateException::class)
     fun doubleEnthroneWithInvalidMutableEmpressInActivity() {
-        val intent = SampleActivity.newIntent(InstrumentationRegistry.getInstrumentation().context)
-        val activityScenario: ActivityScenario<SampleActivity> = ActivityScenario.launch(intent)
+        val activityScenario = ActivityScenario.launch(SampleActivity::class.java)
         activityScenario.onActivity { activity ->
+            activity.enthrone(SampleMutableEmpress())
             activity.enthrone(EmptyMutableEmpress(SampleMutableEmpress::class.java.name))
         }
     }
@@ -83,42 +83,49 @@ class RulerFragmentTest {
 
     private fun <T : WithRuler> recreationTest(
         scenario: CommonScenario<T>,
+        retainInstance: Boolean,
         finalCounterValue: Int
     ) {
+        val dispatcher = TestCoroutineDispatcher()
+
         scenario.onScenario {
-            it.mutableEmpressApi.post(Event.Increment)
-            it.empressApi.post(Event.Increment)
-            assertEquals(1, it.mutableEmpressApi.models()[Model.Counter::class].count)
-            assertEquals(1, it.mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
+            val empressApi = it.enthroneEmpress(dispatcher, retainInstance)
+            val mutableEmpressApi = it.enthroneMutableEmpress(dispatcher, retainInstance)
+
+            empressApi.post(Event.Increment)
+            mutableEmpressApi.post(Event.Increment)
 
             runBlocking {
-                assertEquals(1, it.empressApi.models()[Model.Counter::class].count)
-                assertEquals(1, it.empressApi.models()[Model.ParcelableCounter::class].count)
+                assertEquals(1, empressApi.models()[Model.Counter::class].count)
+                assertEquals(1, empressApi.models()[Model.ParcelableCounter::class].count)
             }
+
+            assertEquals(1, mutableEmpressApi.models()[Model.Counter::class].count)
+            assertEquals(1, mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
         }
+
         scenario.recreate()
+
         scenario.onScenario {
-            assertEquals(finalCounterValue, it.mutableEmpressApi.models()[Model.Counter::class].count)
-            assertEquals(1, it.mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
+            val empressApi = it.enthroneEmpress(dispatcher, retainInstance)
+            val mutableEmpressApi = it.enthroneMutableEmpress(dispatcher, retainInstance)
 
             runBlocking {
-                assertEquals(finalCounterValue, it.empressApi.models()[Model.Counter::class].count)
-                assertEquals(1, it.empressApi.models()[Model.ParcelableCounter::class].count)
+                assertEquals(finalCounterValue, empressApi.models()[Model.Counter::class].count)
+                assertEquals(1, empressApi.models()[Model.ParcelableCounter::class].count)
             }
+
+            assertEquals(finalCounterValue, mutableEmpressApi.models()[Model.Counter::class].count)
+            assertEquals(1, mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
         }
     }
 
-    private fun activityScenario(retainInstance: Boolean): CommonScenario<SampleActivity> {
-        val intent = SampleActivity.newIntent(
-            InstrumentationRegistry.getInstrumentation().context,
-            retainInstance
-        )
-        return CommonScenario.FromActivity(intent)
+    private fun activityScenario(): CommonScenario<SampleActivity> {
+        return CommonScenario.FromActivity(ActivityScenario.launch(SampleActivity::class.java))
     }
 
-    private fun fragmentScenario(retainInstance: Boolean): CommonScenario<SampleFragment> {
-        val args = SampleFragment.argsBundle(retainInstance)
-        return CommonScenario.FromFragment(SampleFragment::class.java, args)
+    private fun fragmentScenario(): CommonScenario<SampleFragment> {
+        return CommonScenario.FromFragment(launchFragment())
     }
 
     private sealed class CommonScenario<T> {
@@ -127,8 +134,6 @@ class RulerFragmentTest {
 
         class FromActivity<A : Activity>(private val scenario: ActivityScenario<A>) :
             CommonScenario<A>() {
-
-            constructor(intent: Intent) : this(ActivityScenario.launch(intent))
 
             override fun onScenario(body: (A) -> Unit) {
                 scenario.onActivity(body)
@@ -142,10 +147,6 @@ class RulerFragmentTest {
         class FromFragment<F : Fragment>(private val scenario: FragmentScenario<F>) :
             CommonScenario<F>() {
 
-            constructor(fragmentClass: Class<F>, args: Bundle) : this(
-                FragmentScenario.launch(fragmentClass, args)
-            )
-
             override fun onScenario(body: (F) -> Unit) {
                 scenario.onFragment(body)
             }
@@ -156,7 +157,8 @@ class RulerFragmentTest {
         }
     }
 
-    private class EmptyMutableEmpress(private val id: String? = null) : MutableEmpress<Event, Model, Request> {
+    private class EmptyMutableEmpress(private val id: String? = null) :
+        MutableEmpress<Event, Model, Request> {
         override fun id(): String {
             return id ?: super.id()
         }
