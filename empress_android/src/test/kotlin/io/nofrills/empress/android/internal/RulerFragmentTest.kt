@@ -1,4 +1,20 @@
-package io.nofrills.empress.android
+/*
+ * Copyright 2019 Mateusz Armatys
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.nofrills.empress.android.internal
 
 import android.app.Activity
 import androidx.fragment.app.Fragment
@@ -8,6 +24,7 @@ import androidx.test.core.app.ActivityScenario
 import io.nofrills.empress.Models
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.RequestCommander
+import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -58,7 +75,11 @@ class RulerFragmentTest {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
             fragment.enthrone(SampleMutableEmpress("my_empress"))
-            fragment.enthrone(EmptyMutableEmpress("my_empress"))
+            fragment.enthrone(
+                EmptyMutableEmpress(
+                    "my_empress"
+                )
+            )
         }
     }
 
@@ -67,7 +88,11 @@ class RulerFragmentTest {
         val activityScenario = ActivityScenario.launch(SampleActivity::class.java)
         activityScenario.onActivity { activity ->
             activity.enthrone(SampleMutableEmpress())
-            activity.enthrone(EmptyMutableEmpress(SampleMutableEmpress::class.java.name))
+            activity.enthrone(
+                EmptyMutableEmpress(
+                    SampleMutableEmpress::class.java.name
+                )
+            )
         }
     }
 
@@ -121,11 +146,15 @@ class RulerFragmentTest {
     }
 
     private fun activityScenario(): CommonScenario<SampleActivity> {
-        return CommonScenario.FromActivity(ActivityScenario.launch(SampleActivity::class.java))
+        return CommonScenario.FromActivity(
+            ActivityScenario.launch(SampleActivity::class.java)
+        )
     }
 
     private fun fragmentScenario(): CommonScenario<SampleFragment> {
-        return CommonScenario.FromFragment(launchFragment())
+        return CommonScenario.FromFragment(
+            launchFragment()
+        )
     }
 
     private sealed class CommonScenario<T> {

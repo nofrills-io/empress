@@ -20,6 +20,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import io.nofrills.empress.*
+import io.nofrills.empress.android.internal.EmpressFragment
+import io.nofrills.empress.android.internal.MutableEmpressFragment
+import io.nofrills.empress.android.internal.RulerFragment
 import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

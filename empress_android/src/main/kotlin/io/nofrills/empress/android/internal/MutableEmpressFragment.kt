@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress.android
+package io.nofrills.empress.android.internal
 
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.backend.MutableEmpressBackend

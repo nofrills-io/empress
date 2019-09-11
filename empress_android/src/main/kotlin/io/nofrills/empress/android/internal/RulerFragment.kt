@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress.android
+package io.nofrills.empress.android.internal
 
 import android.os.Bundle
 import android.os.Parcelable
