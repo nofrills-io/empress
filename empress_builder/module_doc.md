@@ -2,8 +2,9 @@
 
 Simple DSL for defining an Empress.
 
-By using the [io.nofrills.empress.builder.Empress] builder function, you can quickly
-define your custom implementation of [io.nofrills.empress.Empress] interface. For example:
+By using the [io.nofrills.empress.builder.Empress] or [io.nofrills.empress.builder.MutableEmpress]
+builder functions, you can quickly define your custom implementation
+of [io.nofrills.empress.Empress] or [io.nofrills.empress.MutableEmpress] interfaces. For example:
 
 ```kotlin
 val empress = Empress("myEmpress") {
