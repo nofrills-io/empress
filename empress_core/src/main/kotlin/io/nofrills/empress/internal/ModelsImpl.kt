@@ -22,7 +22,7 @@ import kotlin.reflect.KClass
 internal data class ModelsImpl<M : Any> constructor(private val modelMap: Map<Class<out M>, M>) :
     Models<M> {
     override fun all(): Collection<M> {
-        return modelMap.values
+        return modelMap.values.toList()
     }
 
     override fun <T : M> get(modelClass: Class<T>): T {
