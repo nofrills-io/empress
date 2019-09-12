@@ -18,19 +18,19 @@
 <td>
 <a href="../io.nofrills.empress/-empress/index.html">io.nofrills.empress.Empress</a></td>
 <td>
-<p>The main interface that needs to be implemented.</p>
+<p>Allows to define <strong>immutable</strong> models, event and request handlers.</p>
 </td>
 </tr>
 <tr>
 <td>
 <a href="../io.nofrills.empress/-empress-api/index.html">io.nofrills.empress.EmpressApi</a></td>
 <td>
-<p>Interface for interacting with a running <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+<p>Allows to manage an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
 </td>
 </tr>
 <tr>
 <td>
-<a href="../io.nofrills.empress/-empress-backend/index.html">io.nofrills.empress.backend.EmpressBackend</a></td>
+<a href="../io.nofrills.empress.backend/-empress-backend/index.html">io.nofrills.empress.backend.EmpressBackend</a></td>
 <td>
 <p>Runs and manages an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
 </td>
@@ -51,10 +51,17 @@
 </tr>
 <tr>
 <td>
+<a href="../io.nofrills.empress/-event-commander/index.html">io.nofrills.empress.EventCommander</a></td>
+<td>
+<p>Allows to send events and listen to processed events.</p>
+</td>
+</tr>
+<tr>
+<td>
 <a href="../io.nofrills.empress.builder/-event-handler.html">io.nofrills.empress.builder.EventHandler</a></td>
 <td>
 <p>Handles an event.
-Event handler should return a collection of patches that have changed.
+Event handler should return a collection of models that have changed.
 If nothing has changed, it should return an empty collection.</p>
 </td>
 </tr>
@@ -81,23 +88,71 @@ If nothing has changed, it should return an empty collection.</p>
 <td>
 <a href="../io.nofrills.empress.builder/-initializer.html">io.nofrills.empress.builder.Initializer</a></td>
 <td>
-<p>Creates an initial patch value.</p>
+<p>Creates an initial model value.</p>
 </td>
 </tr>
 <tr>
 <td>
 <a href="../io.nofrills.empress.builder/-initializer-context.html">io.nofrills.empress.builder.InitializerContext</a></td>
 <td>
-<p>Context for patch initializers.</p>
+<p>Context for model initializers.</p>
 </td>
 </tr>
 <tr>
 <td>
-<a href="../io.nofrills.empress/-model/index.html">io.nofrills.empress.Model</a></td>
+<a href="../io.nofrills.empress/-model-initializer/index.html">io.nofrills.empress.ModelInitializer</a></td>
 <td>
-<p>Represents state of your application.
-A model consists of a set of <a href="../io.nofrills.empress/-model/index.html#Patch">patches</a>, where a <a href="../io.nofrills.empress/-model/index.html#Patch">Patch</a> is usually
-defined as a sealed class, and each subclass of <a href="../io.nofrills.empress/-model/index.html#Patch">Patch</a> is related to a single aspect of the state.</p>
+<p>Initializes the models.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress/-models/index.html">io.nofrills.empress.Models</a></td>
+<td>
+<p>Allows to access the models.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress/-mutable-empress/index.html">io.nofrills.empress.MutableEmpress</a></td>
+<td>
+<p>Allows to define <strong>mutable</strong> models, event and request handlers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress/-mutable-empress-api/index.html">io.nofrills.empress.MutableEmpressApi</a></td>
+<td>
+<p>Allows to manage an <a href="../io.nofrills.empress/-mutable-empress/index.html">MutableEmpress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress.backend/-mutable-empress-backend/index.html">io.nofrills.empress.backend.MutableEmpressBackend</a></td>
+<td>
+<p>Runs and manages an <a href="../io.nofrills.empress/-mutable-empress/index.html">MutableEmpress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress.builder/-mutable-empress-builder/index.html">io.nofrills.empress.builder.MutableEmpressBuilder</a></td>
+<td>
+<p>Allows to build an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress.builder/-mutable-event-handler.html">io.nofrills.empress.builder.MutableEventHandler</a></td>
+<td>
+<p>Handles an event.
+Intended for mutable models.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress/-request-commander/index.html">io.nofrills.empress.RequestCommander</a></td>
+<td>
+<p>Manages requests.</p>
 </td>
 </tr>
 <tr>
@@ -109,6 +164,13 @@ defined as a sealed class, and each subclass of <a href="../io.nofrills.empress/
 </tr>
 <tr>
 <td>
+<a href="../io.nofrills.empress/-request-handler/index.html">io.nofrills.empress.RequestHandler</a></td>
+<td>
+<p>Handles requests.</p>
+</td>
+</tr>
+<tr>
+<td>
 <a href="../io.nofrills.empress.builder/-request-handler-context/index.html">io.nofrills.empress.builder.RequestHandlerContext</a></td>
 <td>
 <p>Context for handling requests.</p>
@@ -116,23 +178,45 @@ defined as a sealed class, and each subclass of <a href="../io.nofrills.empress/
 </tr>
 <tr>
 <td>
-<a href="../io.nofrills.empress/-request-id/index.html">io.nofrills.empress.RequestId</a></td>
+<a href="../io.nofrills.empress/-request-id.html">io.nofrills.empress.RequestId</a></td>
 <td>
-<p>Represents a running request.</p>
+<p>Represents a running request.
+Note: This class does not implement <code>android.os.Parcelable</code> interface.</p>
 </td>
 </tr>
 <tr>
 <td>
-<a href="../io.nofrills.empress/-requests/index.html">io.nofrills.empress.Requests</a></td>
+<a href="../io.nofrills.empress/-ruler/index.html">io.nofrills.empress.Ruler</a></td>
 <td>
-<p>Allows to manage any additional asynchronous requests (e.g. downloading data from a server).</p>
+<p>Common interface for defining models and handling requests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress/-ruler-api/index.html">io.nofrills.empress.RulerApi</a></td>
+<td>
+<p>Common interface for managing a <a href="../io.nofrills.empress/-ruler/index.html">Ruler</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress.backend/-ruler-backend/index.html">io.nofrills.empress.backend.RulerBackend</a></td>
+<td>
+<p>Common backend for running and managing a <a href="../io.nofrills.empress/-ruler/index.html">Ruler</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<a href="../io.nofrills.empress.builder/-ruler-builder/index.html">io.nofrills.empress.builder.RulerBuilder</a></td>
+<td>
+<p>Allows to build an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
 </td>
 </tr>
 <tr>
 <td>
 <a href="../io.nofrills.empress/-update/index.html">io.nofrills.empress.Update</a></td>
 <td>
-<p>Represents an update in the <a href="../io.nofrills.empress/-update/model.html">model</a>, that resulted from processing an <a href="../io.nofrills.empress/-update/event.html">event</a>.</p>
+<p>Represents an update, that resulted from processing an <a href="../io.nofrills.empress/-update/event.html">event</a>.</p>
 </td>
 </tr>
 </tbody>

@@ -8,39 +8,19 @@
 <a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress</a>&nbsp;/&nbsp;<a href="./index.html">EmpressApi</a><br/>
 <br/>
 <h1>EmpressApi</h1>
-<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
-<p>Interface for interacting with a running <a href="../-empress/index.html">Empress</a> instance.</p>
+<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-event-commander/index.html"><span class="identifier">EventCommander</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-ruler-api/index.html"><span class="identifier">RulerApi</span></a></code>
+<p>Allows to manage an <a href="../-empress/index.html">Empress</a> instance.</p>
 <h3>Functions</h3>
 <table>
 <tbody>
 <tr>
 <td>
-<p><a href="interrupt.html">interrupt</a></p>
+<p><a href="models.html">models</a></p>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">interrupt</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
-<p>Interrupts processing of events.
-Calling this will cause the completion of the <a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html">flow</a> returned by <a href="updates.html">updates</a>.
-Usually only needed in tests.</p>
-</td>
-</tr>
-<tr>
-<td>
-<p><a href="model-snapshot.html">modelSnapshot</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">modelSnapshot</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-model/index.html"><span class="identifier">Model</span></a><span class="symbol">&lt;</span><a href="index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<code><span class="keyword">abstract</span> <span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">models</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../-models/index.html"><span class="identifier">Models</span></a><span class="symbol">&lt;</span><a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
 <p>Return current snapshot of the model.
 Usually you want to obtain whole model when starting the application.</p>
-</td>
-</tr>
-<tr>
-<td>
-<p><a href="send.html">send</a></p>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">send</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.EmpressApi$send(io.nofrills.empress.EmpressApi.Event)/event">event</span><span class="symbol">:</span>&nbsp;<a href="index.html#Event"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-job/index.html"><span class="identifier">Job</span></a></code>
-<p>Sends an <a href="send.html#io.nofrills.empress.EmpressApi$send(io.nofrills.empress.EmpressApi.Event)/event">event</a> for processing.</p>
 </td>
 </tr>
 <tr>
@@ -48,9 +28,41 @@ Usually you want to obtain whole model when starting the application.</p>
 <p><a href="updates.html">updates</a></p>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">updates</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html"><span class="identifier">Flow</span></a><span class="symbol">&lt;</span><a href="../-update/index.html"><span class="identifier">Update</span></a><span class="symbol">&lt;</span><a href="index.html#Event"><span class="identifier">Event</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
-<p>Allows to listen for <a href="../-update/index.html">updates</a>.
-When receiving an update, you can check <a href="../-model/updated.html">Model.updated</a> to see which patches have changed.</p>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">updates</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html"><span class="identifier">Flow</span></a><span class="symbol">&lt;</span><a href="../-update/index.html"><span class="identifier">Update</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Allows to listen for <a href="../-update/index.html">updates</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inherited Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-event-commander/events.html">events</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">events</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html"><span class="identifier">Flow</span></a><span class="symbol">&lt;</span><a href="../-event-commander/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span></code>
+<p>Allows to listen for events that have been handled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-ruler-api/interrupt.html">interrupt</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">interrupt</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Interrupts event processing loop.
+Usually only needed in tests.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-event-commander/post.html">post</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.EventCommander$post(io.nofrills.empress.EventCommander.E)/event">event</span><span class="symbol">:</span>&nbsp;<a href="../-event-commander/index.html#E"><span class="identifier">E</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sends an <a href="../-event-commander/post.html#io.nofrills.empress.EventCommander$post(io.nofrills.empress.EventCommander.E)/event">event</a> for processing.</p>
 </td>
 </tr>
 </tbody>
@@ -60,10 +72,10 @@ When receiving an update, you can check <a href="../-model/updated.html">Model.u
 <tbody>
 <tr>
 <td>
-<p><a href="../-empress-backend/index.html">EmpressBackend</a></p>
+<p><a href="../../io.nofrills.empress.backend/-empress-backend/index.html">EmpressBackend</a></p>
 </td>
 <td>
-<code><span class="keyword">class </span><span class="identifier">EmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">Event</span><span class="symbol">, </span><span class="identifier">Patch</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">Request</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">EmpressApi</span></a><span class="symbol">&lt;</span><a href="../-empress-backend/index.html#Event"><span class="identifier">Event</span></a><span class="symbol">,</span>&nbsp;<a href="../-empress-backend/index.html#Patch"><span class="identifier">Patch</span></a><span class="symbol">&gt;</span></code>
+<code><span class="keyword">class </span><span class="identifier">EmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../io.nofrills.empress.backend/-ruler-backend/index.html"><span class="identifier">RulerBackend</span></a><span class="symbol">&lt;</span><a href="../../io.nofrills.empress.backend/-empress-backend/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="../../io.nofrills.empress.backend/-empress-backend/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="../../io.nofrills.empress.backend/-empress-backend/index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="./index.html"><span class="identifier">EmpressApi</span></a><span class="symbol">&lt;</span><a href="../../io.nofrills.empress.backend/-empress-backend/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="../../io.nofrills.empress.backend/-empress-backend/index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
 <p>Runs and manages an <a href="../-empress/index.html">Empress</a> instance.</p>
 </td>
 </tr>

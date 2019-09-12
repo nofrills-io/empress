@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>RulerBuilder - empress</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress.builder</a>&nbsp;/&nbsp;<a href="./index.html">RulerBuilder</a><br/>
+<br/>
+<h1>RulerBuilder</h1>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">RulerBuilder</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">RL</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../../io.nofrills.empress/-ruler/index.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Allows to build an <a href="../../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="initializer.html">initializer</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Md</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span> <span class="identifier">initializer</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.builder.RulerBuilder$initializer(kotlin.Function1((io.nofrills.empress.builder.InitializerContext, io.nofrills.empress.builder.RulerBuilder.initializer.Md)))/body">body</span><span class="symbol">:</span>&nbsp;<a href="../-initializer.html"><span class="identifier">Initializer</span></a><span class="symbol">&lt;</span><a href="initializer.html#Md"><span class="identifier">Md</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Defines an initializer for a <a href="initializer.html#Md">Md</a> model.</p>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Md</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span> <span class="identifier">initializer</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.builder.RulerBuilder$initializer(kotlin.Function1((io.nofrills.empress.builder.InitializerContext, io.nofrills.empress.builder.RulerBuilder.initializer.Md)), java.lang.Class((io.nofrills.empress.builder.RulerBuilder.initializer.Md)))/body">body</span><span class="symbol">:</span>&nbsp;<a href="../-initializer.html"><span class="identifier">Initializer</span></a><span class="symbol">&lt;</span><a href="initializer.html#Md"><span class="identifier">Md</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.builder.RulerBuilder$initializer(kotlin.Function1((io.nofrills.empress.builder.InitializerContext, io.nofrills.empress.builder.RulerBuilder.initializer.Md)), java.lang.Class((io.nofrills.empress.builder.RulerBuilder.initializer.Md)))/modelClass">modelClass</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><a href="initializer.html#Md"><span class="identifier">Md</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="on-request.html">onRequest</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Rq</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span> <span class="identifier">onRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.builder.RulerBuilder$onRequest(kotlin.coroutines.SuspendFunction1((io.nofrills.empress.builder.RequestHandlerContext((io.nofrills.empress.builder.RulerBuilder.onRequest.Rq)), io.nofrills.empress.builder.RulerBuilder.E)))/body">body</span><span class="symbol">:</span>&nbsp;<a href="../-request-handler.html"><span class="identifier">RequestHandler</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="on-request.html#Rq"><span class="identifier">Rq</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Defines request handler for a <a href="index.html#R">R</a>.</p>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">Rq</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span> <span class="identifier">onRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.builder.RulerBuilder$onRequest(java.lang.Class((io.nofrills.empress.builder.RulerBuilder.onRequest.Rq)), kotlin.coroutines.SuspendFunction1((io.nofrills.empress.builder.RequestHandlerContext((io.nofrills.empress.builder.RulerBuilder.onRequest.Rq)), io.nofrills.empress.builder.RulerBuilder.E)))/requestClass">requestClass</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><a href="on-request.html#Rq"><span class="identifier">Rq</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.builder.RulerBuilder$onRequest(java.lang.Class((io.nofrills.empress.builder.RulerBuilder.onRequest.Rq)), kotlin.coroutines.SuspendFunction1((io.nofrills.empress.builder.RequestHandlerContext((io.nofrills.empress.builder.RulerBuilder.onRequest.Rq)), io.nofrills.empress.builder.RulerBuilder.E)))/body">body</span><span class="symbol">:</span>&nbsp;<a href="../-request-handler.html"><span class="identifier">RequestHandler</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="on-request.html#Rq"><span class="identifier">Rq</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-empress-builder/index.html">EmpressBuilder</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">EmpressBuilder</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">RulerBuilder</span></a><span class="symbol">&lt;</span><a href="../-empress-builder/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="../-empress-builder/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="../-empress-builder/index.html#R"><span class="identifier">R</span></a><span class="symbol">,</span>&nbsp;<a href="../../io.nofrills.empress/-empress/index.html"><span class="identifier">Empress</span></a><span class="symbol">&lt;</span><a href="../-empress-builder/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="../-empress-builder/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="../-empress-builder/index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Allows to build an <a href="../../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="../-mutable-empress-builder/index.html">MutableEmpressBuilder</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">MutableEmpressBuilder</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">RulerBuilder</span></a><span class="symbol">&lt;</span><a href="../-mutable-empress-builder/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="../-mutable-empress-builder/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="../-mutable-empress-builder/index.html#R"><span class="identifier">R</span></a><span class="symbol">,</span>&nbsp;<a href="../../io.nofrills.empress/-mutable-empress/index.html"><span class="identifier">MutableEmpress</span></a><span class="symbol">&lt;</span><a href="../-mutable-empress-builder/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="../-mutable-empress-builder/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="../-mutable-empress-builder/index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">&gt;</span></code>
+<p>Allows to build an <a href="../../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

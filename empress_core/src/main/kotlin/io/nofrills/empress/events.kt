@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
 
 /** Allows to send events and listen to processed events. */
 interface EventCommander<E : Any> {
-    /** Allows to listen for event that have been handled. */
+    /** Allows to listen for events that have been handled. */
     fun events(): Flow<E>
 
     /** Sends an [event] for processing. */
