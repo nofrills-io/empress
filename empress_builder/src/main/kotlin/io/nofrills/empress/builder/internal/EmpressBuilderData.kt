@@ -27,9 +27,9 @@ internal class EmpressBuilderData<E : Any, M : Any, R : Any> {
     internal val mutableEventHandlers = mutableMapOf<Class<out E>, MutableEventHandler<E, M, R>>()
     internal val requestHandlers = mutableMapOf<Class<out R>, RequestHandler<E, R>>()
 
-    internal fun <Md : M> addInitializer(initializer: Initializer<Md>, patchCls: Class<Md>) {
-        check(initializers.put(patchCls, initializer) == null) {
-            "Initializer for $patchCls was already added."
+    internal fun <Md : M> addInitializer(initializer: Initializer<Md>, modelClass: Class<Md>) {
+        check(initializers.put(modelClass, initializer) == null) {
+            "Initializer for $modelClass was already added."
         }
     }
 

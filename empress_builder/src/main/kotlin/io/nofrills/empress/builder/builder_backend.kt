@@ -43,12 +43,12 @@ class EventHandlerContext<E : Any, M : Any, R : Any>(
 @EmpressDslMarker
 class RequestHandlerContext<R>(val request: R)
 
-/** Context for patch initializers. */
+/** Context for model initializers. */
 @EmpressDslMarker
 object InitializerContext
 
 /** Handles an event.
- * Event handler should return a collection of patches that have changed.
+ * Event handler should return a collection of models that have changed.
  * If nothing has changed, it should return an empty collection.
  */
 typealias EventHandler<E, M, R> = EventHandlerContext<E, M, R>.() -> Collection<M>
@@ -75,8 +75,8 @@ abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> inte
     }
 
     /** @see initializer */
-    fun <Md : M> initializer(body: Initializer<Md>, patchClass: Class<Md>) {
-        builderData.addInitializer(body, patchClass)
+    fun <Md : M> initializer(body: Initializer<Md>, modelClass: Class<Md>) {
+        builderData.addInitializer(body, modelClass)
     }
 
     /** Defines request handler for a [R]. */

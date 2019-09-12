@@ -24,8 +24,8 @@ interface Empress<E : Any, M : Any, R : Any> : Ruler<E, M, R> {
      * @param event An event that was triggered.
      * @param models Current models.
      * @param requests Allows to post new requests or cancel existing ones.
-     * @return A collection of updated patches. You should only return patches that have changed.
-     *  If nothing has changed, you can return an empty collection. Based on updated patches,
+     * @return A collection of updated models. You should only return models that have changed.
+     *  If nothing has changed, you can return an empty collection. Based on updated models,
      *  a new [update][Update] will be sent.
      */
     fun onEvent(event: E, models: Models<M>, requests: RequestCommander<R>): Collection<M>

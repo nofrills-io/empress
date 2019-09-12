@@ -66,6 +66,10 @@ tasks.register("publishDokka", Copy::class) {
     dependsOn(dokkaTasks)
     from(File(project.buildDir, "dokka"))
     destinationDir = rootProject.file("docs/dokka")
+
+    doFirst {
+        destinationDir.deleteRecursively()
+    }
 }
 
 apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")
