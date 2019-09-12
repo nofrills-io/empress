@@ -16,109 +16,56 @@
 
 package io.nofrills.empress.sample
 
-import android.os.Parcelable
 import io.nofrills.empress.Empress
-import io.nofrills.empress.Models
-import io.nofrills.empress.RequestCommander
-import io.nofrills.empress.RequestId
-import kotlinx.android.parcel.Parcelize
+import io.nofrills.empress.builder.Empress
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
-sealed class Event {
-    object Decrement : Event()
-    object Increment : Event()
-    object SendCounter : Event()
-    object CancelSendingCounter : Event()
-    object CounterSent : Event()
-    object GetFailure : Event()
-    object GetFailureWithRequest : Event()
-}
+val sampleEmpress: Empress<Event, Model, Request> by lazy {
+    Empress<Event, Model, Request>("empressSample") {
+        initializer { Model.Counter(0) }
+        initializer { Model.Sender(null) }
 
-sealed class Model {
-    @Parcelize
-    data class Counter(var count: Int) : Model(), Parcelable
+        onEvent<Event.CancelSendingCounter> {
+            val sender = models[Model.Sender::class]
+            requests.cancel(sender.requestId)
+            listOf(sender.copy(requestId = null))
+        }
 
-    data class Sender(val requestId: RequestId?) : Model()
-}
+        onEvent<Event.CounterSent> { listOf(models[Model.Sender::class].copy(requestId = null)) }
 
-sealed class Request {
-    class SendCounter(val counterValue: Int) : Request()
-    object GetFailure : Request()
-}
+        onEvent<Event.Decrement> {
+            val counter = models[Model.Counter::class]
+            listOf(counter.copy(count = counter.count - 1))
+        }
 
-class SampleEmpress(private val id: String? = null) : Empress<Event, Model, Request> {
-    override fun id(): String {
-        return id ?: super.id()
-    }
+        onEvent<Event.GetFailure> { throw OnEventFailure() }
 
-    override fun initialize(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.Sender(null))
-    }
+        onEvent<Event.GetFailureWithRequest> {
+            requests.post(Request.GetFailure)
+            emptyList()
+        }
 
-    override fun onEvent(
-        event: Event,
-        models: Models<Model>,
-        requests: RequestCommander<Request>
-    ): Collection<Model> {
-        return when (event) {
-            Event.Decrement -> changeCount(-1, models)
-            Event.Increment -> changeCount(1, models)
-            Event.SendCounter -> sendCurrentCount(models, requests)
-            Event.CancelSendingCounter -> cancelSendingCounter(models, requests)
-            Event.CounterSent -> onSent(models)
-            Event.GetFailure -> throw OnEventFailure()
-            Event.GetFailureWithRequest -> run {
-                requests.post(Request.GetFailure)
-                emptyList<Model>()
+        onEvent<Event.Increment> {
+            val counter = models[Model.Counter::class]
+            listOf(counter.copy(count = counter.count + 1))
+        }
+
+        onEvent<Event.SendCounter> {
+            val sender = models[Model.Sender::class]
+            if (sender.requestId != null) {
+                return@onEvent emptyList()
             }
-        }
-    }
-
-    override suspend fun onRequest(request: Request): Event {
-        return when (request) {
-            is Request.SendCounter -> run {
-                delay(abs(request.counterValue) * 1000L)
-                Event.CounterSent
-            }
-            Request.GetFailure -> throw OnRequestFailure()
-        }
-    }
-
-    private fun changeCount(d: Int, models: Models<Model>): Collection<Model> {
-        val counter = models[Model.Counter::class]
-        return listOf(counter.copy(count = counter.count + d))
-    }
-
-    private fun sendCurrentCount(
-        models: Models<Model>,
-        requests: RequestCommander<Request>
-    ): Collection<Model> {
-        val sender = models[Model.Sender::class]
-        if (sender.requestId != null) {
-            return listOf()
+            val counter = models[Model.Counter::class]
+            val requestId = requests.post(Request.SendCounter(counter.count))
+            listOf(sender.copy(requestId = requestId))
         }
 
-        val counter = models[Model.Counter::class]
-        val requestId = requests.post(Request.SendCounter(counter.count))
-        return listOf(sender.copy(requestId = requestId))
-    }
+        onRequest<Request.GetFailure> { throw OnRequestFailure() }
 
-    private fun cancelSendingCounter(
-        models: Models<Model>,
-        requests: RequestCommander<Request>
-    ): Collection<Model> {
-        val sender = models[Model.Sender::class]
-        val requestId = sender.requestId ?: return listOf()
-        requests.cancel(requestId)
-        return listOf(sender.copy(requestId = null))
-    }
-
-    private fun onSent(models: Models<Model>): Collection<Model> {
-        return listOf(models[Model.Sender::class].copy(requestId = null))
+        onRequest<Request.SendCounter> {
+            delay(abs(request.counterValue) * 1000L)
+            Event.CounterSent
+        }
     }
 }
-
-class OnEventFailure : Throwable()
-
-class OnRequestFailure : Throwable()
