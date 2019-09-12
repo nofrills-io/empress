@@ -8,12 +8,12 @@ of [io.nofrills.empress.Empress] or [io.nofrills.empress.MutableEmpress] interfa
 
 ```kotlin
 val empress = Empress("myEmpress") {
-    initializer { /* return initial value for one of your Patch subclasses */ }
+    initializer { /* return initial value for one of your Model subclasses */ }
     initializer { /* another initializer */ }
 
     onEvent<Event.MyEvent> {
         // handle an event
-        // return a list of patches that have changed (or an empty list if nothing's changed)
+        // return a list of models that have changed (or an empty list if nothing's changed)
     }
 
     onEvent<Event.AnotherEvent> {

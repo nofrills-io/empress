@@ -16,7 +16,9 @@
 
 package io.nofrills.empress
 
-/** Represents a running request. */
+/** Represents a running request.
+ * Note: This class does not implement `android.os.Parcelable` interface.
+ */
 interface RequestId
 
 /** Manages requests. */
