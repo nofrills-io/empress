@@ -17,66 +17,129 @@
 package io.nofrills.empress.sample
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
+import io.nofrills.empress.RequestId
+import io.nofrills.empress.RulerApi
 import io.nofrills.empress.android.enthrone
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private val empressApi by lazy { enthrone(SampleEmpress()) }
+    private lateinit var activeRuler: RulerApi
+    private val empressApi by lazy { enthrone(sampleEmpress) }
+    private val mutableEmpressApi by lazy { enthrone(sampleMutableEmpress) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
+        activeRuler = empressApi
+        updateActiveRulerTitle()
+
         lifecycle.coroutineScope.launch {
             render(empressApi.models().all())
+
             empressApi.updates().collect { update ->
-                render(update.updated, update.event)
+                if (activeRuler == empressApi) {
+                    render(update.updated, update.event)
+                }
+            }
+        }
+
+        lifecycle.coroutineScope.launch {
+            mutableEmpressApi.events().collect { event ->
+                if (activeRuler == mutableEmpressApi) {
+                    renderMutable(mutableEmpressApi.models().all(), event)
+                }
             }
         }
 
         setupButtonListeners()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        MenuInflater(this).inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.toggle_active_ruler -> {
+                toggleActiveRuler()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun setupButtonListeners() {
         decrement_button.setOnClickListener {
             empressApi.post(Event.Decrement)
+            mutableEmpressApi.post(Event.Decrement)
         }
         increment_button.setOnClickListener {
             empressApi.post(Event.Increment)
+            mutableEmpressApi.post(Event.Increment)
         }
         send_button.setOnClickListener {
             empressApi.post(Event.SendCounter)
+            mutableEmpressApi.post(Event.SendCounter)
         }
         cancel_button.setOnClickListener {
             empressApi.post(Event.CancelSendingCounter)
+            mutableEmpressApi.post(Event.CancelSendingCounter)
         }
+    }
+
+    private fun toggleActiveRuler() {
+        activeRuler = if (activeRuler == empressApi) {
+            mutableEmpressApi
+        } else {
+            empressApi
+        }
+
+        updateActiveRulerTitle()
+    }
+
+    private fun updateActiveRulerTitle() {
+        title = if (activeRuler == empressApi) "Empress" else "MutableEmpress"
     }
 
     private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
         for (patch in models) {
             when (patch) {
-                is Model.Counter -> renderCount(patch)
-                is Model.Sender -> renderProgress(patch, sourceEvent)
+                is Model.Counter -> renderCount(patch.count)
+                is Model.Sender -> renderProgress(patch.requestId, sourceEvent)
             }
         }
     }
 
-    private fun renderProgress(sender: Model.Sender, sourceEvent: Event? = null) {
-        if (sender.requestId == null) {
+    private fun renderMutable(models: Collection<MutModel>, sourceEvent: Event? = null) {
+        for (patch in models) {
+            when (patch) {
+                is MutModel.Counter -> renderCount(patch.count)
+                is MutModel.Sender -> renderProgress(patch.requestId, sourceEvent)
+            }
+        }
+    }
+
+    private fun renderProgress(sendRequestId: RequestId?, sourceEvent: Event? = null) {
+        if (sendRequestId == null) {
             if (sourceEvent is Event.CounterSent) {
                 showToast(R.string.counter_sent)
             } else if (sourceEvent is Event.CancelSendingCounter) {
                 showToast(R.string.send_counter_cancelled)
             }
         }
-        progress_bar.visibility = if (sender.requestId != null) {
+        progress_bar.visibility = if (sendRequestId != null) {
             View.VISIBLE
         } else {
             View.GONE
@@ -89,7 +152,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderCount(counter: Model.Counter) {
-        counter_value.text = counter.count.toString()
+    private fun renderCount(count: Int) {
+        counter_value.text = count.toString()
     }
 }

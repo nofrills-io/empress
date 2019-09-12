@@ -31,6 +31,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.sync.Mutex
+import java.util.concurrent.ConcurrentHashMap
 
 /** Common backend for running and managing a [Ruler]. */
 @UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -43,7 +44,7 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
 
     private val handledEvents = BroadcastChannel<E>(HANDLED_EVENTS_CHANNEL_CAPACITY)
 
-    private val handledEventsFlow = handledEvents.asFlow()
+    private val handledEventsFlow: Flow<E> = handledEvents.asFlow()
 
     /** If interruption was requested, the mutex will be locked. */
     private val interruption = Mutex()
@@ -134,7 +135,7 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
                 }
             }
 
-            val modelMap = mutableMapOf<Class<out M>, M>()
+            val modelMap = ConcurrentHashMap<Class<out M>, M>()
             if (modelInitializer != null) {
                 for (model in modelInitializer.initialize()) {
                     check(modelMap.put(model::class.java, model) == null) {

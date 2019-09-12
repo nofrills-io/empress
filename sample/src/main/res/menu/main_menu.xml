@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2019 Mateusz Armatys
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +14,8 @@
   ~ limitations under the License.
   -->
 
-<resources>
-    <string name="app_name">Empress Sample</string>
-    <string name="counter_sent">Counter has been sent</string>
-    <string name="decrement">Decrement</string>
-    <string name="increment">Increment</string>
-    <string name="send">Send</string>
-    <string name="cancel">Cancel</string>
-    <string name="send_counter_cancelled">Sending counter cancelled</string>
-    <string name="toggle_active_ruler">Toggle active ruler</string>
-</resources>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/toggle_active_ruler"
+        android:title="@string/toggle_active_ruler" />
+</menu>

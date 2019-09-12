@@ -36,7 +36,7 @@ class CounterFragment : Fragment() {
 
         // we call `enthrone` on activity,
         // since we want to share the Empress instance
-        api = requireActivity().enthrone(SampleEmpress())
+        api = requireActivity().enthrone(sampleEmpress)
     }
 
     override fun onCreateView(
