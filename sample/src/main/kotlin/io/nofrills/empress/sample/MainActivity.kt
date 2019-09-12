@@ -114,19 +114,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
-        for (patch in models) {
-            when (patch) {
-                is Model.Counter -> renderCount(patch.count)
-                is Model.Sender -> renderProgress(patch.requestId, sourceEvent)
+        for (model in models) {
+            when (model) {
+                is Model.Counter -> renderCount(model.count)
+                is Model.Sender -> renderProgress(model.requestId, sourceEvent)
             }
         }
     }
 
     private fun renderMutable(models: Collection<MutModel>, sourceEvent: Event? = null) {
-        for (patch in models) {
-            when (patch) {
-                is MutModel.Counter -> renderCount(patch.count)
-                is MutModel.Sender -> renderProgress(patch.requestId, sourceEvent)
+        for (model in models) {
+            when (model) {
+                is MutModel.Counter -> renderCount(model.count)
+                is MutModel.Sender -> renderProgress(model.requestId, sourceEvent)
             }
         }
     }

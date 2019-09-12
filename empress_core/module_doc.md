@@ -8,8 +8,10 @@ First, you need to define three (usually `sealed`) classes: `Event`, `Model` and
 (though you can call them whatever you want).
 
 - Event — signals an event for which we need to take some action
-- Model — represents application state. Usually modelled as a sealed class, where each subclass is relatively small, and is related to a single aspect of the app.
-- Request — denotes an intent for obtaining a resource asynchronously
+- Model — represents application state;
+    each subclass should be relatively small, and be related to a single aspect of the app;
+    can implement `android.os.Parcelable` (in which case it will be restored when needed) 
+- Request — represents a demand for obtaining a resource asynchronously
 
 If your models are immutable (have immutable properties), define and implement an [io.nofrills.empress.Empress] interface:
 
@@ -34,7 +36,7 @@ you should use [io.nofrills.empress.backend.EmpressBackend] or [io.nofrills.empr
 
 ```kotlin
 val empress = MyEmpress()
-val coroutineScope = ... // e.g. TestCoroutineScope or your activity's scope
+val coroutineScope = ... // e.g. TestCoroutineScope or scope of your activity
 val api: EmpressApi<Event, Model> = EmpressBackend(empress, scope)
 ```
 

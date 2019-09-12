@@ -55,6 +55,7 @@ val dokkaTasks = tasks.withType(DokkaAndroidTask::class) {
     }
     includes = listOf(
         "${rootProject.projectDir}/empress_core/module_doc.md",
+        "${rootProject.projectDir}/empress_core/module_doc_backend.md",
         "${rootProject.projectDir}/empress_android/module_doc.md",
         "${rootProject.projectDir}/empress_builder/module_doc.md"
     )
