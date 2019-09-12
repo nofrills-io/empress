@@ -46,7 +46,7 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
     fun initialState() = scope.runBlockingTest {
         assertEquals(
             listOf(Model.Counter(0), Model.Sender(null)),
-            tested.modelSnapshot().all().toList()
+            tested.modelSnapshot().all().sortedBy { it::class.java.name }
         )
         val deferredEvents = async { tested.events().toList() }
         tested.interrupt()
