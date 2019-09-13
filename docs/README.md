@@ -50,7 +50,7 @@ sealed class Event {
 // Your model should be either fully immutable, or fully mutable.
 sealed class Model {
     // In case our process is temporarily killed by the OS, we can make sure
-    // our state will be brought back, by implementing `Parcelable`
+    // our state will be brought back, by implementing `android.os.Parcelable`
     @Parcelize
     data class Counter(val count: Int) : Model(), Parcelable
 
@@ -73,7 +73,7 @@ interface. Alternatively, for __mutable__ models, use [MutableEmpress](dokka/emp
 You can also use an [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
 
 ```kotlin
-val empress = Empress("sampleEmpress") {
+val empress = Empress<Event, Model, Request>("sampleEmpress") {
     initializer { Model.Counter(0) }
     initializer { Model.Sender(null) }
 
@@ -94,21 +94,22 @@ val empress = Empress("sampleEmpress") {
             // Counter value is already being sent,
             // so we return an empty collection, since there's nothing to be done.
             listOf()
-            
+
             // Alternatively, we could cancel current request 
             // (using requests.cancel(sender.requestId)) 
             // and then create a new one.
         } else {
             // We create a request and queue it..
+            val counter = models[Model.Counter::class]
             val requestId = requests.post(Request.SendCounter(counter.count))
-            
+
             // ..while returning an updated model.
             listOf(Model.Sender(requestId))
         }
     }
 
     onEvent<Event.CounterSent> {
-        val sender = model[Model.Sender::class]
+        val sender = models[Model.Sender::class]
         if (sender.requestId == null) {
             listOf()
         } else {
@@ -136,15 +137,15 @@ override fun onCreate(savedInstanceState: Bundle?) {
     
     // pass events to empress
     decrement_button.setOnClickListener {
-        api.send(Event.Decrement)
+        api.post(Event.Decrement)
     }
     increment_button.setOnClickListener {
-        api.send(Event.Decrement)
+        api.post(Event.Increment)
     }
 
-    launch {
+    lifecycle.coroutineScope.launch {
         // first, we can render the whole UI
-        render(api.modelSnapshot().all())
+        render(api.models().all())
 
         // then we listen for updates and render only the updated models
         api.updates().collect { update ->
