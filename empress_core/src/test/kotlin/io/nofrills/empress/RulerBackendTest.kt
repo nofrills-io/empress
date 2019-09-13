@@ -314,6 +314,23 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
         assertTrue(exceptionCaught)
     }
 
+    @Test
+    fun eventsBuffer() = usingTestScope {
+        val eventCount = RulerBackend.HANDLED_EVENTS_CHANNEL_CAPACITY * 2
+        val deferredEvents = async {
+            tested.events().toList()
+        }
+
+        for (i in 1..eventCount) {
+            tested.post(Event.Increment)
+        }
+        tested.interrupt()
+        val events = deferredEvents.await()
+
+        assertEquals(eventCount, events.size)
+        assertEquals(eventCount, tested.modelSnapshot()[Model.Counter::class].count)
+    }
+
     protected abstract fun makeRuler(initializeWithDuplicate: Boolean = false): RL
 
     protected abstract fun makeBackend(

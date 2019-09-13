@@ -122,7 +122,7 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
     internal abstract suspend fun processEvent(event: E)
 
     companion object {
-        private const val HANDLED_EVENTS_CHANNEL_CAPACITY = 16
+        internal const val HANDLED_EVENTS_CHANNEL_CAPACITY = 16
 
         internal fun <M : Any> makeModelMap(
             storedModels: Collection<M>,
