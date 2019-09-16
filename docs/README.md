@@ -45,7 +45,7 @@ sealed class Event {
     object CounterSent : Event()
 }
 
-// In empress your model is defined as a set of subclasses,
+// In Empress, your model can be defined as a set of subclasses,
 // where each subclass is responsible for single aspect of application state.
 // Your model should be either fully immutable, or fully mutable.
 sealed class Model {
