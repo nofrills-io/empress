@@ -9,6 +9,16 @@
 Empress is a framework for managing application state and its representation in UI.
 It's targeted to be used with Android's activities and fragments, but you can also use it standalone.
 
+Empress is similar to androidx ViewModel library in a way that it:
+- can survive configuration changes
+- can be shared among multiple clients (e.g. fragments)
+
+Additionally:
+- supports "save & restore" flow (it's automatic, as long as your model is `Parcelable`)
+- supports long-running suspending requests
+- uses `kotlinx.coroutines.flow.Flow` for propagating changes (for immutable models)
+- aims for compatibility with Jetpack Compose (with mutable models)
+
 ### Install
 
 ```kotlin
@@ -17,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.nofrills-io:empress:<empress_version>")
+    implementation("com.github.nofrills-io:empress:empress_version")
 }
 
 // Note: skip `::class` if you're using Groovy instead of Kotlin
