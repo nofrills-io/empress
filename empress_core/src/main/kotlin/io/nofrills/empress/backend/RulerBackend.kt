@@ -16,12 +16,7 @@
 
 package io.nofrills.empress.backend
 
-import io.nofrills.empress.EventCommander
-import io.nofrills.empress.Models
-import io.nofrills.empress.ModelInitializer
-import io.nofrills.empress.RequestCommander
-import io.nofrills.empress.Ruler
-import io.nofrills.empress.RulerApi
+import io.nofrills.empress.*
 import io.nofrills.empress.internal.RequestCommanderImpl
 import io.nofrills.empress.internal.RequestHolder
 import io.nofrills.empress.internal.RequestIdProducer
@@ -39,7 +34,7 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
     private val ruler: Ruler<E, M, R>,
     private val eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope
-) : EventCommander<E>, RulerApi {
+) : EventCommander<E>, EventListener<E>, RulerApi {
     private val eventChannel = Channel<E>()
 
     private val handledEvents = BroadcastChannel<E>(HANDLED_EVENTS_CHANNEL_CAPACITY)
