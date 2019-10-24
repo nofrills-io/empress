@@ -44,12 +44,8 @@ object Deps {
     const val kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Ver.kotlin}"
 
     // Testing
-    const val benchmarkJunit = "androidx.benchmark:benchmark-junit4:1.0.0-rc01"
     const val coroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Ver.coroutines}"
-    const val espressoCore = "androidx.test.espresso:espresso-core:3.2.0"
     const val fragmentTesting = "androidx.fragment:fragment-testing:${Ver.androidxFragment}"
     const val junit = "junit:junit:4.12"
     const val robolectric = "org.robolectric:robolectric:4.3.1"
-    const val testExtJunit = "androidx.test.ext:junit-ktx:1.1.1"
-    const val testRunner = "androidx.test:runner:1.2.0"
 }

@@ -38,9 +38,6 @@ androidExtensions {
 }
 
 dependencies {
-    androidTestImplementation(Deps.testRunner)
-    androidTestImplementation(Deps.espressoCore)
-
     implementation(project(":empress_android"))
     implementation(project(":empress_builder"))
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc01")
