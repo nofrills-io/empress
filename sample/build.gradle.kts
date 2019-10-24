@@ -43,9 +43,10 @@ dependencies {
 
     implementation(project(":empress_android"))
     implementation(project(":empress_builder"))
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-beta01")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc01")
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)
+    implementation(Deps.fragment)
     implementation(Deps.kotlinStdLib)
 
     testImplementation(Deps.coroutinesTest)
