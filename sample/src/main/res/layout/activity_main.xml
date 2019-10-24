@@ -27,7 +27,7 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.3" />
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/sample_fragment"
         android:name="io.nofrills.empress.sample.CounterFragment"
         android:layout_width="match_parent"
