@@ -27,6 +27,15 @@ import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
+fun <E : Any, M : Any, R : Any> FragmentActivity.enthronement(
+    empress: Empress<E, M, R>,
+    eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    retainInstance: Boolean = true
+): Lazy<EmpressApi<E, M>> {
+    return lazy { enthrone(empress, eventDispatcher, requestDispatcher, retainInstance) }
+}
+
 /** Installs an empress instance into the [activity][this].
  * If an empress with the same [id][Empress.id] was already installed,
  * this method will return an existing instance.
@@ -73,6 +82,16 @@ fun <E : Any, M : Any, R : Any> Fragment.enthrone(
         requestDispatcher = requestDispatcher,
         retainInstance = retainInstance
     ) { EmpressFragment<E, M, R>() }
+}
+
+fun <E : Any, M : Any, R : Any> FragmentActivity.enthronement(
+    mutableEmpress: MutableEmpress<E, M, R>,
+    eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
+    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    retainInstance: Boolean = true
+    // TODO allow to specify the scope (parent activity or this fragment)
+): Lazy<MutableEmpressApi<E, M>> {
+    return lazy { enthrone(mutableEmpress, eventDispatcher, requestDispatcher, retainInstance) }
 }
 
 /** Installs an [mutableEmpress] instance into the [activity][this].
