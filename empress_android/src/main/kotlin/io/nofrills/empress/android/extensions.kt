@@ -27,18 +27,10 @@ import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
-fun <E : Any, M : Any, R : Any> FragmentActivity.enthronement(
-    empress: Empress<E, M, R>,
-    eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    retainInstance: Boolean = true
-): Lazy<EmpressApi<E, M>> {
-    return lazy { enthrone(empress, eventDispatcher, requestDispatcher, retainInstance) }
-}
-
 /** Installs an empress instance into the [activity][this].
- * If an empress with the same [id][Empress.id] was already installed,
+ * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
+ * @param empressId Id used to identify an [EmpressApi] instance.
  * @param empress Instance of [Empress] to install.
  * @param eventDispatcher A dispatcher to use for handling events in [empress].
  * @param requestDispatcher A dispatcher to use for handling requests in [empress].
@@ -46,23 +38,31 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthronement(
  * @return An instance of [EmpressApi] for communicating with [empress].
  */
 fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
+    empressId: String,
     empress: Empress<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
 ): EmpressApi<E, M> {
     return getRulerBackendInstance(
-        empress,
         supportFragmentManager,
-        eventDispatcher = eventDispatcher,
-        requestDispatcher = requestDispatcher,
-        retainInstance = retainInstance
-    ) { EmpressFragment<E, M, R>() }
+        retainInstance = retainInstance,
+        rulerFactory = {
+            EmpressSpec(
+                empress,
+                eventDispatcher = eventDispatcher,
+                requestDispatcher = requestDispatcher
+            )
+        },
+        rulerFragmentFactory = { EmpressFragment<E, M, R>() },
+        rulerId = empressId
+    )
 }
 
 /** Installs an empress instance into the [fragment][this].
- * If an empress with the same [id][Empress.id] was already installed,
+ * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
+ * @param empressId Id used to identify an [EmpressApi] instance.
  * @param empress Instance of [Empress] to install.
  * @param eventDispatcher A dispatcher to use for handling events in [empress].
  * @param requestDispatcher A dispatcher to use for handling requests in [empress].
@@ -70,33 +70,31 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
  * @return An instance of [EmpressApi] for communicating with [empress].
  */
 fun <E : Any, M : Any, R : Any> Fragment.enthrone(
+    empressId: String,
     empress: Empress<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
 ): EmpressApi<E, M> {
     return getRulerBackendInstance(
-        empress,
         childFragmentManager,
-        eventDispatcher = eventDispatcher,
-        requestDispatcher = requestDispatcher,
-        retainInstance = retainInstance
-    ) { EmpressFragment<E, M, R>() }
-}
-
-fun <E : Any, M : Any, R : Any> FragmentActivity.enthronement(
-    mutableEmpress: MutableEmpress<E, M, R>,
-    eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    retainInstance: Boolean = true
-    // TODO allow to specify the scope (parent activity or this fragment)
-): Lazy<MutableEmpressApi<E, M>> {
-    return lazy { enthrone(mutableEmpress, eventDispatcher, requestDispatcher, retainInstance) }
+        retainInstance = retainInstance,
+        rulerFactory = {
+            EmpressSpec(
+                empress,
+                eventDispatcher = eventDispatcher,
+                requestDispatcher = requestDispatcher
+            )
+        },
+        rulerFragmentFactory = { EmpressFragment<E, M, R>() },
+        rulerId = empressId
+    )
 }
 
 /** Installs an [mutableEmpress] instance into the [activity][this].
- * If an mutableEmpress with the same [id][MutableEmpress.id] was already installed,
+ * If an mutableEmpress with the same [id][mutableEmpressId] was already installed,
  * this method will return an existing instance.
+ * @param mutableEmpressId Id used to identify an [MutableEmpressApi] instance.
  * @param mutableEmpress Instance of [MutableEmpress] to install.
  * @param eventDispatcher A dispatcher to use for handling events in [mutableEmpress].
  * @param requestDispatcher A dispatcher to use for handling requests in [mutableEmpress].
@@ -104,23 +102,31 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthronement(
  * @return An instance of [MutableEmpressApi] for communicating with [mutableEmpress].
  */
 fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
+    mutableEmpressId: String,
     mutableEmpress: MutableEmpress<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
 ): MutableEmpressApi<E, M> {
     return getRulerBackendInstance(
-        mutableEmpress,
         supportFragmentManager,
-        eventDispatcher = eventDispatcher,
-        requestDispatcher = requestDispatcher,
-        retainInstance = retainInstance
-    ) { MutableEmpressFragment<E, M, R>() }
+        retainInstance = retainInstance,
+        rulerFactory = {
+            MutableEmpressSpec(
+                mutableEmpress,
+                eventDispatcher = eventDispatcher,
+                requestDispatcher = requestDispatcher
+            )
+        },
+        rulerFragmentFactory = { MutableEmpressFragment<E, M, R>() },
+        rulerId = mutableEmpressId
+    )
 }
 
 /** Installs an [mutableEmpress] instance into the [fragment][this].
- * If an mutableEmpress with the same [id][MutableEmpress.id] was already installed,
+ * If an mutableEmpress with the same [id][mutableEmpressId] was already installed,
  * this method will return an existing instance.
+ * @param mutableEmpressId Id used to identify an [MutableEmpressApi] instance.
  * @param mutableEmpress Instance of [MutableEmpress] to install.
  * @param eventDispatcher A dispatcher to use for handling events in [mutableEmpress].
  * @param requestDispatcher A dispatcher to use for handling requests in [mutableEmpress].
@@ -128,29 +134,35 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
  * @return An instance of [MutableEmpressApi] for communicating with [mutableEmpress].
  */
 fun <E : Any, M : Any, R : Any> Fragment.enthrone(
+    mutableEmpressId: String,
     mutableEmpress: MutableEmpress<E, M, R>,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
 ): MutableEmpressApi<E, M> {
     return getRulerBackendInstance(
-        mutableEmpress,
         childFragmentManager,
-        eventDispatcher = eventDispatcher,
-        requestDispatcher = requestDispatcher,
-        retainInstance = retainInstance
-    ) { MutableEmpressFragment<E, M, R>() }
+        retainInstance = retainInstance,
+        rulerFactory = {
+            MutableEmpressSpec(
+                mutableEmpress,
+                eventDispatcher = eventDispatcher,
+                requestDispatcher = requestDispatcher
+            )
+        },
+        rulerFragmentFactory = { MutableEmpressFragment<E, M, R>() },
+        rulerId = mutableEmpressId
+    )
 }
 
 private fun <E : Any, M : Any, R : Any, B : RulerBackend<E, M, R>, RL : Ruler<E, M, R>, F : RulerFragment<E, M, R, B, RL>> getRulerBackendInstance(
-    ruler: RL,
     fragmentManager: FragmentManager,
-    eventDispatcher: CoroutineDispatcher,
-    requestDispatcher: CoroutineDispatcher,
     retainInstance: Boolean,
-    rulerFragmentFactory: () -> F
+    rulerFactory: () -> RulerSpec<E, M, R, RL>,
+    rulerFragmentFactory: () -> F,
+    rulerId: String
 ): B {
-    val fragmentTag = "io.nofrills.empress.ruler-fragment-${ruler.id()}"
+    val fragmentTag = "io.nofrills.empress.ruler-fragment-${rulerId}"
     @Suppress("UNCHECKED_CAST")
     val fragment: F =
         fragmentManager.findFragmentByTag(fragmentTag) as F?
@@ -158,10 +170,32 @@ private fun <E : Any, M : Any, R : Any, B : RulerBackend<E, M, R>, RL : Ruler<E,
                 fragmentManager.beginTransaction().add(it, fragmentTag).commitNow()
             }
     fragment.retainInstance = retainInstance
-    fragment.initialize(
-        ruler,
-        eventDispatcher = eventDispatcher,
-        requestDispatcher = requestDispatcher
-    )
+    fragment.initialize(rulerFactory)
     return fragment.backend
 }
+
+internal abstract class RulerSpec<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>>(
+    internal val ruler: RL,
+    internal val eventDispatcher: CoroutineDispatcher,
+    internal val requestDispatcher: CoroutineDispatcher
+)
+
+private class EmpressSpec<E : Any, M : Any, R : Any>(
+    empress: Empress<E, M, R>,
+    eventDispatcher: CoroutineDispatcher,
+    requestDispatcher: CoroutineDispatcher
+) : RulerSpec<E, M, R, Empress<E, M, R>>(
+    ruler = empress,
+    eventDispatcher = eventDispatcher,
+    requestDispatcher = requestDispatcher
+)
+
+private class MutableEmpressSpec<E : Any, M : Any, R : Any>(
+    mutableEmpress: MutableEmpress<E, M, R>,
+    eventDispatcher: CoroutineDispatcher,
+    requestDispatcher: CoroutineDispatcher
+) : RulerSpec<E, M, R, MutableEmpress<E, M, R>>(
+    ruler = mutableEmpress,
+    eventDispatcher = eventDispatcher,
+    requestDispatcher = requestDispatcher
+)

@@ -23,14 +23,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
-import io.nofrills.empress.android.enthronement
 import kotlinx.android.synthetic.main.fragment_counter.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class CounterFragment : Fragment() {
-//    private val empress by requireActivity().enthronement(sampleEmpress)
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,7 +41,7 @@ class CounterFragment : Fragment() {
 
         // we call `enthrone` on activity,
         // since we want to share the Empress instance
-        val empress = requireActivity().enthrone(sampleEmpress)
+        val empress = requireActivity().enthrone(MainActivity.EMPRESS_ID, sampleEmpress)
 
         lifecycle.coroutineScope.launch {
             renderCount(empress.models()[Model.Counter::class])

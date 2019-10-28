@@ -28,18 +28,15 @@ import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.RequestId
 import io.nofrills.empress.RulerApi
 import io.nofrills.empress.android.enthrone
-import io.nofrills.empress.android.enthronement
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var activeRuler: RulerApi
-//    private val empressApi by lazy { enthrone(sampleEmpress) }
-//    private val mutableEmpressApi by lazy { enthrone(sampleMutableEmpress) }
 
-    private val empressApi by enthronement(sampleEmpress)
-    private val mutableEmpressApi by enthronement(sampleMutableEmpress)
+    private val empressApi by lazy { enthrone(EMPRESS_ID, sampleEmpress) }
+    private val mutableEmpressApi by lazy { enthrone(MUTABLE_EMPRESS_ID, sampleMutableEmpress) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }
@@ -158,5 +155,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderCount(count: Int) {
         counter_value.text = count.toString()
+    }
+
+    companion object {
+        internal const val EMPRESS_ID = "sampleEmpress"
+        internal const val MUTABLE_EMPRESS_ID = "sampleMutableEmpress"
     }
 }

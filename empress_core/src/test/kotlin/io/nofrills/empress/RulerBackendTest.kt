@@ -53,8 +53,6 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
         assertTrue(tested.areChannelsClosedForSend())
         val events = deferredEvents.await()
         assertEquals(0, events.size)
-        assertTrue(tested.hasEqualClass(makeRuler()::class.java))
-        assertTrue(tested.hasEqualId(makeRuler()::class.java.name))
     }
 
     @Test

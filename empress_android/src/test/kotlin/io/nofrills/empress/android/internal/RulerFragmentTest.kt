@@ -21,9 +21,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragment
 import androidx.test.core.app.ActivityScenario
-import io.nofrills.empress.Models
-import io.nofrills.empress.MutableEmpress
-import io.nofrills.empress.RequestCommander
 import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -65,34 +62,8 @@ class RulerFragmentTest {
     fun doubleEnthrone() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val backend = fragment.enthrone(SampleMutableEmpress())
-            assertSame(backend, fragment.enthrone(SampleMutableEmpress()))
-        }
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun doubleEnthroneWithInvalidMutableEmpressInFragment() {
-        val scenario = launchFragment<Fragment>()
-        scenario.onFragment { fragment ->
-            fragment.enthrone(SampleMutableEmpress("my_empress"))
-            fragment.enthrone(
-                EmptyMutableEmpress(
-                    "my_empress"
-                )
-            )
-        }
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun doubleEnthroneWithInvalidMutableEmpressInActivity() {
-        val activityScenario = ActivityScenario.launch(SampleActivity::class.java)
-        activityScenario.onActivity { activity ->
-            activity.enthrone(SampleMutableEmpress())
-            activity.enthrone(
-                EmptyMutableEmpress(
-                    SampleMutableEmpress::class.java.name
-                )
-            )
+            val backend = fragment.enthrone("test", SampleMutableEmpress())
+            assertSame(backend, fragment.enthrone("test", SampleMutableEmpress()))
         }
     }
 
@@ -100,8 +71,8 @@ class RulerFragmentTest {
     fun twoEmperorsWithDistinctIds() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val api1 = fragment.enthrone(SampleMutableEmpress("empress1"))
-            val api2 = fragment.enthrone(SampleMutableEmpress("empress2"))
+            val api1 = fragment.enthrone("empress1", SampleMutableEmpress())
+            val api2 = fragment.enthrone("empress2", SampleMutableEmpress())
             assertNotSame(api1, api2)
         }
     }
@@ -183,26 +154,6 @@ class RulerFragmentTest {
             override fun recreate() {
                 scenario.recreate()
             }
-        }
-    }
-
-    private class EmptyMutableEmpress(private val id: String? = null) :
-        MutableEmpress<Event, Model, Request> {
-        override fun id(): String {
-            return id ?: super.id()
-        }
-
-        override fun initialize(): Collection<Model> = emptyList()
-
-        override fun onEvent(
-            event: Event,
-            models: Models<Model>,
-            requests: RequestCommander<Request>
-        ) {
-        }
-
-        override suspend fun onRequest(request: Request): Event {
-            error("mock")
         }
     }
 }

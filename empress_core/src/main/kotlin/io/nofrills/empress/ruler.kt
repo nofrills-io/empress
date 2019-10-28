@@ -17,13 +17,7 @@
 package io.nofrills.empress
 
 /** Common interface for defining models and handling requests. */
-interface Ruler<E : Any, M : Any, R : Any> : ModelInitializer<M>, RequestHandler<E, R> {
-    /** Returns an ID for this instance.
-     * Useful if you want to install more than one rulers into an activity,
-     * or if you want to share the same model instance.
-     */
-    fun id(): String = javaClass.name
-}
+interface Ruler<E : Any, M : Any, R : Any> : ModelInitializer<M>, RequestHandler<E, R>
 
 /** Common interface for managing a [Ruler]. */
 interface RulerApi {

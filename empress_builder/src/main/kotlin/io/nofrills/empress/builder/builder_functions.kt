@@ -20,31 +20,27 @@ import io.nofrills.empress.Empress
 import io.nofrills.empress.MutableEmpress
 
 /** Builds an [Empress] instance.
- * @param id ID for [Empress] instance.
  * @param body Specification for the new [Empress] instance.
  * @return New [Empress].
  */
 @Suppress("FunctionName")
 fun <E : Any, M : Any, R : Any> Empress(
-    id: String,
     body: EmpressBuilder<E, M, R>.() -> Unit
 ): Empress<E, M, R> {
-    val builder = EmpressBuilder<E, M, R>(id)
+    val builder = EmpressBuilder<E, M, R>()
     body(builder)
     return builder.build()
 }
 
 /** Builds an [MutableEmpress] instance.
- * @param id ID for [MutableEmpress] instance.
  * @param body Specification for the new [MutableEmpress] instance.
  * @return New [MutableEmpress].
  */
 @Suppress("FunctionName")
 fun <E : Any, M : Any, R : Any> MutableEmpress(
-    id: String,
     body: MutableEmpressBuilder<E, M, R>.() -> Unit
 ): MutableEmpress<E, M, R> {
-    val builder = MutableEmpressBuilder<E, M, R>(id)
+    val builder = MutableEmpressBuilder<E, M, R>()
     body(builder)
     return builder.build()
 }

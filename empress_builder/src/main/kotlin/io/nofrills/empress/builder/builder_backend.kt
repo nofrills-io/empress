@@ -94,7 +94,7 @@ abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> inte
 
 /** Allows to build an [Empress] instance. */
 @EmpressDslMarker
-class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) :
+class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
     RulerBuilder<E, M, R, Empress<E, M, R>>() {
 
     /** Defines event handler for an [E]. */
@@ -109,7 +109,6 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val
 
     override fun build(): Empress<E, M, R> {
         return EmpressFromBuilder(
-            id,
             builderData.initializers.values,
             builderData.eventHandlers,
             builderData.requestHandlers
@@ -119,7 +118,7 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val
 
 /** Allows to build an [Empress] instance. */
 @EmpressDslMarker
-class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) :
+class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
     RulerBuilder<E, M, R, MutableEmpress<E, M, R>>() {
 
     /** Defines event handler for an [E]. */
@@ -134,7 +133,6 @@ class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor(priv
 
     override fun build(): MutableEmpress<E, M, R> {
         return MutableEmpressFromBuilder(
-            id,
             builderData.initializers.values,
             builderData.mutableEventHandlers,
             builderData.requestHandlers
