@@ -71,11 +71,11 @@ abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> inte
 
     /** Defines an initializer for a [Md] model. */
     inline fun <reified Md : M> initializer(noinline body: Initializer<Md>) {
-        initializer(body, Md::class.java)
+        initializer(Md::class.java, body)
     }
 
     /** @see initializer */
-    fun <Md : M> initializer(body: Initializer<Md>, modelClass: Class<Md>) {
+    fun <Md : M> initializer(modelClass: Class<Md>, body: Initializer<Md>) {
         builderData.addInitializer(body, modelClass)
     }
 
