@@ -15,10 +15,16 @@ java {
 }
 
 dependencies {
+    api(project(":empress_core"))
+
+    compileOnly("org.jetbrains.kotlin:kotlin-reflect:${Ver.kotlin}")
+
+    implementation(Deps.androidxAnnotations)
     implementation(Deps.kotlinStdLib)
-    implementation(project(":empress_core"))
-    testImplementation(Deps.junit)
+
+    testImplementation("org.jetbrains.kotlin:kotlin-reflect:${Ver.kotlin}")
     testImplementation(Deps.coroutinesTest)
+    testImplementation(Deps.junit)
 }
 
 tasks.withType(KotlinCompile::class).configureEach {

@@ -35,6 +35,7 @@ object Ver {
 }
 
 object Deps {
+    const val androidxAnnotations = "androidx.annotation:annotation:1.1.0"
     const val appCompat = "androidx.appcompat:appcompat:1.1.0"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val coroutinesAndroid =

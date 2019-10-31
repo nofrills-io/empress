@@ -20,6 +20,8 @@ import io.nofrills.empress.*
 import io.nofrills.empress.builder.internal.EmpressBuilderData
 import io.nofrills.empress.builder.internal.EmpressFromBuilder
 import io.nofrills.empress.builder.internal.MutableEmpressFromBuilder
+import io.nofrills.empress.builder.testing.EmpressCompletenessUtil
+import kotlin.reflect.KClass
 
 /** DSL Marker for [EmpressBuilder]. */
 @DslMarker
@@ -89,7 +91,12 @@ abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> inte
         builderData.addOnRequest(body, requestClass)
     }
 
-    internal abstract fun build(): RL
+    internal abstract fun build(
+        checkCompleteness: Boolean,
+        eventClass: KClass<E>,
+        modelClass: KClass<M>,
+        requestClass: KClass<R>
+    ): RL
 }
 
 /** Allows to build an [Empress] instance. */
@@ -107,7 +114,15 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
         builderData.addOnEvent(body, eventClass)
     }
 
-    override fun build(): Empress<E, M, R> {
+    override fun build(
+        checkCompleteness: Boolean,
+        eventClass: KClass<E>,
+        modelClass: KClass<M>,
+        requestClass: KClass<R>
+    ): Empress<E, M, R> {
+        if (checkCompleteness) {
+            EmpressCompletenessUtil.check(this, eventClass, modelClass, requestClass)
+        }
         return EmpressFromBuilder(
             builderData.initializers.values,
             builderData.eventHandlers,
@@ -131,7 +146,15 @@ class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
         builderData.addOnMutableEvent(body, eventClass)
     }
 
-    override fun build(): MutableEmpress<E, M, R> {
+    override fun build(
+        checkCompleteness: Boolean,
+        eventClass: KClass<E>,
+        modelClass: KClass<M>,
+        requestClass: KClass<R>
+    ): MutableEmpress<E, M, R> {
+        if (checkCompleteness) {
+            EmpressCompletenessUtil.check(this, eventClass, modelClass, requestClass)
+        }
         return MutableEmpressFromBuilder(
             builderData.initializers.values,
             builderData.mutableEventHandlers,
