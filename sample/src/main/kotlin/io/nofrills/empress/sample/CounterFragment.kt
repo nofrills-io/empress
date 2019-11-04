@@ -41,7 +41,7 @@ class CounterFragment : Fragment() {
 
         // we call `enthrone` on activity,
         // since we want to share the Empress instance
-        val empress = requireActivity().enthrone(sampleEmpress)
+        val empress = requireActivity().enthrone(MainActivity.EMPRESS_ID, sampleEmpress)
 
         lifecycle.coroutineScope.launch {
             renderCount(empress.models()[Model.Counter::class])

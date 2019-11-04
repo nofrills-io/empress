@@ -83,7 +83,7 @@ interface. Alternatively, for __mutable__ models, use [MutableEmpress](dokka/emp
 You can also use an [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
 
 ```kotlin
-val empress = Empress<Event, Model, Request>("sampleEmpress") {
+val empress = Empress<Event, Model, Request> {
     initializer { Model.Counter(0) }
     initializer { Model.Sender(null) }
 

@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap
 /** Common backend for running and managing a [Ruler]. */
 @UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
 abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
-    private val ruler: Ruler<E, M, R>,
+    ruler: Ruler<E, M, R>,
     private val eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope
 ) : EventCommander<E>, EventListener<E>, RulerApi {
@@ -73,15 +73,6 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
 
     internal open fun areChannelsClosedForSend(): Boolean {
         return eventChannel.isClosedForSend && handledEvents.isClosedForSend
-    }
-
-    /** Returns `true` if the internal [Ruler] class is equal to the given [rulerClass]. */
-    fun hasEqualClass(rulerClass: Class<*>): Boolean {
-        return ruler::class.java == rulerClass
-    }
-
-    internal fun hasEqualId(id: String): Boolean {
-        return ruler.id() == id
     }
 
     override fun interrupt() {

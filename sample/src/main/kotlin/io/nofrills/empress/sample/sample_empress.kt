@@ -22,7 +22,7 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 val sampleEmpress: Empress<Event, Model, Request> by lazy {
-    Empress<Event, Model, Request>("empressSample") {
+    Empress<Event, Model, Request> {
         initializer { Model.Counter(0) }
         initializer { Model.Sender(null) }
 

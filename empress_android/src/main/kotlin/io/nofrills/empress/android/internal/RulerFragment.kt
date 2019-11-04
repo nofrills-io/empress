@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import androidx.fragment.app.Fragment
 import io.nofrills.empress.Ruler
+import io.nofrills.empress.android.RulerSpec
 import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -59,17 +60,13 @@ internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBacken
         super.onDestroy()
     }
 
-    internal fun initialize(
-        ruler: RL,
-        eventDispatcher: CoroutineDispatcher,
-        requestDispatcher: CoroutineDispatcher
-    ) {
+    internal fun initialize(rulerFactory: () -> RulerSpec<E, M, R, RL>) {
         if (!this::backend.isInitialized) {
-            val eventHandlerScope = CoroutineScope(eventDispatcher + job)
-            val requestHandlerScope = CoroutineScope(requestDispatcher + job)
-            backend = makeRulerBackend(ruler, eventHandlerScope, requestHandlerScope, storedModels)
-        } else check(backend.hasEqualClass(ruler::class.java)) {
-            "Backend is already initialized with a different Empress subclass."
+            val result = rulerFactory()
+            val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)
+            val requestHandlerScope = CoroutineScope(result.requestDispatcher + job)
+            backend =
+                makeRulerBackend(result.ruler, eventHandlerScope, requestHandlerScope, storedModels)
         }
     }
 

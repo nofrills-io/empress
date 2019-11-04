@@ -34,8 +34,9 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var activeRuler: RulerApi
-    private val empressApi by lazy { enthrone(sampleEmpress) }
-    private val mutableEmpressApi by lazy { enthrone(sampleMutableEmpress) }
+
+    private val empressApi by lazy { enthrone(EMPRESS_ID, sampleEmpress) }
+    private val mutableEmpressApi by lazy { enthrone(MUTABLE_EMPRESS_ID, sampleMutableEmpress) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }
@@ -154,5 +155,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderCount(count: Int) {
         counter_value.text = count.toString()
+    }
+
+    companion object {
+        internal const val EMPRESS_ID = "sampleEmpress"
+        internal const val MUTABLE_EMPRESS_ID = "sampleMutableEmpress"
     }
 }

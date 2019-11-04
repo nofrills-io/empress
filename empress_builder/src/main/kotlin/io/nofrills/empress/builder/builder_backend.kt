@@ -20,6 +20,8 @@ import io.nofrills.empress.*
 import io.nofrills.empress.builder.internal.EmpressBuilderData
 import io.nofrills.empress.builder.internal.EmpressFromBuilder
 import io.nofrills.empress.builder.internal.MutableEmpressFromBuilder
+import io.nofrills.empress.builder.testing.EmpressClassHandlerUtil
+import kotlin.reflect.KClass
 
 /** DSL Marker for [EmpressBuilder]. */
 @DslMarker
@@ -71,11 +73,11 @@ abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> inte
 
     /** Defines an initializer for a [Md] model. */
     inline fun <reified Md : M> initializer(noinline body: Initializer<Md>) {
-        initializer(body, Md::class.java)
+        initializer(Md::class.java, body)
     }
 
     /** @see initializer */
-    fun <Md : M> initializer(body: Initializer<Md>, modelClass: Class<Md>) {
+    fun <Md : M> initializer(modelClass: Class<Md>, body: Initializer<Md>) {
         builderData.addInitializer(body, modelClass)
     }
 
@@ -89,12 +91,17 @@ abstract class RulerBuilder<E : Any, M : Any, R : Any, RL : Ruler<E, M, R>> inte
         builderData.addOnRequest(body, requestClass)
     }
 
-    internal abstract fun build(): RL
+    internal abstract fun build(
+        checkCompleteness: Boolean,
+        eventClass: KClass<E>,
+        modelClass: KClass<M>,
+        requestClass: KClass<R>
+    ): RL
 }
 
 /** Allows to build an [Empress] instance. */
 @EmpressDslMarker
-class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) :
+class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
     RulerBuilder<E, M, R, Empress<E, M, R>>() {
 
     /** Defines event handler for an [E]. */
@@ -107,9 +114,18 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val
         builderData.addOnEvent(body, eventClass)
     }
 
-    override fun build(): Empress<E, M, R> {
+    override fun build(
+        checkCompleteness: Boolean,
+        eventClass: KClass<E>,
+        modelClass: KClass<M>,
+        requestClass: KClass<R>
+    ): Empress<E, M, R> {
+        if (checkCompleteness) {
+            EmpressClassHandlerUtil.checkClassHandled(eventClass, builderData.eventHandlers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(modelClass, builderData.initializers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(requestClass, builderData.requestHandlers.keys)
+        }
         return EmpressFromBuilder(
-            id,
             builderData.initializers.values,
             builderData.eventHandlers,
             builderData.requestHandlers
@@ -119,7 +135,7 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val
 
 /** Allows to build an [Empress] instance. */
 @EmpressDslMarker
-class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor(private val id: String) :
+class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
     RulerBuilder<E, M, R, MutableEmpress<E, M, R>>() {
 
     /** Defines event handler for an [E]. */
@@ -132,9 +148,18 @@ class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor(priv
         builderData.addOnMutableEvent(body, eventClass)
     }
 
-    override fun build(): MutableEmpress<E, M, R> {
+    override fun build(
+        checkCompleteness: Boolean,
+        eventClass: KClass<E>,
+        modelClass: KClass<M>,
+        requestClass: KClass<R>
+    ): MutableEmpress<E, M, R> {
+        if (checkCompleteness) {
+            EmpressClassHandlerUtil.checkClassHandled(eventClass, builderData.eventHandlers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(modelClass, builderData.initializers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(requestClass, builderData.requestHandlers.keys)
+        }
         return MutableEmpressFromBuilder(
-            id,
             builderData.initializers.values,
             builderData.mutableEventHandlers,
             builderData.requestHandlers

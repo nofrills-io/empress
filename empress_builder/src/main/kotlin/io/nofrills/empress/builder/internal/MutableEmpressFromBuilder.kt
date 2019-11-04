@@ -22,16 +22,10 @@ import io.nofrills.empress.RequestCommander
 import io.nofrills.empress.builder.*
 
 internal class MutableEmpressFromBuilder<E : Any, M : Any, R : Any>(
-    private val id: String,
     private val initializers: Collection<Initializer<M>>,
     private val eventHandlers: Map<Class<out E>, MutableEventHandler<E, M, R>>,
     private val requestHandlers: Map<Class<out R>, RequestHandler<E, R>>
 ) : MutableEmpress<E, M, R> {
-
-    override fun id(): String {
-        return id
-    }
-
     override fun initialize(): Collection<M> {
         return initializers.map { it.invoke(InitializerContext) }
     }
