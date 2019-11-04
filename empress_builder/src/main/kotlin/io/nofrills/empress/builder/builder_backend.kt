@@ -20,7 +20,7 @@ import io.nofrills.empress.*
 import io.nofrills.empress.builder.internal.EmpressBuilderData
 import io.nofrills.empress.builder.internal.EmpressFromBuilder
 import io.nofrills.empress.builder.internal.MutableEmpressFromBuilder
-import io.nofrills.empress.builder.testing.EmpressCompletenessUtil
+import io.nofrills.empress.builder.testing.EmpressClassHandlerUtil
 import kotlin.reflect.KClass
 
 /** DSL Marker for [EmpressBuilder]. */
@@ -121,7 +121,9 @@ class EmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
         requestClass: KClass<R>
     ): Empress<E, M, R> {
         if (checkCompleteness) {
-            EmpressCompletenessUtil.check(this, eventClass, modelClass, requestClass)
+            EmpressClassHandlerUtil.checkClassHandled(eventClass, builderData.eventHandlers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(modelClass, builderData.initializers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(requestClass, builderData.requestHandlers.keys)
         }
         return EmpressFromBuilder(
             builderData.initializers.values,
@@ -153,7 +155,9 @@ class MutableEmpressBuilder<E : Any, M : Any, R : Any> internal constructor() :
         requestClass: KClass<R>
     ): MutableEmpress<E, M, R> {
         if (checkCompleteness) {
-            EmpressCompletenessUtil.check(this, eventClass, modelClass, requestClass)
+            EmpressClassHandlerUtil.checkClassHandled(eventClass, builderData.eventHandlers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(modelClass, builderData.initializers.keys)
+            EmpressClassHandlerUtil.checkClassHandled(requestClass, builderData.requestHandlers.keys)
         }
         return MutableEmpressFromBuilder(
             builderData.initializers.values,

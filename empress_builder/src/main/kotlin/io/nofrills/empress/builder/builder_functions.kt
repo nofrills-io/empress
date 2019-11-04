@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
 
 /** Builds an [Empress] instance.
  * @param checkCompleteness Checks the completeness of the [Empress] definition.
- *  Use only in tests or debug builds. Requires kotlin-reflect library.
+ *  Use only in tests or debug builds. Requires `kotlin-reflect` library.
  * @param body Specification for the new [Empress] instance.
  * @return New [Empress].
  */
@@ -51,7 +51,7 @@ fun <E : Any, M : Any, R : Any> Empress(
 
 /** Builds an [MutableEmpress] instance.
  * @param checkCompleteness Checks the completeness of the [MutableEmpress] definition.
- *  Use only in tests or debug builds. Requires kotlin-reflect library.
+ *  Use only in tests or debug builds. Requires `kotlin-reflect` library.
  * @param body Specification for the new [MutableEmpress] instance.
  * @return New [MutableEmpress].
  */
