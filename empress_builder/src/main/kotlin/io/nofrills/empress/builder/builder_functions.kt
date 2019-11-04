@@ -35,6 +35,7 @@ inline fun <reified E : Any, reified M : Any, reified R : Any> Empress(
     return Empress(checkCompleteness, E::class, M::class, R::class, body)
 }
 
+/** @suppress */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 @Suppress("FunctionName")
 fun <E : Any, M : Any, R : Any> Empress(
@@ -63,6 +64,7 @@ inline fun <reified E : Any, reified M : Any, reified R : Any> MutableEmpress(
     return MutableEmpress(checkCompleteness, E::class, M::class, R::class, body)
 }
 
+/** @suppress */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 @Suppress("FunctionName")
 fun <E : Any, M : Any, R : Any> MutableEmpress(
