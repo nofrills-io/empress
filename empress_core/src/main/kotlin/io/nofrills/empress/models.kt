@@ -31,7 +31,7 @@ interface Models<M : Any> {
 }
 
 /** Initializes the models. */
-interface ModelInitializer<M : Any> {
+interface ModelInitializer<out M : Any> {
     /** Initializer should return a collection of all possible models. */
     fun initialize(): Collection<M>
 }

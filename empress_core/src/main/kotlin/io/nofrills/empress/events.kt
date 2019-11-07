@@ -18,11 +18,14 @@ package io.nofrills.empress
 
 import kotlinx.coroutines.flow.Flow
 
-/** Allows to send events and listen to processed events. */
-interface EventCommander<E : Any> {
-    /** Allows to listen for events that have been handled. */
-    fun events(): Flow<E>
-
+/** Allows to send events. */
+interface EventCommander<in E : Any> {
     /** Sends an [event] for processing. */
     fun post(event: E)
+}
+
+/** Allows to listen to processed events. */
+interface EventListener<out E : Any> {
+    /** Allows to listen for events that have been handled. */
+    fun events(): Flow<E>
 }

@@ -43,7 +43,7 @@ interface Update<E : Any, M : Any> {
 }
 
 /** Allows to manage an [Empress] instance. */
-interface EmpressApi<E : Any, M : Any> : EventCommander<E>, RulerApi {
+interface EmpressApi<E : Any, M : Any> : EventCommander<E>, EventListener<E>, RulerApi {
     /** Return current snapshot of the model.
      * Usually you want to obtain whole model when starting the application.
      */

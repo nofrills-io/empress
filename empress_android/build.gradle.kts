@@ -55,13 +55,6 @@ dependencies {
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
     testImplementation(Deps.robolectric)
-
-    androidTestImplementation(project(":test_support"))
-    androidTestImplementation(Deps.benchmarkJunit)
-    androidTestImplementation(Deps.coroutinesTest)
-    androidTestImplementation(Deps.espressoCore)
-    androidTestImplementation(Deps.testExtJunit)
-    androidTestImplementation(Deps.testRunner)
 }
 
 gradle.taskGraph.beforeTask {

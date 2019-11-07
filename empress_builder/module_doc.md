@@ -7,7 +7,7 @@ builder functions, you can quickly define your custom implementation
 of [io.nofrills.empress.Empress] or [io.nofrills.empress.MutableEmpress] interfaces. For example:
 
 ```kotlin
-val empress = Empress<Event, Model, Request>("myEmpress") {
+val empress = Empress<Event, Model, Request> {
     initializer { /* return initial value for one of your Model subclasses */ }
     initializer { /* another initializer */ }
 

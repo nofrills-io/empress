@@ -34,7 +34,7 @@ class MutableEmpressBuilderTest {
     @Before
     fun setUp() {
         scope = TestCoroutineScope()
-        tested = MutableEmpress("mutableEmpressTest") {
+        tested = MutableEmpress {
             initializer { Model.Counter(0) }
             initializer { Model.Sender(null) }
 
@@ -57,11 +57,6 @@ class MutableEmpressBuilderTest {
     @After
     fun tearDown() {
         scope.cleanupTestCoroutines()
-    }
-
-    @Test
-    fun hasCorrectId() {
-        assertEquals("mutableEmpressTest", tested.id())
     }
 
     @Test
@@ -104,7 +99,7 @@ class MutableEmpressBuilderTest {
 
     @Test(expected = IllegalStateException::class)
     fun duplicateInitializer() {
-        MutableEmpress<Event, Model, Request>("test") {
+        MutableEmpress<Event, Model, Request> {
             initializer { Model.Counter(0) }
             initializer { Model.Counter(1) }
         }
@@ -112,7 +107,7 @@ class MutableEmpressBuilderTest {
 
     @Test(expected = IllegalStateException::class)
     fun duplicateEventHandler() {
-        MutableEmpress<Event, Model, Request>("test") {
+        MutableEmpress<Event, Model, Request> {
             onEvent<Event.Click> { }
             onEvent<Event.Click> { }
         }
@@ -120,7 +115,7 @@ class MutableEmpressBuilderTest {
 
     @Test(expected = IllegalStateException::class)
     fun duplicateRequestHandler() {
-        MutableEmpress<Event, Model, Request>("test") {
+        MutableEmpress<Event, Model, Request> {
             onRequest<Request.Send> { Event.Sent }
             onRequest<Request.Send> { Event.Sent }
         }

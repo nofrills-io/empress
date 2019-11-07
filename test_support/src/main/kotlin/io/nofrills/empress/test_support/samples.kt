@@ -20,11 +20,7 @@ sealed class Model {
 
 sealed class Request
 
-class SampleEmpress(private val id: String? = null) : Empress<Event, Model, Request> {
-    override fun id(): String {
-        return id ?: super.id()
-    }
-
+class SampleEmpress : Empress<Event, Model, Request> {
     override fun initialize(): Collection<Model> {
         return listOf(Model.Counter(0), Model.ParcelableCounter(0))
     }
@@ -52,11 +48,7 @@ class SampleEmpress(private val id: String? = null) : Empress<Event, Model, Requ
 }
 
 
-class SampleMutableEmpress(private val id: String? = null) : MutableEmpress<Event, Model, Request> {
-    override fun id(): String {
-        return id ?: super.id()
-    }
-
+class SampleMutableEmpress() : MutableEmpress<Event, Model, Request> {
     override fun initialize(): Collection<Model> {
         return listOf(Model.Counter(0), Model.ParcelableCounter(0))
     }

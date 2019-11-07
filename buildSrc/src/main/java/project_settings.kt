@@ -24,18 +24,19 @@ object EmpressLib {
     const val mavPluginVersion = "1.0.4"
     const val minSdkVersion = 21
     const val targetSdkVersion = 28
-    const val versionCode = 3
-    const val versionName = "0.3.0"
+    const val versionCode = 4
+    const val versionName = "0.4.0"
 }
 
 object Ver {
-    const val androidxFragment = "1.1.0-rc04"
-    const val coroutines = "1.3.0"
+    const val androidxFragment = "1.2.0-rc01"
+    const val coroutines = "1.3.2"
     const val kotlin = "1.3.50"
 }
 
 object Deps {
-    const val appCompat = "androidx.appcompat:appcompat:1.1.0-rc01"
+    const val androidxAnnotations = "androidx.annotation:annotation:1.1.0"
+    const val appCompat = "androidx.appcompat:appcompat:1.1.0"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val coroutinesAndroid =
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Ver.coroutines}"
@@ -44,12 +45,8 @@ object Deps {
     const val kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Ver.kotlin}"
 
     // Testing
-    const val benchmarkJunit = "androidx.benchmark:benchmark-junit4:1.0.0-alpha04"
     const val coroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Ver.coroutines}"
-    const val espressoCore = "androidx.test.espresso:espresso-core:3.1.1"
     const val fragmentTesting = "androidx.fragment:fragment-testing:${Ver.androidxFragment}"
     const val junit = "junit:junit:4.12"
-    const val robolectric = "org.robolectric:robolectric:4.3"
-    const val testExtJunit = "androidx.test.ext:junit-ktx:1.1.0"
-    const val testRunner = "androidx.test:runner:1.1.0"
+    const val robolectric = "org.robolectric:robolectric:4.3.1"
 }

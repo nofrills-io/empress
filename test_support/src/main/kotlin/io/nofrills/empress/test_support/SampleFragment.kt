@@ -12,6 +12,7 @@ class SampleFragment : Fragment(), WithRuler {
         retainInstance: Boolean
     ): EmpressApi<Event, Model> {
         return enthrone(
+            "sample_empress",
             SampleEmpress(),
             eventDispatcher = dispatcher,
             requestDispatcher = dispatcher,
@@ -24,6 +25,7 @@ class SampleFragment : Fragment(), WithRuler {
         retainInstance: Boolean
     ): MutableEmpressApi<Event, Model> {
         return enthrone(
+            "sample_mutable_empress",
             SampleMutableEmpress(),
             eventDispatcher = dispatcher,
             requestDispatcher = dispatcher,
