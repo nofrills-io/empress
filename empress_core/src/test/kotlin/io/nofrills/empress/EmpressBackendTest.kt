@@ -64,7 +64,6 @@ internal class EmpressBackendTest :
                 )
             ), updates[0].all
         )
-        assertEquals(Event.Increment, updates[0].event)
         assertEquals(listOf(Model.Counter(1)), updates[0].updated)
     }
 }

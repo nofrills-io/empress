@@ -16,6 +16,7 @@
 
 package io.nofrills.empress.sample
 
+import io.nofrills.empress.Consumable
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.builder.MutableEmpress
 import kotlinx.coroutines.delay
@@ -24,15 +25,20 @@ import kotlin.math.abs
 val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
     MutableEmpress<Event, MutModel, Request> {
         initializer { MutModel.Counter(0) }
-        initializer { MutModel.Sender(null) }
+        initializer { MutModel.Sender(SenderState.Idle) }
 
         onEvent<Event.CancelSendingCounter> {
             val sender = models[MutModel.Sender::class]
-            requests.cancel(sender.requestId)
-            sender.requestId = null
+            val state = sender.state.peek()
+            if (state is SenderState.Sending) {
+                requests.cancel(state.requestId)
+                sender.state = Consumable(SenderState.Cancelled) { SenderState.Idle }
+            }
         }
 
-        onEvent<Event.CounterSent> { models[MutModel.Sender::class].requestId = null }
+        onEvent<Event.CounterSent> {
+            models[MutModel.Sender::class].state = Consumable(SenderState.Sent) { SenderState.Idle }
+        }
 
         onEvent<Event.Decrement> { models[MutModel.Counter::class].count -= 1 }
 
@@ -44,11 +50,13 @@ val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
 
         onEvent<Event.SendCounter> {
             val sender = models[MutModel.Sender::class]
-            if (sender.requestId != null) {
+            val state = sender.state.peek()
+            if (state is SenderState.Sending) {
                 return@onEvent
             }
             val counter = models[MutModel.Counter::class]
-            sender.requestId = requests.post(Request.SendCounter(counter.count))
+            val requestId = requests.post(Request.SendCounter(counter.count))
+            sender.state = Consumable(SenderState.Sending(requestId))
         }
 
         onRequest<Request.GetFailure> { throw OnRequestFailure() }

@@ -25,7 +25,6 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
-import io.nofrills.empress.RequestId
 import io.nofrills.empress.RulerApi
 import io.nofrills.empress.android.enthrone
 import kotlinx.android.synthetic.main.activity_main.*
@@ -50,15 +49,15 @@ class MainActivity : AppCompatActivity() {
 
             empressApi.updates().collect { update ->
                 if (activeRuler == empressApi) {
-                    render(update.updated, update.event)
+                    render(update.updated)
                 }
             }
         }
 
         lifecycle.coroutineScope.launch {
-            mutableEmpressApi.events().collect { event ->
+            mutableEmpressApi.events().collect {
                 if (activeRuler == mutableEmpressApi) {
-                    renderMutable(mutableEmpressApi.models().all(), event)
+                    renderMutable(mutableEmpressApi.models().all())
                 }
             }
         }
@@ -114,33 +113,31 @@ class MainActivity : AppCompatActivity() {
         title = if (activeRuler == empressApi) "Empress" else "MutableEmpress"
     }
 
-    private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
+    private fun render(models: Collection<Model>) {
         for (model in models) {
             when (model) {
                 is Model.Counter -> renderCount(model.count)
-                is Model.Sender -> renderProgress(model.requestId, sourceEvent)
+                is Model.Sender<*> -> renderProgress(model.state.consume())
             }
         }
     }
 
-    private fun renderMutable(models: Collection<MutModel>, sourceEvent: Event? = null) {
+    private fun renderMutable(models: Collection<MutModel>) {
         for (model in models) {
             when (model) {
                 is MutModel.Counter -> renderCount(model.count)
-                is MutModel.Sender -> renderProgress(model.requestId, sourceEvent)
+                is MutModel.Sender -> renderProgress(model.state.consume())
             }
         }
     }
 
-    private fun renderProgress(sendRequestId: RequestId?, sourceEvent: Event? = null) {
-        if (sendRequestId == null) {
-            if (sourceEvent is Event.CounterSent) {
-                showToast(R.string.counter_sent)
-            } else if (sourceEvent is Event.CancelSendingCounter) {
-                showToast(R.string.send_counter_cancelled)
-            }
+    private fun renderProgress(senderState: SenderState) {
+        when (senderState) {
+            is SenderState.Sent -> showToast(R.string.counter_sent)
+            is SenderState.Cancelled -> showToast(R.string.send_counter_cancelled)
         }
-        progress_bar.visibility = if (sendRequestId != null) {
+
+        progress_bar.visibility = if (senderState is SenderState.Sending) {
             View.VISIBLE
         } else {
             View.GONE

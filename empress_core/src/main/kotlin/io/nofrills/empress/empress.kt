@@ -31,14 +31,12 @@ interface Empress<E : Any, M : Any, R : Any> : Ruler<E, M, R> {
     fun onEvent(event: E, models: Models<M>, requests: RequestCommander<R>): Collection<M>
 }
 
-/** Represents an update, that resulted from processing an [event].
+/** Represents an update, that resulted from processing an event.
  * @property all Set of all models
- * @property event Event that triggered the update.
  * @property updated Models that were updated as a result of processing an event.
  */
 interface Update<E : Any, M : Any> {
     val all: Models<M>
-    val event: E
     val updated: Collection<M>
 }
 

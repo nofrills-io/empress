@@ -16,6 +16,9 @@
 
 package io.nofrills.empress
 
+import java.io.Serializable
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KClass
 
 /** Allows to access the models. */
@@ -34,4 +37,26 @@ interface Models<M : Any> {
 interface ModelInitializer<out M : Any> {
     /** Initializer should return a collection of all possible models. */
     fun initialize(): Collection<M>
+}
+
+open class Consumable<T> constructor(value: T, private val effect: (() -> T)? = null) :
+    Serializable {
+    private val atomicValue = AtomicReference(value)
+
+    private val atomicIsConsumed = AtomicBoolean(false)
+
+    val isConsumed: Boolean
+        get() = atomicIsConsumed.get()
+
+    fun consume(): T {
+        return if (!atomicIsConsumed.getAndSet(true) && effect != null) {
+            atomicValue.getAndSet(effect.invoke())
+        } else {
+            atomicValue.get()
+        }
+    }
+
+    fun peek(): T {
+        return atomicValue.get()
+    }
 }

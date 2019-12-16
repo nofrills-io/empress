@@ -68,7 +68,7 @@ class EmpressBackend<E : Any, M : Any, R : Any> constructor(
                 putAll(makeModelMap(updated))
             }
         }
-        updates.send(UpdateImpl(ModelsImpl(map), event, updated))
+        updates.send(UpdateImpl(ModelsImpl(map), updated))
     }
 
     override fun areChannelsClosedForSend(): Boolean {
@@ -90,7 +90,7 @@ class EmpressBackend<E : Any, M : Any, R : Any> constructor(
 
     private class UpdateImpl<E : Any, M : Any>(
         override val all: Models<M>,
-        override val event: E,
+//        override val event: E,
         override val updated: Collection<M>
     ) : Update<E, M>
 }
