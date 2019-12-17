@@ -16,13 +16,8 @@
 
 package io.nofrills.empress
 
-/** Common interface for defining models and handling requests. */
-interface Ruler<E : Any, M : Any, R : Any> : ModelInitializer<M>, RequestHandler<E, R>
+typealias Effect<E> = suspend () -> E
 
-/** Common interface for managing a [Ruler]. */
-interface RulerApi<E : Any> : EffectHandler<E>, EventCommander<E>, EventListener<E> {
-    /** Interrupts event processing loop.
-     * Usually only needed in tests.
-     */
-    fun interrupt()
+interface EffectHandler<E : Any> {
+    fun post(effect: Effect<E>)
 }

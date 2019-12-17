@@ -34,7 +34,7 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
     ruler: Ruler<E, M, R>,
     private val eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope
-) : EventCommander<E>, EventListener<E>, RulerApi {
+) : RulerApi<E> {
     private val eventChannel = Channel<E>()
 
     private val handledEvents = BroadcastChannel<E>(HANDLED_EVENTS_CHANNEL_CAPACITY)
@@ -63,6 +63,13 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
 
     override fun events(): Flow<E> {
         return handledEventsFlow
+    }
+
+    override fun post(effect: Effect<E>) {
+        eventHandlerScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            val event = effect()
+            sendEvent(event)
+        }
     }
 
     override fun post(event: E) {

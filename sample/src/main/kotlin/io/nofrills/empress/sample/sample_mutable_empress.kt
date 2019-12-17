@@ -32,12 +32,13 @@ val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
             val state = sender.state.peek()
             if (state is SenderState.Sending) {
                 requests.cancel(state.requestId)
-                sender.state = Consumable(SenderState.Cancelled) { SenderState.Idle }
+                sender.state = Consumable(SenderState.Cancelled) { Event.SenderStateConsumed }
             }
         }
 
         onEvent<Event.CounterSent> {
-            models[MutModel.Sender::class].state = Consumable(SenderState.Sent) { SenderState.Idle }
+            models[MutModel.Sender::class].state =
+                Consumable(SenderState.Sent) { Event.SenderStateConsumed }
         }
 
         onEvent<Event.Decrement> { models[MutModel.Counter::class].count -= 1 }
@@ -57,6 +58,10 @@ val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
             val counter = models[MutModel.Counter::class]
             val requestId = requests.post(Request.SendCounter(counter.count))
             sender.state = Consumable(SenderState.Sending(requestId))
+        }
+
+        onEvent<Event.SenderStateConsumed> {
+            models[MutModel.Sender::class].state = Consumable(SenderState.Idle)
         }
 
         onRequest<Request.GetFailure> { throw OnRequestFailure() }

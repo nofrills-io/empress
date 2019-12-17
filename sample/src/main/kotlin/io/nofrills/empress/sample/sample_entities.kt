@@ -29,6 +29,7 @@ sealed class Event {
     object CounterSent : Event()
     object GetFailure : Event()
     object GetFailureWithRequest : Event()
+    object SenderStateConsumed: Event()
 }
 
 sealed class SenderState {
@@ -42,8 +43,8 @@ sealed class Model {
     @Parcelize
     data class Counter(val count: Int) : Model(), Parcelable
 
-    data class Sender<S : SenderState>(val state: Consumable<S>) : Model() {
-        constructor(state: S) : this(Consumable(state))
+    data class Sender(val state: Consumable<Event, SenderState>) : Model() {
+        constructor(state: SenderState) : this(Consumable(state))
     }
 }
 
@@ -51,7 +52,7 @@ sealed class MutModel {
     @Parcelize
     data class Counter(var count: Int) : MutModel(), Parcelable
 
-    data class Sender(var state: Consumable<SenderState>) : MutModel() {
+    data class Sender(var state: Consumable<Event, SenderState>) : MutModel() {
         constructor(state: SenderState) : this(Consumable(state))
     }
 }

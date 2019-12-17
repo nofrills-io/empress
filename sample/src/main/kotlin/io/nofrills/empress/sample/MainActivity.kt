@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var activeRuler: RulerApi
+    private lateinit var activeRuler: RulerApi<Event>
 
     private val empressApi by lazy { enthrone(EMPRESS_ID, sampleEmpress) }
     private val mutableEmpressApi by lazy { enthrone(MUTABLE_EMPRESS_ID, sampleMutableEmpress) }
@@ -41,11 +41,18 @@ class MainActivity : AppCompatActivity() {
         allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
-        activeRuler = empressApi
+        activeRuler = if (savedInstanceState?.getString(ACTIVE_RULER_EXTRA) == MUTABLE_EMPRESS_ID) {
+            mutableEmpressApi
+        } else {
+            empressApi
+        }
+
         updateActiveRulerTitle()
 
         lifecycle.coroutineScope.launch {
-            render(empressApi.models().all())
+            if (activeRuler == empressApi) {
+                render(empressApi.models().all())
+            }
 
             empressApi.updates().collect { update ->
                 if (activeRuler == empressApi) {
@@ -55,6 +62,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         lifecycle.coroutineScope.launch {
+            if (activeRuler == mutableEmpressApi) {
+                renderMutable(mutableEmpressApi.models().all())
+            }
             mutableEmpressApi.events().collect {
                 if (activeRuler == mutableEmpressApi) {
                     renderMutable(mutableEmpressApi.models().all())
@@ -78,6 +88,12 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val rulerId = if (activeRuler == empressApi) EMPRESS_ID else MUTABLE_EMPRESS_ID
+        outState.putString(ACTIVE_RULER_EXTRA, rulerId)
     }
 
     private fun setupButtonListeners() {
@@ -117,7 +133,7 @@ class MainActivity : AppCompatActivity() {
         for (model in models) {
             when (model) {
                 is Model.Counter -> renderCount(model.count)
-                is Model.Sender<*> -> renderProgress(model.state.consume())
+                is Model.Sender -> renderProgress(model.state.consume(empressApi))
             }
         }
     }
@@ -126,7 +142,7 @@ class MainActivity : AppCompatActivity() {
         for (model in models) {
             when (model) {
                 is MutModel.Counter -> renderCount(model.count)
-                is MutModel.Sender -> renderProgress(model.state.consume())
+                is MutModel.Sender -> renderProgress(model.state.consume(mutableEmpressApi))
             }
         }
     }
@@ -155,6 +171,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val ACTIVE_RULER_EXTRA = "ACTIVE_RULER_EXTRA"
         internal const val EMPRESS_ID = "sampleEmpress"
         internal const val MUTABLE_EMPRESS_ID = "sampleMutableEmpress"
     }

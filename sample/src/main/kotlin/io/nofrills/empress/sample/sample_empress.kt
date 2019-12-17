@@ -32,13 +32,13 @@ val sampleEmpress: Empress<Event, Model, Request> by lazy {
             val state = sender.state.peek()
             if (state is SenderState.Sending) {
                 requests.cancel(state.requestId)
-                listOf(Model.Sender(Consumable(SenderState.Cancelled) { SenderState.Idle }))
+                listOf(Model.Sender(Consumable<Event, SenderState>(SenderState.Cancelled) { Event.SenderStateConsumed }))
             } else {
                 listOf()
             }
         }
 
-        onEvent<Event.CounterSent> { listOf(Model.Sender(Consumable(SenderState.Sent) { SenderState.Idle })) }
+        onEvent<Event.CounterSent> { listOf(Model.Sender(Consumable<Event, SenderState>(SenderState.Sent) { Event.SenderStateConsumed })) }
 
         onEvent<Event.Decrement> {
             val counter = models[Model.Counter::class]
@@ -65,6 +65,11 @@ val sampleEmpress: Empress<Event, Model, Request> by lazy {
             val counter = models[Model.Counter::class]
             val requestId = requests.post(Request.SendCounter(counter.count))
             listOf(Model.Sender(SenderState.Sending(requestId)))
+        }
+
+        onEvent<Event.SenderStateConsumed> {
+            val sender = models[Model.Sender::class]
+            listOf(sender.copy(state = Consumable(SenderState.Idle)))
         }
 
         onRequest<Request.GetFailure> { throw OnRequestFailure() }
