@@ -72,6 +72,22 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
     }
 
     @Test
+    fun postEffect() = scope.runBlockingTest {
+        val deferredEvents = async { tested.events().toList() }
+        tested.post { Event.Increment }
+        tested.interrupt()
+
+        assertTrue(tested.areChannelsClosedForSend())
+
+        val events = deferredEvents.await()
+        assertEquals(1, events.size)
+        assertEquals(Event.Increment, events[0])
+
+        assertEquals(Model.Counter(1), tested.modelSnapshot()[Model.Counter::class])
+        assertTrue(tested.areChannelsClosedForSend())
+    }
+
+    @Test
     fun postEvent() = scope.runBlockingTest {
         val deferredEvents = async { tested.events().toList() }
         tested.post(Event.Increment)
