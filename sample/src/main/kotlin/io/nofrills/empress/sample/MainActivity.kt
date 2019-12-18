@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity() {
         for (model in models) {
             when (model) {
                 is Model.Counter -> renderCount(model.count)
-                is Model.Sender -> renderProgress(model.state.consume(empressApi))
+                is Model.Sender -> renderProgress(model.consumableState.consume(empressApi))
             }
         }
     }
@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
         for (model in models) {
             when (model) {
                 is MutModel.Counter -> renderCount(model.count)
-                is MutModel.Sender -> renderProgress(model.state.consume(mutableEmpressApi))
+                is MutModel.Sender -> renderProgress(model.consumableState.consume(mutableEmpressApi))
             }
         }
     }

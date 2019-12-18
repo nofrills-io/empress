@@ -18,6 +18,8 @@ package io.nofrills.empress.sample
 
 import android.os.Parcelable
 import io.nofrills.empress.Consumable
+import io.nofrills.empress.consumableOf
+import io.nofrills.empress.Effect
 import io.nofrills.empress.RequestId
 import kotlinx.android.parcel.Parcelize
 
@@ -29,7 +31,7 @@ sealed class Event {
     object CounterSent : Event()
     object GetFailure : Event()
     object GetFailureWithRequest : Event()
-    object SenderStateConsumed: Event()
+    object SenderStateConsumed : Event()
 }
 
 sealed class SenderState {
@@ -43,8 +45,9 @@ sealed class Model {
     @Parcelize
     data class Counter(val count: Int) : Model(), Parcelable
 
-    data class Sender(val state: Consumable<Event, SenderState>) : Model() {
-        constructor(state: SenderState) : this(Consumable(state))
+    data class Sender(val consumableState: Consumable<SenderState, Event>) : Model() {
+        constructor(state: SenderState, effect: Effect<Event>? = null)
+                : this(consumableOf(state, effect))
     }
 }
 
@@ -52,8 +55,9 @@ sealed class MutModel {
     @Parcelize
     data class Counter(var count: Int) : MutModel(), Parcelable
 
-    data class Sender(var state: Consumable<Event, SenderState>) : MutModel() {
-        constructor(state: SenderState) : this(Consumable(state))
+    data class Sender(var consumableState: Consumable<SenderState, Event>) : MutModel() {
+        constructor(state: SenderState, effect: Effect<Event>? = null)
+                : this(consumableOf(state, effect))
     }
 }
 

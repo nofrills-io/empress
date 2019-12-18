@@ -16,7 +16,7 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.Consumable
+import io.nofrills.empress.consumableOf
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.builder.MutableEmpress
 import kotlinx.coroutines.delay
@@ -29,16 +29,16 @@ val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
 
         onEvent<Event.CancelSendingCounter> {
             val sender = models[MutModel.Sender::class]
-            val state = sender.state.peek()
+            val state = sender.consumableState.peek()
             if (state is SenderState.Sending) {
                 requests.cancel(state.requestId)
-                sender.state = Consumable(SenderState.Cancelled) { Event.SenderStateConsumed }
+                sender.consumableState = consumableOf(SenderState.Cancelled) { Event.SenderStateConsumed }
             }
         }
 
         onEvent<Event.CounterSent> {
-            models[MutModel.Sender::class].state =
-                Consumable(SenderState.Sent) { Event.SenderStateConsumed }
+            models[MutModel.Sender::class].consumableState =
+                consumableOf(SenderState.Sent) { Event.SenderStateConsumed }
         }
 
         onEvent<Event.Decrement> { models[MutModel.Counter::class].count -= 1 }
@@ -51,17 +51,17 @@ val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
 
         onEvent<Event.SendCounter> {
             val sender = models[MutModel.Sender::class]
-            val state = sender.state.peek()
+            val state = sender.consumableState.peek()
             if (state is SenderState.Sending) {
                 return@onEvent
             }
             val counter = models[MutModel.Counter::class]
             val requestId = requests.post(Request.SendCounter(counter.count))
-            sender.state = Consumable(SenderState.Sending(requestId))
+            sender.consumableState = consumableOf(SenderState.Sending(requestId))
         }
 
         onEvent<Event.SenderStateConsumed> {
-            models[MutModel.Sender::class].state = Consumable(SenderState.Idle)
+            models[MutModel.Sender::class].consumableState = consumableOf(SenderState.Idle)
         }
 
         onRequest<Request.GetFailure> { throw OnRequestFailure() }

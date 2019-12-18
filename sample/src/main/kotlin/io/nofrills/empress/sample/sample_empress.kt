@@ -16,7 +16,7 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.Consumable
+import io.nofrills.empress.consumableOf
 import io.nofrills.empress.Empress
 import io.nofrills.empress.builder.Empress
 import kotlinx.coroutines.delay
@@ -29,16 +29,16 @@ val sampleEmpress: Empress<Event, Model, Request> by lazy {
 
         onEvent<Event.CancelSendingCounter> {
             val sender = models[Model.Sender::class]
-            val state = sender.state.peek()
+            val state = sender.consumableState.peek()
             if (state is SenderState.Sending) {
                 requests.cancel(state.requestId)
-                listOf(Model.Sender(Consumable<Event, SenderState>(SenderState.Cancelled) { Event.SenderStateConsumed }))
+                listOf(Model.Sender(SenderState.Cancelled) { Event.SenderStateConsumed })
             } else {
                 listOf()
             }
         }
 
-        onEvent<Event.CounterSent> { listOf(Model.Sender(Consumable<Event, SenderState>(SenderState.Sent) { Event.SenderStateConsumed })) }
+        onEvent<Event.CounterSent> { listOf(Model.Sender(SenderState.Sent) { Event.SenderStateConsumed }) }
 
         onEvent<Event.Decrement> {
             val counter = models[Model.Counter::class]
@@ -58,7 +58,7 @@ val sampleEmpress: Empress<Event, Model, Request> by lazy {
         }
 
         onEvent<Event.SendCounter> {
-            val state = models[Model.Sender::class].state.peek()
+            val state = models[Model.Sender::class].consumableState.peek()
             if (state is SenderState.Sending) {
                 return@onEvent emptyList()
             }
@@ -69,7 +69,7 @@ val sampleEmpress: Empress<Event, Model, Request> by lazy {
 
         onEvent<Event.SenderStateConsumed> {
             val sender = models[Model.Sender::class]
-            listOf(sender.copy(state = Consumable(SenderState.Idle)))
+            listOf(sender.copy(consumableState = consumableOf(SenderState.Idle)))
         }
 
         onRequest<Request.GetFailure> { throw OnRequestFailure() }

@@ -16,8 +16,11 @@
 
 package io.nofrills.empress
 
+/** Function that produces an object (usually an event). */
 typealias Effect<E> = suspend () -> E
 
-interface EffectHandler<E : Any> {
+/** Allows to send effects. */
+interface EffectCommander<E : Any> {
+    /** Sends an [effect] for processing. */
     fun post(effect: Effect<E>)
 }
