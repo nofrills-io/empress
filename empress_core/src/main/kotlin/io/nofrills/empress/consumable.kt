@@ -19,12 +19,19 @@ package io.nofrills.empress
 import java.io.Serializable
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Wraps an object that can be consumed.
- * When it's [consumed][consume], an [Effect] may be produced.
+/** Wraps a value of type [V] that can be consumed.
+ * When it's [consumed][consume], an [Effect] of type [E] may be produced.
  */
 interface Consumable<V, E : Any> : Serializable {
+    /** True if the value has been consumed. */
     val isConsumed: Boolean
+
+    /** Returns the value while consuming it.
+     * @param effectCommander An object that handles effects produced while consuming the value.
+     */
     fun consume(effectCommander: EffectCommander<E>): V
+
+    /** Returns the value without consuming it. */
     fun peek(): V
 }
 
