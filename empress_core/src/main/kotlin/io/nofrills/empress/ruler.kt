@@ -20,7 +20,7 @@ package io.nofrills.empress
 interface Ruler<E : Any, M : Any, R : Any> : ModelInitializer<M>, RequestHandler<E, R>
 
 /** Common interface for managing a [Ruler]. */
-interface RulerApi {
+interface RulerApi<E : Any> : EffectCommander<E>, EventCommander<E>, EventListener<E> {
     /** Interrupts event processing loop.
      * Usually only needed in tests.
      */

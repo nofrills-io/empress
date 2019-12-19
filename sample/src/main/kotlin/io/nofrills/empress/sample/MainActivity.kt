@@ -25,7 +25,6 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
-import io.nofrills.empress.RequestId
 import io.nofrills.empress.RulerApi
 import io.nofrills.empress.android.enthrone
 import kotlinx.android.synthetic.main.activity_main.*
@@ -33,7 +32,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var activeRuler: RulerApi
+    private lateinit var activeRuler: RulerApi<Event>
 
     private val empressApi by lazy { enthrone(EMPRESS_ID, sampleEmpress) }
     private val mutableEmpressApi by lazy { enthrone(MUTABLE_EMPRESS_ID, sampleMutableEmpress) }
@@ -42,23 +41,33 @@ class MainActivity : AppCompatActivity() {
         allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
-        activeRuler = empressApi
+        activeRuler = if (savedInstanceState?.getString(ACTIVE_RULER_EXTRA) == MUTABLE_EMPRESS_ID) {
+            mutableEmpressApi
+        } else {
+            empressApi
+        }
+
         updateActiveRulerTitle()
 
         lifecycle.coroutineScope.launch {
-            render(empressApi.models().all())
+            if (activeRuler == empressApi) {
+                render(empressApi.models().all())
+            }
 
             empressApi.updates().collect { update ->
                 if (activeRuler == empressApi) {
-                    render(update.updated, update.event)
+                    render(update.updated)
                 }
             }
         }
 
         lifecycle.coroutineScope.launch {
-            mutableEmpressApi.events().collect { event ->
+            if (activeRuler == mutableEmpressApi) {
+                renderMutable(mutableEmpressApi.models().all())
+            }
+            mutableEmpressApi.events().collect {
                 if (activeRuler == mutableEmpressApi) {
-                    renderMutable(mutableEmpressApi.models().all(), event)
+                    renderMutable(mutableEmpressApi.models().all())
                 }
             }
         }
@@ -79,6 +88,12 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val rulerId = if (activeRuler == empressApi) EMPRESS_ID else MUTABLE_EMPRESS_ID
+        outState.putString(ACTIVE_RULER_EXTRA, rulerId)
     }
 
     private fun setupButtonListeners() {
@@ -114,33 +129,31 @@ class MainActivity : AppCompatActivity() {
         title = if (activeRuler == empressApi) "Empress" else "MutableEmpress"
     }
 
-    private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
+    private fun render(models: Collection<Model>) {
         for (model in models) {
             when (model) {
                 is Model.Counter -> renderCount(model.count)
-                is Model.Sender -> renderProgress(model.requestId, sourceEvent)
+                is Model.Sender -> renderProgress(model.consumableState.consume(empressApi))
             }
         }
     }
 
-    private fun renderMutable(models: Collection<MutModel>, sourceEvent: Event? = null) {
+    private fun renderMutable(models: Collection<MutModel>) {
         for (model in models) {
             when (model) {
                 is MutModel.Counter -> renderCount(model.count)
-                is MutModel.Sender -> renderProgress(model.requestId, sourceEvent)
+                is MutModel.Sender -> renderProgress(model.consumableState.consume(mutableEmpressApi))
             }
         }
     }
 
-    private fun renderProgress(sendRequestId: RequestId?, sourceEvent: Event? = null) {
-        if (sendRequestId == null) {
-            if (sourceEvent is Event.CounterSent) {
-                showToast(R.string.counter_sent)
-            } else if (sourceEvent is Event.CancelSendingCounter) {
-                showToast(R.string.send_counter_cancelled)
-            }
+    private fun renderProgress(senderState: SenderState) {
+        when (senderState) {
+            is SenderState.Sent -> showToast(R.string.counter_sent)
+            is SenderState.Cancelled -> showToast(R.string.send_counter_cancelled)
         }
-        progress_bar.visibility = if (sendRequestId != null) {
+
+        progress_bar.visibility = if (senderState is SenderState.Sending) {
             View.VISIBLE
         } else {
             View.GONE
@@ -158,6 +171,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val ACTIVE_RULER_EXTRA = "ACTIVE_RULER_EXTRA"
         internal const val EMPRESS_ID = "sampleEmpress"
         internal const val MUTABLE_EMPRESS_ID = "sampleMutableEmpress"
     }

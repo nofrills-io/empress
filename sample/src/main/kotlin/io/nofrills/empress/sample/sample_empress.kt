@@ -16,6 +16,7 @@
 
 package io.nofrills.empress.sample
 
+import io.nofrills.empress.consumableOf
 import io.nofrills.empress.Empress
 import io.nofrills.empress.builder.Empress
 import kotlinx.coroutines.delay
@@ -24,15 +25,20 @@ import kotlin.math.abs
 val sampleEmpress: Empress<Event, Model, Request> by lazy {
     Empress<Event, Model, Request> {
         initializer { Model.Counter(0) }
-        initializer { Model.Sender(null) }
+        initializer { Model.Sender(SenderState.Idle) }
 
         onEvent<Event.CancelSendingCounter> {
             val sender = models[Model.Sender::class]
-            requests.cancel(sender.requestId)
-            listOf(sender.copy(requestId = null))
+            val state = sender.consumableState.peek()
+            if (state is SenderState.Sending) {
+                requests.cancel(state.requestId)
+                listOf(Model.Sender(SenderState.Cancelled) { Event.SenderStateConsumed })
+            } else {
+                listOf()
+            }
         }
 
-        onEvent<Event.CounterSent> { listOf(models[Model.Sender::class].copy(requestId = null)) }
+        onEvent<Event.CounterSent> { listOf(Model.Sender(SenderState.Sent) { Event.SenderStateConsumed }) }
 
         onEvent<Event.Decrement> {
             val counter = models[Model.Counter::class]
@@ -52,13 +58,18 @@ val sampleEmpress: Empress<Event, Model, Request> by lazy {
         }
 
         onEvent<Event.SendCounter> {
-            val sender = models[Model.Sender::class]
-            if (sender.requestId != null) {
+            val state = models[Model.Sender::class].consumableState.peek()
+            if (state is SenderState.Sending) {
                 return@onEvent emptyList()
             }
             val counter = models[Model.Counter::class]
             val requestId = requests.post(Request.SendCounter(counter.count))
-            listOf(sender.copy(requestId = requestId))
+            listOf(Model.Sender(SenderState.Sending(requestId)))
+        }
+
+        onEvent<Event.SenderStateConsumed> {
+            val sender = models[Model.Sender::class]
+            listOf(sender.copy(consumableState = consumableOf(SenderState.Idle)))
         }
 
         onRequest<Request.GetFailure> { throw OnRequestFailure() }
