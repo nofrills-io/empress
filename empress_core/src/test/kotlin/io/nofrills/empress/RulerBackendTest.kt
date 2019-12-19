@@ -18,6 +18,8 @@ package io.nofrills.empress
 
 import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -75,6 +77,27 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
     fun postEffect() = scope.runBlockingTest {
         val deferredEvents = async { tested.events().toList() }
         tested.post { Event.Increment }
+        tested.interrupt()
+
+        assertTrue(tested.areChannelsClosedForSend())
+
+        val events = deferredEvents.await()
+        assertEquals(1, events.size)
+        assertEquals(Event.Increment, events[0])
+
+        assertEquals(Model.Counter(1), tested.modelSnapshot()[Model.Counter::class])
+        assertTrue(tested.areChannelsClosedForSend())
+    }
+
+    @Test
+    fun postDelayedEffect() = scope.runBlockingTest {
+        val deferredEvents = async { tested.events().toList() }
+        tested.post {
+            delay(100)
+            Event.Increment
+        }
+
+        delay(200)
         tested.interrupt()
 
         assertTrue(tested.areChannelsClosedForSend())
@@ -332,15 +355,21 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
     fun eventsBuffer() = usingTestScope {
         val eventCount = RulerBackend.HANDLED_EVENTS_CHANNEL_CAPACITY * 2
         val deferredEvents = async {
-            tested.events().toList()
+            val events = mutableListOf<Event>()
+            tested.events().take(eventCount).collect {
+                delay(100)
+                events.add(it)
+            }
+            events
         }
 
-        for (i in 1..eventCount) {
-            tested.post(Event.Increment)
+        async {
+            for (i in 1..eventCount) {
+                tested.post(Event.Increment)
+            }
         }
-        tested.interrupt()
+
         val events = deferredEvents.await()
-
         assertEquals(eventCount, events.size)
         assertEquals(eventCount, tested.modelSnapshot()[Model.Counter::class].count)
     }

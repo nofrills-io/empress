@@ -37,7 +37,7 @@ class ConsumableTest {
         assertEquals(15, c.peek())
         assertEquals(15, c.consume(effectCommander))
         assertTrue(c.isConsumed)
-        assertNull(effectCommander.postedEffect)
+        assertNull(effectCommander.popPostedEffect())
     }
 
     @Test
@@ -47,17 +47,28 @@ class ConsumableTest {
         assertFalse(c.isConsumed)
         assertEquals(15, c.peek())
         assertFalse(c.isConsumed)
-        assertNull(effectCommander.postedEffect)
+        assertNull(effectCommander.popPostedEffect())
+
         assertEquals(15, c.consume(effectCommander))
         assertTrue(c.isConsumed)
-        assertEquals("eff", effectCommander.postedEffect?.invoke())
+        assertEquals("eff", effectCommander.popPostedEffect()?.invoke())
+
+        assertEquals(15, c.consume(effectCommander))
+        assertTrue(c.isConsumed)
+        assertNull(effectCommander.popPostedEffect())
     }
 
     private class MockEffectCommander : EffectCommander<String> {
-        var postedEffect: Effect<String>? = null
+        private var postedEffect: Effect<String>? = null
 
         override fun post(effect: Effect<String>) {
             postedEffect = effect
+        }
+
+        internal fun popPostedEffect(): Effect<String>? {
+            return postedEffect.also {
+                postedEffect = null
+            }
         }
     }
 }
