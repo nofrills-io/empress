@@ -41,12 +41,7 @@ interface Update<E : Any, M : Any> {
 }
 
 /** Allows to manage an [Empress] instance. */
-interface EmpressApi<E : Any, M : Any> : RulerApi<E> {
-    /** Return current snapshot of the model.
-     * Usually you want to obtain whole model when starting the application.
-     */
-    suspend fun models(): Models<M>
-
+interface EmpressApi<E : Any, M : Any> : RulerApi<E, M> {
     /** Allows to listen for [updates][Update]. */
     fun updates(): Flow<Update<E, M>>
 }

@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var activeRuler: RulerApi<Event>
+    private lateinit var activeRuler: RulerApi<Event, *>
 
     private val empressApi by lazy { enthrone(EMPRESS_ID, sampleEmpress) }
     private val mutableEmpressApi by lazy { enthrone(MUTABLE_EMPRESS_ID, sampleMutableEmpress) }

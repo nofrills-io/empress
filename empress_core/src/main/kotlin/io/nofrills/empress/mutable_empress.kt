@@ -27,7 +27,4 @@ interface MutableEmpress<E : Any, M : Any, R : Any> : Ruler<E, M, R> {
 }
 
 /** Allows to manage an [MutableEmpress] instance. */
-interface MutableEmpressApi<E : Any, M : Any> : RulerApi<E> {
-    /** Returns current models. */
-    fun models(): Models<M>
-}
+interface MutableEmpressApi<E : Any, M : Any> : RulerApi<E, M>

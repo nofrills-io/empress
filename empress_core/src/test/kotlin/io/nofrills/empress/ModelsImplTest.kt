@@ -25,26 +25,26 @@ class ModelsImplTest {
 
     @Test
     fun emptyState() {
-        tested = ModelsImpl(emptyMap())
+        tested = ModelsImpl(mutableMapOf())
         assertEquals(emptyList<Any>(), tested.all())
     }
 
     @Test(expected = NoSuchElementException::class)
     fun emptyNonExistent() {
-        tested = ModelsImpl(emptyMap())
+        tested = ModelsImpl(mutableMapOf())
         tested[String::class]
     }
 
     @Test(expected = NoSuchElementException::class)
     fun relatedClasses() {
-        val modelMap = mapOf<Class<out Any>, Any>(CharSequence::class.java to "hi")
+        val modelMap = mutableMapOf<Class<out Any>, Any>(CharSequence::class.java to "hi")
         tested = ModelsImpl(modelMap)
         tested[String::class]
     }
 
     @Test
     fun twoModels() {
-        val modelMap = mapOf(String::class.java to "hello", Int::class.java to 123)
+        val modelMap = mutableMapOf(String::class.java to "hello", Int::class.java to 123)
         tested = ModelsImpl(modelMap)
         assertEquals("hello", tested[String::class])
         assertEquals(123, tested[Int::class])
@@ -56,7 +56,7 @@ class ModelsImplTest {
             var a: String = "a"
             var b: Int = 5
         }
-        val modelMap = mapOf<Class<out Any>, Any>(obj::class.java to obj)
+        val modelMap = mutableMapOf<Class<out Any>, Any>(obj::class.java to obj)
         tested = ModelsImpl(modelMap)
 
         assertEquals("a", tested[obj::class].a)

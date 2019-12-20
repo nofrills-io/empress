@@ -58,7 +58,7 @@ internal class EmpressBackendTest :
         assertEquals(1, updates.size)
         assertEquals(
             ModelsImpl(
-                mapOf(
+                mutableMapOf(
                     Model.Counter::class.java to Model.Counter(1),
                     Model.Sender::class.java to Model.Sender(null)
                 )

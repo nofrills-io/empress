@@ -33,14 +33,8 @@ class MutableEmpressBackend<E : Any, M : Any, R : Any> constructor(
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>?
-) : RulerBackend<E, M, R>(mutableEmpress, eventHandlerScope, requestHandlerScope), MutableEmpressApi<E, M> {
-
-    private val models = ModelsImpl(makeModelMap(storedModels ?: emptyList(), mutableEmpress))
-
-    override fun models(): Models<M> {
-        return models
-    }
-
+) : RulerBackend<E, M, R>(mutableEmpress, eventHandlerScope, requestHandlerScope, storedModels),
+    MutableEmpressApi<E, M> {
     override suspend fun processEvent(event: E) {
         mutableEmpress.onEvent(event, models, requestCommander)
     }
