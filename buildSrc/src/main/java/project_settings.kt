@@ -31,7 +31,7 @@ object EmpressLib {
 object Ver {
     const val androidxFragment = "1.2.0-rc01"
     const val coroutines = "1.3.2"
-    const val kotlin = "1.3.50"
+    const val kotlin = "1.3.61"
 }
 
 object Deps {
