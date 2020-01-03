@@ -20,8 +20,6 @@ import io.nofrills.empress.Empress
 import io.nofrills.empress.EmpressApi
 import io.nofrills.empress.Models
 import io.nofrills.empress.Update
-import io.nofrills.empress.internal.AtomicItem
-import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -41,34 +39,20 @@ class EmpressBackend<E : Any, M : Any, R : Any> constructor(
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>? = null
-) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope), EmpressApi<E, M> {
-
-    private val modelsMap = AtomicItem(makeModelMap(storedModels ?: emptyList(), empress))
+) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope, storedModels), EmpressApi<E, M> {
 
     private val updates = BroadcastChannel<Update<E, M>>(UPDATES_CHANNEL_CAPACITY)
 
     private val updatesFlow: Flow<Update<E, M>> = updates.asFlow()
-
-    override suspend fun models(): Models<M> {
-        return ModelsImpl(modelsMap.get())
-    }
 
     override fun updates(): Flow<Update<E, M>> {
         return updatesFlow
     }
 
     override suspend fun processEvent(event: E) {
-        lateinit var updated: Collection<M>
-        val map = modelsMap.update {
-            updated = empress.onEvent(
-                event,
-                ModelsImpl(it), requestCommander
-            )
-            it.toMutableMap().apply {
-                putAll(makeModelMap(updated))
-            }
-        }
-        updates.send(UpdateImpl(ModelsImpl(map), event, updated))
+        val updated: Collection<M> = empress.onEvent(event, models, requestCommander)
+        models.putAll(makeModelMap(updated))
+        updates.send(UpdateImpl(models, updated))
     }
 
     override fun areChannelsClosedForSend(): Boolean {
@@ -90,7 +74,6 @@ class EmpressBackend<E : Any, M : Any, R : Any> constructor(
 
     private class UpdateImpl<E : Any, M : Any>(
         override val all: Models<M>,
-        override val event: E,
         override val updated: Collection<M>
     ) : Update<E, M>
 }

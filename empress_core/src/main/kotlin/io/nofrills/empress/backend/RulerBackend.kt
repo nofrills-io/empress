@@ -17,6 +17,7 @@
 package io.nofrills.empress.backend
 
 import io.nofrills.empress.*
+import io.nofrills.empress.internal.ModelsImpl
 import io.nofrills.empress.internal.RequestCommanderImpl
 import io.nofrills.empress.internal.RequestHolder
 import io.nofrills.empress.internal.RequestIdProducer
@@ -33,8 +34,9 @@ import java.util.concurrent.ConcurrentHashMap
 abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
     ruler: Ruler<E, M, R>,
     private val eventHandlerScope: CoroutineScope,
-    requestHandlerScope: CoroutineScope
-) : EventCommander<E>, EventListener<E>, RulerApi {
+    requestHandlerScope: CoroutineScope,
+    storedModels: Collection<M>? = null
+) : RulerApi<E, M> {
     private val eventChannel = Channel<E>()
 
     private val handledEvents = BroadcastChannel<E>(HANDLED_EVENTS_CHANNEL_CAPACITY)
@@ -43,6 +45,8 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
 
     /** If interruption was requested, the mutex will be locked. */
     private val interruption = Mutex()
+
+    internal val models = ModelsImpl(makeModelMap(storedModels ?: emptyList(), ruler))
 
     private val requestHolder = RequestHolder()
 
@@ -63,6 +67,17 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
 
     override fun events(): Flow<E> {
         return handledEventsFlow
+    }
+
+    override fun models(): Models<M> {
+        return models
+    }
+
+    override fun post(effect: Effect<E>) {
+        eventHandlerScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            val event = effect()
+            sendEvent(event)
+        }
     }
 
     override fun post(event: E) {
@@ -113,7 +128,7 @@ abstract class RulerBackend<E : Any, M : Any, R : Any> constructor(
         internal fun <M : Any> makeModelMap(
             storedModels: Collection<M>,
             modelInitializer: ModelInitializer<M>? = null
-        ): Map<Class<out M>, M> {
+        ): MutableMap<Class<out M>, M> {
             val storedModelsMap = mutableMapOf<Class<out M>, M>()
             for (model in storedModels) {
                 check(storedModelsMap.put(model::class.java, model) == null) {

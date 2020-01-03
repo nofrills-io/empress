@@ -19,7 +19,7 @@ package io.nofrills.empress.internal
 import io.nofrills.empress.Models
 import kotlin.reflect.KClass
 
-internal data class ModelsImpl<M : Any> constructor(private val modelMap: Map<Class<out M>, M>) :
+internal data class ModelsImpl<M : Any> constructor(private val modelMap: MutableMap<Class<out M>, M>) :
     Models<M> {
     override fun all(): Collection<M> {
         return modelMap.values.toList()
@@ -32,5 +32,9 @@ internal data class ModelsImpl<M : Any> constructor(private val modelMap: Map<Cl
 
     override fun <T : M> get(modelClass: KClass<T>): T {
         return get(modelClass.java)
+    }
+
+    internal fun putAll(updatedModelMap: Map<Class<out M>, M>) {
+        modelMap.putAll(updatedModelMap)
     }
 }

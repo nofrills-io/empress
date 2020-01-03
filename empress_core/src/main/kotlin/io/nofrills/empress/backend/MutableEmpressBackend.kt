@@ -16,10 +16,9 @@
 
 package io.nofrills.empress.backend
 
+import io.nofrills.empress.Models
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.MutableEmpressApi
-import io.nofrills.empress.Models
-import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
 
 /** Runs and manages an [MutableEmpress] instance.
@@ -33,14 +32,8 @@ class MutableEmpressBackend<E : Any, M : Any, R : Any> constructor(
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>?
-) : RulerBackend<E, M, R>(mutableEmpress, eventHandlerScope, requestHandlerScope), MutableEmpressApi<E, M> {
-
-    private val models = ModelsImpl(makeModelMap(storedModels ?: emptyList(), mutableEmpress))
-
-    override fun models(): Models<M> {
-        return models
-    }
-
+) : RulerBackend<E, M, R>(mutableEmpress, eventHandlerScope, requestHandlerScope, storedModels),
+    MutableEmpressApi<E, M> {
     override suspend fun processEvent(event: E) {
         mutableEmpress.onEvent(event, models, requestCommander)
     }

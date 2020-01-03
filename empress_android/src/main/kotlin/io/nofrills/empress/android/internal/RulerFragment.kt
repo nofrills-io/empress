@@ -22,10 +22,8 @@ import androidx.fragment.app.Fragment
 import io.nofrills.empress.Ruler
 import io.nofrills.empress.android.RulerSpec
 import io.nofrills.empress.backend.RulerBackend
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import java.util.*
 
 internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBackend<E, M, R>, RL : Ruler<E, M, R>> :
@@ -46,7 +44,7 @@ internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBacken
         super.onSaveInstanceState(outState)
 
         val parcelablePatches = arrayListOf<Parcelable>()
-        val models = runBlocking { getRulerModels() }
+        val models = backend.models().all()
         for (model in models) {
             if (model is Parcelable) {
                 parcelablePatches.add(model)
@@ -76,8 +74,6 @@ internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBacken
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<M>?
     ): B
-
-    protected abstract suspend fun getRulerModels(): Collection<M>
 
     companion object {
         private const val MODELS_KEY = "io.nofrills.models"

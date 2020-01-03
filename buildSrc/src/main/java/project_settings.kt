@@ -24,14 +24,14 @@ object EmpressLib {
     const val mavPluginVersion = "1.0.4"
     const val minSdkVersion = 21
     const val targetSdkVersion = 28
-    const val versionCode = 4
-    const val versionName = "0.4.0"
+    const val versionCode = 5
+    const val versionName = "0.5.0"
 }
 
 object Ver {
     const val androidxFragment = "1.2.0-rc01"
     const val coroutines = "1.3.2"
-    const val kotlin = "1.3.50"
+    const val kotlin = "1.3.61"
 }
 
 object Deps {

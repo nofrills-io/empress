@@ -27,6 +27,8 @@ import io.nofrills.empress.backend.RulerBackend
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
+private val DEFAULT_EMPRESS_DISPATCHER = Dispatchers.Default
+
 /** Installs an empress instance into the [activity][this].
  * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
@@ -40,8 +42,8 @@ import kotlinx.coroutines.Dispatchers
 fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
     empressId: String,
     empress: Empress<E, M, R>,
-    eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    eventDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
+    requestDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
     retainInstance: Boolean = true
 ): EmpressApi<E, M> {
     return getRulerBackendInstance(
@@ -72,8 +74,8 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
 fun <E : Any, M : Any, R : Any> Fragment.enthrone(
     empressId: String,
     empress: Empress<E, M, R>,
-    eventDispatcher: CoroutineDispatcher = Dispatchers.Default,
-    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    eventDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
+    requestDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
     retainInstance: Boolean = true
 ): EmpressApi<E, M> {
     return getRulerBackendInstance(
@@ -104,8 +106,8 @@ fun <E : Any, M : Any, R : Any> Fragment.enthrone(
 fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
     mutableEmpressId: String,
     mutableEmpress: MutableEmpress<E, M, R>,
-    eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    eventDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
+    requestDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
     retainInstance: Boolean = true
 ): MutableEmpressApi<E, M> {
     return getRulerBackendInstance(
@@ -136,8 +138,8 @@ fun <E : Any, M : Any, R : Any> FragmentActivity.enthrone(
 fun <E : Any, M : Any, R : Any> Fragment.enthrone(
     mutableEmpressId: String,
     mutableEmpress: MutableEmpress<E, M, R>,
-    eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
-    requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    eventDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
+    requestDispatcher: CoroutineDispatcher = DEFAULT_EMPRESS_DISPATCHER,
     retainInstance: Boolean = true
 ): MutableEmpressApi<E, M> {
     return getRulerBackendInstance(

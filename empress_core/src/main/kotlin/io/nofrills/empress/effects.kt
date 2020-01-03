@@ -16,15 +16,11 @@
 
 package io.nofrills.empress
 
-/** Allows to define __mutable__ models, event and request handlers. */
-interface MutableEmpress<E : Any, M : Any, R : Any> : Ruler<E, M, R> {
-    /** Handles an incoming [event].
-     * @param event An event that was triggered.
-     * @param models Current models.
-     * @param requests Allows to post new requests or cancel existing ones.
-     */
-    fun onEvent(event: E, models: Models<M>, requests: RequestCommander<R>)
-}
+/** Function that produces an object (usually an event). */
+typealias Effect<E> = suspend () -> E
 
-/** Allows to manage an [MutableEmpress] instance. */
-interface MutableEmpressApi<E : Any, M : Any> : RulerApi<E, M>
+/** Allows to send effects. */
+interface EffectCommander<E : Any> {
+    /** Sends an [effect] for processing. */
+    fun post(effect: Effect<E>)
+}

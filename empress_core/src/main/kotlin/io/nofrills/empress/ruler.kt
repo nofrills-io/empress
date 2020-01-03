@@ -20,9 +20,14 @@ package io.nofrills.empress
 interface Ruler<E : Any, M : Any, R : Any> : ModelInitializer<M>, RequestHandler<E, R>
 
 /** Common interface for managing a [Ruler]. */
-interface RulerApi {
+interface RulerApi<E : Any, M : Any> : EffectCommander<E>, EventCommander<E>, EventListener<E> {
     /** Interrupts event processing loop.
      * Usually only needed in tests.
      */
     fun interrupt()
+
+    /** Return current snapshot of the model.
+     * Usually you'll want to obtain all models to render initial state.
+     */
+    fun models(): Models<M>
 }
