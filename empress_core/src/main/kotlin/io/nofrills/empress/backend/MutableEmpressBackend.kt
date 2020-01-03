@@ -16,10 +16,9 @@
 
 package io.nofrills.empress.backend
 
+import io.nofrills.empress.Models
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.MutableEmpressApi
-import io.nofrills.empress.Models
-import io.nofrills.empress.internal.ModelsImpl
 import kotlinx.coroutines.CoroutineScope
 
 /** Runs and manages an [MutableEmpress] instance.

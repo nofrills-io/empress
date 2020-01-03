@@ -22,10 +22,8 @@ import androidx.fragment.app.Fragment
 import io.nofrills.empress.Ruler
 import io.nofrills.empress.android.RulerSpec
 import io.nofrills.empress.backend.RulerBackend
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import java.util.*
 
 internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBackend<E, M, R>, RL : Ruler<E, M, R>> :

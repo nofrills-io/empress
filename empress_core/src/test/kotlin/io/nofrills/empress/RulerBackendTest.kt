@@ -363,10 +363,8 @@ internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>
             events
         }
 
-        async {
-            for (i in 1..eventCount) {
-                tested.post(Event.Increment)
-            }
+        for (i in 1..eventCount) {
+            tested.post(Event.Increment)
         }
 
         val events = deferredEvents.await()

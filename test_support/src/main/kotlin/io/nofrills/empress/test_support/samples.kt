@@ -48,7 +48,7 @@ class SampleEmpress : Empress<Event, Model, Request> {
 }
 
 
-class SampleMutableEmpress() : MutableEmpress<Event, Model, Request> {
+class SampleMutableEmpress : MutableEmpress<Event, Model, Request> {
     override fun initialize(): Collection<Model> {
         return listOf(Model.Counter(0), Model.ParcelableCounter(0))
     }

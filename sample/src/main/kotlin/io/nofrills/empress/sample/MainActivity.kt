@@ -26,11 +26,9 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.RulerApi
-import io.nofrills.empress.Update
 import io.nofrills.empress.android.enthrone
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var activeRuler: RulerApi<Event, *>
