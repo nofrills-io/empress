@@ -24,8 +24,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
 import kotlinx.android.synthetic.main.fragment_counter.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.*
 
 class CounterFragment : Fragment() {
     override fun onCreateView(
@@ -41,16 +40,14 @@ class CounterFragment : Fragment() {
 
         // we call `enthrone` on activity,
         // since we want to share the Empress instance
-        val empress = requireActivity().enthrone(MainActivity.EMPRESS_ID, sampleEmpress)
+        val empressApi = requireActivity().enthrone(MainActivity.EMPRESS_ID, sampleEmpress)
 
-        lifecycle.coroutineScope.launch {
-            renderCount(empress.models()[Model.Counter::class])
-            empress.updates().collect {
-                it.updated
-                    .filterIsInstance<Model.Counter>()
-                    .forEach(this@CounterFragment::renderCount)
-            }
-        }
+        empressApi.updates()
+            .map { it.updated.filterIsInstance<Model.Counter>().firstOrNull() }
+            .filterNotNull()
+            .onStart { emit(empressApi.models()[Model.Counter::class]) }
+            .onEach { renderCount(it) }
+            .launchIn(lifecycle.coroutineScope)
     }
 
     private fun renderCount(counter: Model.Counter) {

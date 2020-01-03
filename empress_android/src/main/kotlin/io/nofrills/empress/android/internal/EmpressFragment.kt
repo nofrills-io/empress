@@ -35,8 +35,4 @@ internal class EmpressFragment<E : Any, M : Any, R : Any> :
             storedModels
         )
     }
-
-    override suspend fun getRulerModels(): Collection<M> {
-        return backend.models().all()
-    }
 }

@@ -26,9 +26,10 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.RulerApi
+import io.nofrills.empress.Update
 import io.nofrills.empress.android.enthrone
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -49,28 +50,19 @@ class MainActivity : AppCompatActivity() {
 
         updateActiveRulerTitle()
 
-        lifecycle.coroutineScope.launch {
-            if (activeRuler == empressApi) {
-                render(empressApi.models().all())
-            }
+        empressApi.updates()
+            .map { it.updated }
+            .onStart { emit(empressApi.models().all()) }
+            .filter { activeRuler == empressApi }
+            .onEach { render(it) }
+            .launchIn(lifecycle.coroutineScope)
 
-            empressApi.updates().collect { update ->
-                if (activeRuler == empressApi) {
-                    render(update.updated)
-                }
-            }
-        }
-
-        lifecycle.coroutineScope.launch {
-            if (activeRuler == mutableEmpressApi) {
-                renderMutable(mutableEmpressApi.models().all())
-            }
-            mutableEmpressApi.events().collect {
-                if (activeRuler == mutableEmpressApi) {
-                    renderMutable(mutableEmpressApi.models().all())
-                }
-            }
-        }
+        mutableEmpressApi.events()
+            .map { mutableEmpressApi.models().all() }
+            .onStart { emit(mutableEmpressApi.models().all()) }
+            .filter { activeRuler == mutableEmpressApi }
+            .onEach { renderMutable(it) }
+            .launchIn(lifecycle.coroutineScope)
 
         setupButtonListeners()
     }

@@ -46,7 +46,7 @@ internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBacken
         super.onSaveInstanceState(outState)
 
         val parcelablePatches = arrayListOf<Parcelable>()
-        val models = runBlocking { getRulerModels() }
+        val models = backend.models().all()
         for (model in models) {
             if (model is Parcelable) {
                 parcelablePatches.add(model)
@@ -76,8 +76,6 @@ internal abstract class RulerFragment<E : Any, M : Any, R : Any, B : RulerBacken
         requestHandlerScope: CoroutineScope,
         storedModels: Collection<M>?
     ): B
-
-    protected abstract suspend fun getRulerModels(): Collection<M>
 
     companion object {
         private const val MODELS_KEY = "io.nofrills.models"
