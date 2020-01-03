@@ -8,7 +8,7 @@
 <a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress</a>&nbsp;/&nbsp;<a href="./index.html">MutableEmpress</a><br/>
 <br/>
 <h1>MutableEmpress</h1>
-<code><span class="keyword">interface </span><span class="identifier">MutableEmpress</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-ruler/index.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span></code>
+<code><span class="keyword">interface </span><span class="identifier">MutableEmpress</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-ruler.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to define <strong>mutable</strong> models, event and request handlers.</p>
 <h3>Functions</h3>
 <table>
@@ -20,22 +20,6 @@
 <td>
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">onEvent</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.MutableEmpress$onEvent(io.nofrills.empress.MutableEmpress.E, io.nofrills.empress.Models((io.nofrills.empress.MutableEmpress.M)), io.nofrills.empress.RequestCommander((io.nofrills.empress.MutableEmpress.R)))/event">event</span><span class="symbol">:</span>&nbsp;<a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.MutableEmpress$onEvent(io.nofrills.empress.MutableEmpress.E, io.nofrills.empress.Models((io.nofrills.empress.MutableEmpress.M)), io.nofrills.empress.RequestCommander((io.nofrills.empress.MutableEmpress.R)))/models">models</span><span class="symbol">:</span>&nbsp;<a href="../-models/index.html"><span class="identifier">Models</span></a><span class="symbol">&lt;</span><a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.MutableEmpress$onEvent(io.nofrills.empress.MutableEmpress.E, io.nofrills.empress.Models((io.nofrills.empress.MutableEmpress.M)), io.nofrills.empress.RequestCommander((io.nofrills.empress.MutableEmpress.R)))/requests">requests</span><span class="symbol">:</span>&nbsp;<a href="../-request-commander/index.html"><span class="identifier">RequestCommander</span></a><span class="symbol">&lt;</span><a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Handles an incoming <a href="on-event.html#io.nofrills.empress.MutableEmpress$onEvent(io.nofrills.empress.MutableEmpress.E, io.nofrills.empress.Models((io.nofrills.empress.MutableEmpress.M)), io.nofrills.empress.RequestCommander((io.nofrills.empress.MutableEmpress.R)))/event">event</a>.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3>Inherited Functions</h3>
-<table>
-<tbody>
-<tr>
-<td>
-<p><a href="../-ruler/id.html">id</a></p>
-</td>
-<td>
-<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">id</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
-<p>Returns an ID for this instance.
-Useful if you want to install more than one rulers into an activity,
-or if you want to share the same model instance.</p>
 </td>
 </tr>
 </tbody>

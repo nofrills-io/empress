@@ -8,7 +8,7 @@
 <a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress.backend</a>&nbsp;/&nbsp;<a href="./index.html">MutableEmpressBackend</a><br/>
 <br/>
 <h1>MutableEmpressBackend</h1>
-<code><span class="keyword">class </span><span class="identifier">MutableEmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-ruler-backend/index.html"><span class="identifier">RulerBackend</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../../io.nofrills.empress/-mutable-empress-api/index.html"><span class="identifier">MutableEmpressApi</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
+<code><span class="keyword">class </span><span class="identifier">MutableEmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-ruler-backend/index.html"><span class="identifier">RulerBackend</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../../io.nofrills.empress/-mutable-empress-api.html"><span class="identifier">MutableEmpressApi</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
 <p>Runs and manages an <a href="../../io.nofrills.empress/-mutable-empress/index.html">MutableEmpress</a> instance.</p>
 <h3>Parameters</h3>
 <p><a name="mutableEmpress"></a>
@@ -33,20 +33,6 @@
 </tr>
 </tbody>
 </table>
-<h3>Functions</h3>
-<table>
-<tbody>
-<tr>
-<td>
-<p><a href="models.html">models</a></p>
-</td>
-<td>
-<code><span class="keyword">fun </span><span class="identifier">models</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../io.nofrills.empress/-models/index.html"><span class="identifier">Models</span></a><span class="symbol">&lt;</span><a href="index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
-<p>Returns current models.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3>Inherited Functions</h3>
 <table>
 <tbody>
@@ -61,15 +47,6 @@
 </tr>
 <tr>
 <td>
-<p><a href="../-ruler-backend/has-equal-class.html">hasEqualClass</a></p>
-</td>
-<td>
-<code><span class="keyword">fun </span><span class="identifier">hasEqualClass</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.backend.RulerBackend$hasEqualClass(java.lang.Class((kotlin.Any)))/rulerClass">rulerClass</span><span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><span class="identifier">*</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
-<p>Returns <code>true</code> if the internal <a href="../../io.nofrills.empress/-ruler/index.html">Ruler</a> class is equal to the given <a href="../-ruler-backend/has-equal-class.html#io.nofrills.empress.backend.RulerBackend$hasEqualClass(java.lang.Class((kotlin.Any)))/rulerClass">rulerClass</a>.</p>
-</td>
-</tr>
-<tr>
-<td>
 <p><a href="../-ruler-backend/interrupt.html">interrupt</a></p>
 </td>
 <td>
@@ -80,9 +57,21 @@ Usually only needed in tests.</p>
 </tr>
 <tr>
 <td>
+<p><a href="../-ruler-backend/models.html">models</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">models</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="../../io.nofrills.empress/-models/index.html"><span class="identifier">Models</span></a><span class="symbol">&lt;</span><a href="../-ruler-backend/index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
+<p>Return current snapshot of the model.
+Usually you'll want to obtain all models to render initial state.</p>
+</td>
+</tr>
+<tr>
+<td>
 <p><a href="../-ruler-backend/post.html">post</a></p>
 </td>
 <td>
+<code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.backend.RulerBackend$post(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.backend.RulerBackend.E)))/effect">effect</span><span class="symbol">:</span>&nbsp;<a href="../../io.nofrills.empress/-effect.html"><span class="identifier">Effect</span></a><span class="symbol">&lt;</span><a href="../-ruler-backend/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sends an <a href="../../io.nofrills.empress/-effect-commander/post.html#io.nofrills.empress.EffectCommander$post(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.EffectCommander.E)))/effect">effect</a> for processing.</p>
 <code><span class="keyword">open</span> <span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.backend.RulerBackend$post(io.nofrills.empress.backend.RulerBackend.E)/event">event</span><span class="symbol">:</span>&nbsp;<a href="../-ruler-backend/index.html#E"><span class="identifier">E</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
 <p>Sends an <a href="../../io.nofrills.empress/-event-commander/post.html#io.nofrills.empress.EventCommander$post(io.nofrills.empress.EventCommander.E)/event">event</a> for processing.</p>
 </td>

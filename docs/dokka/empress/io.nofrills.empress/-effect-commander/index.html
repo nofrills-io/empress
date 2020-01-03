@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EffectCommander - empress</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress</a>&nbsp;/&nbsp;<a href="./index.html">EffectCommander</a><br/>
+<br/>
+<h1>EffectCommander</h1>
+<code><span class="keyword">interface </span><span class="identifier">EffectCommander</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Allows to send effects.</p>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="post.html">post</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.EffectCommander$post(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.EffectCommander.E)))/effect">effect</span><span class="symbol">:</span>&nbsp;<a href="../-effect.html"><span class="identifier">Effect</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code>
+<p>Sends an <a href="post.html#io.nofrills.empress.EffectCommander$post(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.EffectCommander.E)))/effect">effect</a> for processing.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Inheritors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="../-ruler-api/index.html">RulerApi</a></p>
+</td>
+<td>
+<code><span class="keyword">interface </span><span class="identifier">RulerApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="./index.html"><span class="identifier">EffectCommander</span></a><span class="symbol">&lt;</span><a href="../-ruler-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-event-commander/index.html"><span class="identifier">EventCommander</span></a><span class="symbol">&lt;</span><a href="../-ruler-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-event-listener/index.html"><span class="identifier">EventListener</span></a><span class="symbol">&lt;</span><a href="../-ruler-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span></code>
+<p>Common interface for managing a <a href="../-ruler.html">Ruler</a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
