@@ -16,7 +16,7 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.consumableOf
+import io.nofrills.empress.consumable.consumableOf
 import io.nofrills.empress.Empress
 import io.nofrills.empress.builder.Empress
 import kotlinx.coroutines.delay

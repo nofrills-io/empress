@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mateusz Armatys
+ * Copyright 2020 Mateusz Armatys
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress
+package io.nofrills.empress.consumable
 
+import io.nofrills.empress.Effect
+import io.nofrills.empress.EffectCommander
 import java.io.Serializable
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** Wraps a value of type [V] that can be consumed.
  * When it's [consumed][consume], an [Effect] of type [E] may be produced.
+ * @see consumableOf
  */
 interface Consumable<V, E : Any> : Serializable {
     /** True if the value has been consumed. */

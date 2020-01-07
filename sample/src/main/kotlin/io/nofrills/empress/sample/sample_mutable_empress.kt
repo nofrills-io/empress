@@ -16,7 +16,7 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.consumableOf
+import io.nofrills.empress.consumable.consumableOf
 import io.nofrills.empress.MutableEmpress
 import io.nofrills.empress.builder.MutableEmpress
 import kotlinx.coroutines.delay
@@ -32,7 +32,8 @@ val sampleMutableEmpress: MutableEmpress<Event, MutModel, Request> by lazy {
             val state = sender.consumableState.peek()
             if (state is SenderState.Sending) {
                 requests.cancel(state.requestId)
-                sender.consumableState = consumableOf(SenderState.Cancelled) { Event.SenderStateConsumed }
+                sender.consumableState =
+                    consumableOf(SenderState.Cancelled) { Event.SenderStateConsumed }
             }
         }
 

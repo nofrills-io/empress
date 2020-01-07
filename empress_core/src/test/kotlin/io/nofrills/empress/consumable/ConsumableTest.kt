@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Mateusz Armatys
+ * Copyright 2020 Mateusz Armatys
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package io.nofrills.empress
+package io.nofrills.empress.consumable
 
+import io.nofrills.empress.Effect
+import io.nofrills.empress.EffectCommander
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.*

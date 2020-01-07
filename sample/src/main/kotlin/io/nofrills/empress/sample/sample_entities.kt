@@ -17,8 +17,8 @@
 package io.nofrills.empress.sample
 
 import android.os.Parcelable
-import io.nofrills.empress.Consumable
-import io.nofrills.empress.consumableOf
+import io.nofrills.empress.consumable.Consumable
+import io.nofrills.empress.consumable.consumableOf
 import io.nofrills.empress.Effect
 import io.nofrills.empress.RequestId
 import kotlinx.android.parcel.Parcelize
