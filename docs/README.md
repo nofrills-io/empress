@@ -77,10 +77,10 @@ sealed class Request {
 
 2. Next, define your empress.
 
-For __immutable__ models, implement [Empress](dokka/empress/io.nofrills.empress/-empress/index.html)
-interface. Alternatively, for __mutable__ models, use [MutableEmpress](dokka/empress/io.nofrills.empress/-mutable-empress/index.html)
+For __immutable__ models, implement [Empress](https://nofrills.io/empress/dokka/empress/io.nofrills.empress/-empress/index.html)
+interface. Alternatively, for __mutable__ models, use [MutableEmpress](https://nofrills.io/empress/dokka/empress/io.nofrills.empress/-mutable-empress/index.html)
 
-You can also use an [Empress DSL builder](dokka/empress/io.nofrills.empress.builder/index.html), like below:
+You can also use an [Empress DSL builder](https://nofrills.io/empress/dokka/empress/io.nofrills.empress.builder/index.html), like below:
 
 ```kotlin
 val empress = Empress<Event, Model, Request> {
@@ -159,12 +159,12 @@ override fun onCreate(savedInstanceState: Bundle?) {
 
         // then we listen for updates and render only the updated models
         api.updates().collect { update ->
-            render(update.updated, update.event)
+            render(update.updated)
         }
     }
 }
 
-private fun render(models: Collection<Model>, sourceEvent: Event? = null) {
+private fun render(models: Collection<Model>) {
     for (model in models) {
         when (model) {
             is Model.Counter -> text_view.text = model.count.toString()
