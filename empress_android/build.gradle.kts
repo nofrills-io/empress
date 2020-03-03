@@ -1,46 +1,15 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    id("io.nofrills.multimodule.aar")
     kotlin("android.extensions")
     id("jacoco")
 }
 
 android {
-    compileSdkVersion(EmpressLib.compileSdkVersion)
-
-    compileOptions {
-        sourceCompatibility = EmpressLib.javaCompat
-        targetCompatibility = EmpressLib.javaCompat
-    }
-
-    defaultConfig {
-        minSdkVersion(EmpressLib.minSdkVersion)
-        targetSdkVersion(EmpressLib.targetSdkVersion)
-        versionCode = EmpressLib.versionCode
-        versionName = EmpressLib.versionName
-        testInstrumentationRunner = "androidx.benchmark.junit4.AndroidBenchmarkRunner"
-    }
-
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
-
-    sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
-    sourceSets["main"].java.srcDir("src/main/kotlin")
-    sourceSets["test"].java.srcDir("src/test/kotlin")
 }
 
 dependencies {
@@ -60,13 +29,6 @@ dependencies {
 gradle.taskGraph.beforeTask {
     if (name.contains("ReleaseUnitTest")) {
         enabled = false
-    }
-}
-
-tasks.withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-        allWarningsAsErrors = true
-        jvmTarget = EmpressLib.jvmTarget
     }
 }
 
@@ -117,5 +79,3 @@ val jacocoTestReport = tasks.register("jacocoTestReport", JacocoReport::class) {
 }
 
 tasks.named("check").dependsOn(jacocoTestReport)
-
-apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")

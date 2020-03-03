@@ -3,15 +3,9 @@ import java.net.URL
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("java-library")
-    kotlin("jvm")
+    id("io.nofrills.multimodule.jar")
     id("jacoco")
     id("org.jetbrains.dokka-android") version "0.9.18"
-}
-
-java {
-    sourceCompatibility = EmpressLib.javaCompat
-    targetCompatibility = EmpressLib.javaCompat
 }
 
 dependencies {
@@ -25,13 +19,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-reflect:${Ver.kotlin}")
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
-}
-
-tasks.withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-        allWarningsAsErrors = true
-        jvmTarget = EmpressLib.jvmTarget
-    }
 }
 
 tasks.withType(JacocoReport::class) {
@@ -78,5 +65,3 @@ tasks.register("publishDokka", Copy::class) {
         destinationDir.deleteRecursively()
     }
 }
-
-apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")

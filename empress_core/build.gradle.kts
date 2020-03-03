@@ -1,14 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("java-library")
-    kotlin("jvm")
+    id("io.nofrills.multimodule.jar")
     id("jacoco")
-}
-
-java {
-    sourceCompatibility = EmpressLib.javaCompat
-    targetCompatibility = EmpressLib.javaCompat
 }
 
 dependencies {
@@ -20,11 +14,9 @@ dependencies {
 
 tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
-        allWarningsAsErrors = true
         freeCompilerArgs = freeCompilerArgs + listOf(
             "-Xuse-experimental=kotlin.Experimental"
         )
-        jvmTarget = EmpressLib.jvmTarget
     }
 }
 
@@ -45,5 +37,3 @@ tasks.withType(JacocoReport::class) {
 tasks.named("check") {
     dependsOn(tasks.withType(JacocoReport::class))
 }
-
-apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")

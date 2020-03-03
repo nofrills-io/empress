@@ -1,36 +1,14 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    id("io.nofrills.multimodule.apk")
     kotlin("android.extensions")
 }
 
 android {
-    compileSdkVersion(EmpressLib.compileSdkVersion)
-
     defaultConfig {
         applicationId = "io.nofrills.empress.sample"
-        minSdkVersion(EmpressLib.minSdkVersion)
-        targetSdkVersion(EmpressLib.targetSdkVersion)
-        versionCode = EmpressLib.versionCode
-        versionName = EmpressLib.versionName
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-
-    sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
-    sourceSets["main"].java.srcDir("src/main/kotlin")
-    sourceSets["test"].java.srcDir("src/test/kotlin")
 }
 
 androidExtensions {
@@ -40,7 +18,7 @@ androidExtensions {
 dependencies {
     implementation(project(":empress_android"))
     implementation(project(":empress_builder"))
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0-rc03")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.2.0")
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)
     implementation(Deps.fragment)
@@ -55,6 +33,5 @@ tasks.withType(KotlinCompile::class).configureEach {
         freeCompilerArgs = freeCompilerArgs + listOf(
             "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
         )
-        jvmTarget = EmpressLib.jvmTarget
     }
 }
