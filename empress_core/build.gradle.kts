@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("io.nofrills.multimodule.jar")
-    id("jacoco")
 }
 
 dependencies {
@@ -24,16 +23,4 @@ tasks.withType(Test::class) {
     testLogging {
         showStandardStreams = false
     }
-}
-
-tasks.withType(JacocoReport::class) {
-    dependsOn(tasks.withType(Test::class))
-    reports {
-        html.isEnabled = true
-        xml.isEnabled = true
-    }
-}
-
-tasks.named("check") {
-    dependsOn(tasks.withType(JacocoReport::class))
 }

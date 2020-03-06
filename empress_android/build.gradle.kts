@@ -1,9 +1,6 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
-
 plugins {
     id("io.nofrills.multimodule.aar")
     kotlin("android.extensions")
-    id("jacoco")
 }
 
 android {
@@ -31,51 +28,3 @@ gradle.taskGraph.beforeTask {
         enabled = false
     }
 }
-
-tasks.withType(Test::class) {
-    extensions.configure(JacocoTaskExtension::class) {
-        isIncludeNoLocationClasses = true
-    }
-}
-
-val jacocoTestReport = tasks.register("jacocoTestReport", JacocoReport::class) {
-    group = "Verification"
-    description = "Generates code coverage report."
-    dependsOn(tasks.withType(Test::class))
-
-    reports {
-        csv.isEnabled = false
-        html.isEnabled = true
-        xml.isEnabled = true
-    }
-
-    val fileFilter = listOf(
-        "**/*Test*.*",
-        "**/AutoValue_*.*",
-        "**/*JavascriptBridge.class",
-        "**/R.class",
-        "**/R$*.class",
-        "**/Manifest*.*",
-        "android/**/*.*",
-        "**/BuildConfig.*",
-        "**/*\$ViewBinder*.*",
-        "**/*\$ViewInjector*.*",
-        "**/Lambda$*.class",
-        "**/Lambda.class",
-        "**/*Lambda.class",
-        "**/*Lambda*.class",
-        "**/*\$InjectAdapter.class",
-        "**/*\$ModuleAdapter.class",
-        "**/*\$ViewInjector*.class"
-    )
-    val kotlinDebugTree = fileTree("$buildDir/tmp/kotlin-classes/debug") { exclude(fileFilter) }
-    val mainSrc = "${project.projectDir}/src/main/kotlin"
-
-    sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(kotlinDebugTree))
-    executionData.setFrom(fileTree(buildDir) {
-        include(setOf("jacoco/testDebugUnitTest.exec"))
-    })
-}
-
-tasks.named("check").dependsOn(jacocoTestReport)

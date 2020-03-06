@@ -6,7 +6,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:3.6.1")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Ver.kotlin}")
-        classpath("io.nofrills:multimodule:0.1.0")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:0.10.1")
     }
 }
 
@@ -47,6 +47,25 @@ multimodule {
         }
     }
 
+    dokka {
+        configuration {
+            externalDocumentationLink {
+                url =
+                    java.net.URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
+            }
+            includes = listOf(
+                "${rootProject.projectDir}/empress_core/module_doc.md",
+                "${rootProject.projectDir}/empress_core/module_doc_backend.md",
+                "${rootProject.projectDir}/empress_core/module_doc_consumable.md",
+                "${rootProject.projectDir}/empress_android/module_doc.md",
+                "${rootProject.projectDir}/empress_builder/module_doc.md"
+            )
+            moduleName = "empress"
+        }
+    }
+
+    jacoco {}
+
     java {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -83,6 +102,7 @@ multimodule {
             }
         }
 
+        withDocs = true
         withSources = true
     }
 }
@@ -94,4 +114,14 @@ subprojects {
 
 tasks.register("clean", Delete::class.java) {
     delete(rootProject.buildDir)
+}
+
+tasks.register("publishDokka", Copy::class) {
+    dependsOn("dokka")
+    from(File(project.buildDir, "dokka"))
+    destinationDir = rootProject.file("docs/dokka")
+
+    doFirst {
+        destinationDir.deleteRecursively()
+    }
 }
