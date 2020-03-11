@@ -5,6 +5,12 @@ plugins {
     kotlin("android.extensions")
 }
 
+submodule {
+    dokkaAllowed.set(false)
+    jacocoAllowed.set(false)
+    publishAllowed.set(false)
+}
+
 android {
     defaultConfig {
         applicationId = "io.nofrills.empress.sample"
