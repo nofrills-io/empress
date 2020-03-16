@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-import org.gradle.api.JavaVersion
-
 object EmpressLib {
     const val compileSdkVersion = 28
-    val javaCompat = JavaVersion.VERSION_1_8
-    const val jdkVersionNum = 8
-    const val jvmTarget = "1.8"
-    const val mavPluginVersion = "1.0.4"
     const val minSdkVersion = 21
     const val targetSdkVersion = 28
     const val versionCode = 5

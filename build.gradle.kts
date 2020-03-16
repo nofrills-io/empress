@@ -5,8 +5,8 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:3.6.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Ver.kotlin}")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:0.10.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Ver.kotlin}")
     }
 }
 
@@ -73,7 +73,6 @@ multimodule {
 
     kotlin {
         allWarningsAsErrors = true
-        jvmTarget = EmpressLib.jvmTarget
     }
 
     publish {
