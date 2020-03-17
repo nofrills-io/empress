@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    id("io.nofrills.multimodule") version "0.2.0"
+    id("io.nofrills.multimodule") version "0.2.1"
 }
 
 allprojects {
