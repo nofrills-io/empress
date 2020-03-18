@@ -5,12 +5,12 @@ plugins {
 dependencies {
     api(project(":empress_core"))
 
-    compileOnly("org.jetbrains.kotlin:kotlin-reflect:${Ver.kotlin}")
+    compileOnly(Deps.kotlinReflect)
 
     implementation(Deps.androidxAnnotations)
     implementation(Deps.kotlinStdLib)
 
-    testImplementation("org.jetbrains.kotlin:kotlin-reflect:${Ver.kotlin}")
+    testImplementation(Deps.kotlinReflect)
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
 }
