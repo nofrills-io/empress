@@ -28,7 +28,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 internal abstract class RulerBackendTest<B : RulerBackend<Event, Model, Request>, RL : Ruler<Event, Model, Request>> {
     private lateinit var scope: TestCoroutineScope
     private lateinit var tested: B

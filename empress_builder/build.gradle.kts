@@ -8,7 +8,6 @@ dependencies {
     compileOnly(Deps.kotlinReflect)
 
     implementation(Deps.androidxAnnotations)
-    implementation(Deps.kotlinStdLib)
 
     testImplementation(Deps.kotlinReflect)
     testImplementation(Deps.coroutinesTest)

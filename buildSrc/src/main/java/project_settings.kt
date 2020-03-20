@@ -1,5 +1,6 @@
 import org.gradle.api.Action
 import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.MutableVersionConstraint
 import org.gradle.kotlin.dsl.DependencyHandlerScope
 import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
 
@@ -29,12 +30,13 @@ object EmpressLib {
 
 object Vers {
     val androidBuildTools = Ver(preferred = "3.6.1", required = "[3.5,4.0)")
+    val coroutines = Ver(preferred = "1.3.5", required = "[1.3.3,2.0)")
     val dokka = Ver(preferred = "0.10.1", required = "[0.10,1.0)")
-    val kotlin = Ver(preferred = "1.3.70", required = "[1.3.20,2.0)")
+    val kotlin = Ver(preferred = "1.3.70", required = "[1.3.70,2.0)")
 }
 
 object Deps {
-    private val coroutines = DepGroup("org.jetbrains.kotlinx", "1.3.3", "[1.3.3,2.0)")
+    private val coroutines = DepGroup("org.jetbrains.kotlinx", Vers.coroutines)
     private val androidXFragment = DepGroup("androidx.fragment", "1.2.2", "[1.2,2.0)")
     private val kotlin = DepGroup("org.jetbrains.kotlin", Vers.kotlin)
 
@@ -74,35 +76,39 @@ class Dep(
 class Ver(
     private val preferred: String?,
     private val required: String
-) : Action<ExternalModuleDependency> {
-    override fun execute(t: ExternalModuleDependency) {
-        t.version {
-            require(required)
-            preferred?.let { prefer(it) }
-        }
+) : Action<MutableVersionConstraint> {
+    override fun execute(t: MutableVersionConstraint) {
+        t.require(required)
+        preferred?.let { t.prefer(it) }
     }
 }
 
 fun DependencyHandlerScope.api(dep: Dep) {
-    addDependencyTo(this, "api", dep.name, dep.version)
-}
-
-fun DependencyHandlerScope.classpath(dep: Dep) {
-    addDependencyTo(this, "classpath", dep.name, dep.version)
+    addDependencyTo<ExternalModuleDependency>(this, "api", dep.name) {
+        version(dep.version)
+    }
 }
 
 fun DependencyHandlerScope.compileOnly(dep: Dep) {
-    addDependencyTo(this, "compileOnly", dep.name, dep.version)
+    addDependencyTo<ExternalModuleDependency>(this, "compileOnly", dep.name) {
+        version(dep.version)
+    }
 }
 
 fun DependencyHandlerScope.debugImplementation(dep: Dep) {
-    addDependencyTo(this, "debugImplementation", dep.name, dep.version)
+    addDependencyTo<ExternalModuleDependency>(this, "debugImplementation", dep.name) {
+        version(dep.version)
+    }
 }
 
 fun DependencyHandlerScope.implementation(dep: Dep) {
-    addDependencyTo(this, "implementation", dep.name, dep.version)
+    addDependencyTo<ExternalModuleDependency>(this, "implementation", dep.name) {
+        version(dep.version)
+    }
 }
 
 fun DependencyHandlerScope.testImplementation(dep: Dep) {
-    addDependencyTo(this, "testImplementation", dep.name, dep.version)
+    addDependencyTo<ExternalModuleDependency>(this, "testImplementation", dep.name) {
+        version(dep.version)
+    }
 }

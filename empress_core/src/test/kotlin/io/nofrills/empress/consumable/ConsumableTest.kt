@@ -43,7 +43,7 @@ class ConsumableTest {
     }
 
     @Test
-    @UseExperimental(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun singleEffect() = runBlockingTest {
         val c: Consumable<Int, String> = consumableOf(15) { "eff" }
         assertFalse(c.isConsumed)

@@ -1,1 +1,10 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            url "http://127.0.0.1:8080"
+        }
+    }
+}
+
 include ':sample', ':empress_core', ':empress_android', ':test_support', ':empress_builder'

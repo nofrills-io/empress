@@ -28,7 +28,6 @@ dependencies {
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)
     implementation(Deps.fragment)
-    implementation(Deps.kotlinStdLib)
 
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
@@ -37,7 +36,7 @@ dependencies {
 tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + listOf(
-            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+            "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
         )
     }
 }

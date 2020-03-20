@@ -4,14 +4,14 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle", Vers.androidBuildTools::execute)
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin", Vers.dokka::execute)
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin", Vers.kotlin::execute)
+        classpath("com.android.tools.build:gradle") { version(Vers.androidBuildTools) }
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin") { version(Vers.dokka) }
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin") { version(Vers.kotlin) }
     }
 }
 
 plugins {
-    id("io.nofrills.multimodule") version "0.2.1"
+    id("io.nofrills.multimodule") version "0.2.2-dev"
 }
 
 allprojects {
@@ -73,6 +73,9 @@ multimodule {
 
     kotlin {
         allWarningsAsErrors = true
+        coroutines = true
+        coroutinesVersion = Vers.coroutines
+        stdLib = true
     }
 
     publish {

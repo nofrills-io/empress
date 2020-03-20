@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -14,7 +15,7 @@ dependencies {
 tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + listOf(
-            "-Xuse-experimental=kotlin.Experimental"
+            "-Xopt-in=kotlin.RequiresOptIn"
         )
     }
 }
@@ -22,5 +23,11 @@ tasks.withType(KotlinCompile::class).configureEach {
 tasks.withType(Test::class) {
     testLogging {
         showStandardStreams = false
+    }
+}
+
+tasks.register("siema") {
+    doLast {
+        println("Kotlin version: ${project.getKotlinPluginVersion()}")
     }
 }
