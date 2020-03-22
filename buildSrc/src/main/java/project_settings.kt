@@ -22,10 +22,10 @@ object EmpressLib {
     const val jdkVersionNum = 8
     const val jvmTarget = "1.8"
     const val mavPluginVersion = "1.0.4"
-    const val minSdkVersion = 21
+    const val minSdkVersion = 18
     const val targetSdkVersion = 28
-    const val versionCode = 5
-    const val versionName = "0.5.0"
+    const val versionCode = 6
+    const val versionName = "0.6.0"
 }
 
 object Ver {
