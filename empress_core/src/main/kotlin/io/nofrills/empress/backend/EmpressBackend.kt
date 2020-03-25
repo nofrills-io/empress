@@ -33,13 +33,14 @@ import kotlinx.coroutines.flow.asFlow
  * @param requestHandlerScope A coroutine scope where requests will be processed.
  * @param storedModels Models that were previously stored, which will be used instead of the ones initialized in [initialize][io.nofrills.empress.ModelInitializer.initialize] function.
  */
-@UseExperimental(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class EmpressBackend<E : Any, M : Any, R : Any> constructor(
     private val empress: Empress<E, M, R>,
     eventHandlerScope: CoroutineScope,
     requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>? = null
-) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope, storedModels), EmpressApi<E, M> {
+) : RulerBackend<E, M, R>(empress, eventHandlerScope, requestHandlerScope, storedModels),
+    EmpressApi<E, M> {
 
     private val updates = BroadcastChannel<Update<E, M>>(UPDATES_CHANNEL_CAPACITY)
 

@@ -1,14 +1,8 @@
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("java-library")
-    kotlin("jvm")
-    id("jacoco")
-}
-
-java {
-    sourceCompatibility = EmpressLib.javaCompat
-    targetCompatibility = EmpressLib.javaCompat
+    id("io.nofrills.multimodule.jar")
 }
 
 dependencies {
@@ -20,11 +14,9 @@ dependencies {
 
 tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
-        allWarningsAsErrors = true
         freeCompilerArgs = freeCompilerArgs + listOf(
-            "-Xuse-experimental=kotlin.Experimental"
+            "-Xopt-in=kotlin.RequiresOptIn"
         )
-        jvmTarget = EmpressLib.jvmTarget
     }
 }
 
@@ -34,16 +26,8 @@ tasks.withType(Test::class) {
     }
 }
 
-tasks.withType(JacocoReport::class) {
-    dependsOn(tasks.withType(Test::class))
-    reports {
-        html.isEnabled = true
-        xml.isEnabled = true
+tasks.register("siema") {
+    doLast {
+        println("Kotlin version: ${project.getKotlinPluginVersion()}")
     }
 }
-
-tasks.named("check") {
-    dependsOn(tasks.withType(JacocoReport::class))
-}
-
-apply(from = "https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/${EmpressLib.mavPluginVersion}/gradle-mavenizer.gradle")
