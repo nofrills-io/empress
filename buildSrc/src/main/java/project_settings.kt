@@ -22,10 +22,10 @@ import org.gradle.kotlin.dsl.accessors.runtime.addDependencyTo
 
 object EmpressLib {
     const val compileSdkVersion = 28
-    const val minSdkVersion = 21
+    const val minSdkVersion = 18
     const val targetSdkVersion = 28
-    const val versionCode = 5
-    const val versionName = "0.5.0"
+    const val versionCode = 6
+    const val versionName = "0.6.0"
 }
 
 object Vers {
