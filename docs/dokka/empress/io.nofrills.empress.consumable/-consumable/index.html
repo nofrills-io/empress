@@ -8,7 +8,7 @@
 <a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress.consumable</a>&nbsp;/&nbsp;<a href="./index.html">Consumable</a><br/>
 <br/>
 <h1>Consumable</h1>
-<code><span class="keyword">interface </span><span class="identifier">Consumable</span><span class="symbol">&lt;</span><span class="identifier">V</span><span class="symbol">, </span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://developer.android.com/reference/java/io/Serializable.html"><span class="identifier">Serializable</span></a></code>
+<code><span class="keyword">interface </span><span class="identifier">Consumable</span><span class="symbol">&lt;</span><span class="identifier">V</span><span class="symbol">, </span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/io/Serializable.html"><span class="identifier">Serializable</span></a></code>
 <p>Wraps a value of type <a href="index.html#V">V</a> that can be consumed.
 When it's <a href="consume.html">consumed</a>, an <a href="../../io.nofrills.empress/-effect.html">Effect</a> of type <a href="index.html#E">E</a> may be produced.</p>
 <p><strong>See Also</strong><br/>
@@ -19,12 +19,11 @@ When it's <a href="consume.html">consumed</a>, an <a href="../../io.nofrills.emp
 <tbody>
 <tr>
 <td>
-<p><a href="is-consumed.html">isConsumed</a></p>
+<h4><a href="is-consumed.html">isConsumed</a></h4>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">isConsumed</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code>
 <p>True if the value has been consumed.</p>
-</td>
+<code><span class="keyword">abstract</span> <span class="keyword">val </span><span class="identifier">isConsumed</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
 </tr>
 </tbody>
 </table>
@@ -33,21 +32,19 @@ When it's <a href="consume.html">consumed</a>, an <a href="../../io.nofrills.emp
 <tbody>
 <tr>
 <td>
-<p><a href="consume.html">consume</a></p>
+<h4><a href="consume.html">consume</a></h4>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">consume</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.consumable.Consumable$consume(io.nofrills.empress.EffectCommander((io.nofrills.empress.consumable.Consumable.E)))/effectCommander">effectCommander</span><span class="symbol">:</span>&nbsp;<a href="../../io.nofrills.empress/-effect-commander/index.html"><span class="identifier">EffectCommander</span></a><span class="symbol">&lt;</span><a href="index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><a href="index.html#V"><span class="identifier">V</span></a></code>
 <p>Returns the value while consuming it.</p>
-</td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">consume</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.consumable.Consumable$consume(io.nofrills.empress.EffectCommander((io.nofrills.empress.consumable.Consumable.E)))/effectCommander">effectCommander</span><span class="symbol">:</span>&nbsp;<a href="../../io.nofrills.empress/-effect-commander/index.html"><span class="identifier">EffectCommander</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">V</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="peek.html">peek</a></p>
+<h4><a href="peek.html">peek</a></h4>
 </td>
 <td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">peek</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="index.html#V"><span class="identifier">V</span></a></code>
 <p>Returns the value without consuming it.</p>
-</td>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">peek</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">V</span></code></td>
 </tr>
 </tbody>
 </table>

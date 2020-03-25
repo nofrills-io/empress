@@ -43,153 +43,132 @@ val api: EmpressApi&lt;Event, Model&gt; = EmpressBackend(empress, scope)
 <tbody>
 <tr>
 <td>
-<p><a href="-effect-commander/index.html">EffectCommander</a></p>
+<h4><a href="-effect.html">Effect</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">EffectCommander</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<p>Function that produces an object (usually an event).</p>
+<code><span class="keyword">typealias </span><span class="identifier">Effect</span><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<span class="identifier">E</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-effect-commander/index.html">EffectCommander</a></h4>
+</td>
+<td>
 <p>Allows to send effects.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">EffectCommander</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-empress/index.html">Empress</a></p>
+<h4><a href="-empress/index.html">Empress</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">Empress</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><a href="-empress/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="-empress/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="-empress/index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to define <strong>immutable</strong> models, event and request handlers.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">Empress</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">R</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-empress-api/index.html">EmpressApi</a></p>
+<h4><a href="-empress-api/index.html">EmpressApi</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler-api/index.html"><span class="identifier">RulerApi</span></a><span class="symbol">&lt;</span><a href="-empress-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="-empress-api/index.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to manage an <a href="-empress/index.html">Empress</a> instance.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler-api/index.html"><span class="identifier">RulerApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-event-commander/index.html">EventCommander</a></p>
+<h4><a href="-event-commander/index.html">EventCommander</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">EventCommander</span><span class="symbol">&lt;</span><span class="keyword">in</span>&nbsp;<span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to send events.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">EventCommander</span><span class="symbol">&lt;</span><span class="keyword">in</span>&nbsp;<span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-event-listener/index.html">EventListener</a></p>
+<h4><a href="-event-listener/index.html">EventListener</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">EventListener</span><span class="symbol">&lt;</span><span class="keyword">out</span>&nbsp;<span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to listen to processed events.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">EventListener</span><span class="symbol">&lt;</span><span class="keyword">out</span>&nbsp;<span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-model-initializer/index.html">ModelInitializer</a></p>
+<h4><a href="-model-initializer/index.html">ModelInitializer</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">ModelInitializer</span><span class="symbol">&lt;</span><span class="keyword">out</span>&nbsp;<span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Initializes the models.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">ModelInitializer</span><span class="symbol">&lt;</span><span class="keyword">out</span>&nbsp;<span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-models/index.html">Models</a></p>
+<h4><a href="-models/index.html">Models</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">Models</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to access the models.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">Models</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-mutable-empress/index.html">MutableEmpress</a></p>
+<h4><a href="-mutable-empress/index.html">MutableEmpress</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">MutableEmpress</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><a href="-mutable-empress/index.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="-mutable-empress/index.html#M"><span class="identifier">M</span></a><span class="symbol">,</span>&nbsp;<a href="-mutable-empress/index.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to define <strong>mutable</strong> models, event and request handlers.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">MutableEmpress</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler.html"><span class="identifier">Ruler</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">R</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-mutable-empress-api.html">MutableEmpressApi</a></p>
+<h4><a href="-mutable-empress-api.html">MutableEmpressApi</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">MutableEmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler-api/index.html"><span class="identifier">RulerApi</span></a><span class="symbol">&lt;</span><a href="-mutable-empress-api.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="-mutable-empress-api.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span></code>
 <p>Allows to manage an <a href="-mutable-empress/index.html">MutableEmpress</a> instance.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">MutableEmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-ruler-api/index.html"><span class="identifier">RulerApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-request-commander/index.html">RequestCommander</a></p>
+<h4><a href="-request-commander/index.html">RequestCommander</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">RequestCommander</span><span class="symbol">&lt;</span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Manages requests.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">RequestCommander</span><span class="symbol">&lt;</span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-request-handler/index.html">RequestHandler</a></p>
+<h4><a href="-request-handler/index.html">RequestHandler</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">RequestHandler</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Handles requests.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">RequestHandler</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-request-id.html">RequestId</a></p>
+<h4><a href="-request-id.html">RequestId</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">RequestId</span></code>
 <p>Represents a running request.
 Note: This class does not implement <code>android.os.Parcelable</code> interface.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">RequestId</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-ruler.html">Ruler</a></p>
+<h4><a href="-ruler.html">Ruler</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">Ruler</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-model-initializer/index.html"><span class="identifier">ModelInitializer</span></a><span class="symbol">&lt;</span><a href="-ruler.html#M"><span class="identifier">M</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-request-handler/index.html"><span class="identifier">RequestHandler</span></a><span class="symbol">&lt;</span><a href="-ruler.html#E"><span class="identifier">E</span></a><span class="symbol">,</span>&nbsp;<a href="-ruler.html#R"><span class="identifier">R</span></a><span class="symbol">&gt;</span></code>
 <p>Common interface for defining models and handling requests.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">Ruler</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">R</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-model-initializer/index.html"><span class="identifier">ModelInitializer</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-request-handler/index.html"><span class="identifier">RequestHandler</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">R</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-ruler-api/index.html">RulerApi</a></p>
+<h4><a href="-ruler-api/index.html">RulerApi</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">RulerApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-effect-commander/index.html"><span class="identifier">EffectCommander</span></a><span class="symbol">&lt;</span><a href="-ruler-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-event-commander/index.html"><span class="identifier">EventCommander</span></a><span class="symbol">&lt;</span><a href="-ruler-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-event-listener/index.html"><span class="identifier">EventListener</span></a><span class="symbol">&lt;</span><a href="-ruler-api/index.html#E"><span class="identifier">E</span></a><span class="symbol">&gt;</span></code>
 <p>Common interface for managing a <a href="-ruler.html">Ruler</a>.</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">RulerApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-effect-commander/index.html"><span class="identifier">EffectCommander</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-event-commander/index.html"><span class="identifier">EventCommander</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-event-listener/index.html"><span class="identifier">EventListener</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
-<p><a href="-update/index.html">Update</a></p>
+<h4><a href="-update/index.html">Update</a></h4>
 </td>
 <td>
-<code><span class="keyword">interface </span><span class="identifier">Update</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
 <p>Represents an update, that resulted from processing an event.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3>Type Aliases</h3>
-<table>
-<tbody>
-<tr>
-<td>
-<p><a href="-effect.html">Effect</a></p>
-</td>
-<td>
-<code><span class="keyword">typealias </span><span class="identifier">Effect</span><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span>&nbsp;<span class="symbol">=</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="-effect.html#E"><span class="identifier">E</span></a></code>
-<p>Function that produces an object (usually an event).</p>
-</td>
+<code><span class="keyword">interface </span><span class="identifier">Update</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 </tbody>
 </table>

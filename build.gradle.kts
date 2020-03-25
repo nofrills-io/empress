@@ -119,7 +119,7 @@ tasks.register("clean", Delete::class.java) {
 }
 
 tasks.register("publishDokka", Copy::class) {
-    dependsOn("dokka")
+    dependsOn(":dokka")
     from(File(project.buildDir, "dokka"))
     destinationDir = rootProject.file("docs/dokka")
 
