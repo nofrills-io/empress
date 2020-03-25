@@ -11,7 +11,7 @@ android {
 
 dependencies {
     api(project(":empress_core"))
-    api(Deps.coroutinesAndroid)
+    api(Deps.coroutinesCore)
 
     implementation(Deps.fragment)
 

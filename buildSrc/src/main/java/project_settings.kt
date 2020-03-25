@@ -45,7 +45,6 @@ object Deps {
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val lifecycleRuntimeKts = "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
 
-    val coroutinesAndroid = Dep(coroutines, "kotlinx-coroutines-android")
     val coroutinesCore = Dep(coroutines, "kotlinx-coroutines-core")
     val fragment = Dep(androidXFragment, "fragment")
     val kotlinReflect = Dep(kotlin, "kotlin-reflect")
