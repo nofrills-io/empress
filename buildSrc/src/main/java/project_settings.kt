@@ -25,13 +25,13 @@ object EmpressLib {
     const val minSdkVersion = 18
     const val targetSdkVersion = 28
     const val versionCode = 6
-    const val versionName = "0.6.1"
+    const val versionName = "0.6.2"
 }
 
 object Vers {
     val androidBuildTools = Ver(preferred = "3.6.1", required = "[3.5,4.0)")
     val coroutines = Ver(preferred = "1.3.5", required = "[1.3.3,2.0)")
-    val dokka = Ver(preferred = "0.10.1", required = "[0.10,1.0)")
+    val dokka = Ver(preferred = "0.10.1", required = "[0.10.1,1.0)")
     val kotlin = Ver(preferred = "1.3.70", required = "[1.3.70,2.0)")
 }
 
