@@ -24,20 +24,20 @@ object EmpressLib {
     const val compileSdkVersion = 28
     const val minSdkVersion = 18
     const val targetSdkVersion = 28
-    const val versionCode = 6
-    const val versionName = "0.6.2"
+    const val versionCode = 7
+    const val versionName = "0.6.4"
 }
 
 object Vers {
-    val androidBuildTools = Ver(preferred = "3.6.1", required = "[3.5,4.0)")
-    val coroutines = Ver(preferred = "1.3.5", required = "[1.3.3,2.0)")
-    val dokka = Ver(preferred = "0.10.1", required = "[0.10.1,1.0)")
-    val kotlin = Ver(preferred = "1.3.70", required = "[1.3.70,2.0)")
+    val androidBuildTools = Ver(preferred = "3.6.1", required = "3.6.0")
+    val coroutines = Ver(preferred = "1.3.5", required = "1.3.3")
+    val dokka = Ver(preferred = "0.10.1", required = "0.10.1")
+    val kotlin = Ver(preferred = "1.3.70", required = "1.3.70")
 }
 
 object Deps {
     private val coroutines = DepGroup("org.jetbrains.kotlinx", Vers.coroutines)
-    private val androidXFragment = DepGroup("androidx.fragment", "1.2.2", "[1.2,2.0)")
+    private val androidXFragment = DepGroup("androidx.fragment", "1.2.2", "1.2.0")
     private val kotlin = DepGroup("org.jetbrains.kotlin", Vers.kotlin)
 
     const val androidxAnnotations = "androidx.annotation:annotation:1.1.0"

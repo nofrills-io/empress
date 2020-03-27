@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -23,11 +22,5 @@ tasks.withType(KotlinCompile::class).configureEach {
 tasks.withType(Test::class) {
     testLogging {
         showStandardStreams = false
-    }
-}
-
-tasks.register("siema") {
-    doLast {
-        println("Kotlin version: ${project.getKotlinPluginVersion()}")
     }
 }
