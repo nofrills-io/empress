@@ -24,3 +24,5 @@ tasks.withType(Test::class) {
         showStandardStreams = false
     }
 }
+
+description = "The core for the Empress framework."

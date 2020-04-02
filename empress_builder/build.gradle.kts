@@ -13,3 +13,5 @@ dependencies {
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
 }
+
+description = "Builder DSL for the Empress framework."

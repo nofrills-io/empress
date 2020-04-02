@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    id("io.nofrills.multimodule") version "0.4.1"
+    id("io.nofrills.multimodule") version "0.5.1"
 }
 
 allprojects {
@@ -80,7 +80,8 @@ multimodule {
 
     publish {
         mavenPom {
-            name.set("empress")
+            name.set(project.name.split("_").joinToString(" ") { it.capitalize() })
+            description.set(project.description)
             url.set("https://nofrills.io/empress/")
 
             licenses {
@@ -100,7 +101,7 @@ multimodule {
         repositories {
             maven {
                 name = "dist"
-                url = uri("file://${buildDir}/dist")
+                url = uri("file://${project.rootProject.buildDir}/dist")
             }
         }
 

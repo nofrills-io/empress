@@ -28,3 +28,5 @@ gradle.taskGraph.beforeTask {
         enabled = false
     }
 }
+
+description = "Android framework for ruling your app."
