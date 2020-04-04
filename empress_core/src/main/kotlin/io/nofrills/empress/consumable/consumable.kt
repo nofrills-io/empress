@@ -34,6 +34,13 @@ interface Consumable<V, E : Any> : Serializable {
      */
     fun consume(effectCommander: EffectCommander<E>): V
 
+    /** Returns the value if it is not yet consumed.
+     * Otherwise, returns `null`.
+     */
+    fun consumeOrNull(effectCommander: EffectCommander<E>): V? {
+        return if (isConsumed) null else consume(effectCommander)
+    }
+
     /** Returns the value without consuming it. */
     fun peek(): V
 }
@@ -67,7 +74,13 @@ internal class SingleEffectConsumable<V, E : Any> constructor(
     }
 }
 
-/** Creates a [Consumable] for a given [value] and [effect]. */
+/** Creates a [Consumable] for a given [value] and [effect].
+ * If [effect] is `null`, the resulting [Consumable] is marked as [consumed][Consumable.isConsumed].
+ * Otherwise, the [Consumable] is consumed when you first call [Consumable.consume],
+ * and the [effect] is performed.
+ * Calling [Consumable.consume] further more than once will return the [value],
+ * but it will not trigger the [effect].
+ */
 fun <V, E : Any> consumableOf(value: V, effect: Effect<E>? = null): Consumable<V, E> {
     return if (effect != null) {
         SingleEffectConsumable(value, effect)
