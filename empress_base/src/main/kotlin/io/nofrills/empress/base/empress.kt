@@ -1,10 +1,8 @@
 package io.nofrills.empress.base
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
-import kotlin.reflect.KClass
 
 data class HandlerId(val id: Long) : AbstractCoroutineContextElement(HandlerId) {
     companion object Key : CoroutineContext.Key<HandlerId>
@@ -14,38 +12,31 @@ data class HandlerId(val id: Long) : AbstractCoroutineContextElement(HandlerId) 
  * @param M Type of the model.
  * @param S Signal type (type of the Flow/Channel)
  */
-abstract class Empress<M : Any, S : Any> : CoroutineScope {
+abstract class Empress<M : Any, S : Any> : BackendFacade<M, S>() {
     internal lateinit var backend: BackendFacade<M, S>
 
-    override lateinit var coroutineContext: CoroutineContext
-        internal set
+    internal abstract fun initialModels(): Collection<M>
 
-    abstract fun initialModels(): Collection<M>
+    override fun all(): Collection<M> = backend.all()
 
-    fun CoroutineScope.all(): Collection<M> = backend.all()
+    override fun cancelHandler(handlerId: HandlerId) = backend.cancelHandler(handlerId)
 
-    fun CoroutineScope.cancelHandler(handlerId: HandlerId) = backend.cancelHandler(handlerId)
+    override fun <T : M> get(modelClass: Class<T>): T = backend.get(modelClass)
 
-    /** Returns a model with the given [modelClass]. */
-    operator fun <T : M> CoroutineScope.get(modelClass: Class<T>): T = backend[modelClass]
+    override suspend fun handlerId(): HandlerId = backend.handlerId()
 
-    /** Returns a model with the given [modelClass]. */
-    operator fun <T : M> CoroutineScope.get(modelClass: KClass<T>): T = get(modelClass.java)
+    override suspend fun signal(signal: S) = backend.signal(signal)
 
-    suspend fun CoroutineScope.handlerId(): HandlerId = backend.handlerId()
+    override suspend fun update(model: M) = backend.update(model)
 
-    suspend fun CoroutineScope.signal(signal: S) = backend.signal(signal)
+    override fun queueSignal(signal: S) = backend.queueSignal(signal)
 
-    fun CoroutineScope.queueSignal(signal: S) = backend.queueSignal(signal)
-
-    suspend fun CoroutineScope.update(model: M) = backend.update(model)
-
-    fun CoroutineScope.queueUpdate(model: M) = backend.queueUpdate(model)
+    override fun queueUpdate(model: M) = backend.queueUpdate(model)
 }
 
-interface EmpressApi<E : Empress<M, S>, M : Any, S : Any> {
+interface EmpressApi<H : Any, M : Any, S : Any> {
     fun interrupt()
-    fun post(fn: suspend E.() -> Unit)
+    fun post(fn: suspend H.() -> Unit)
     fun signals(): Flow<S>
     fun updates(): Flow<M>
 }
