@@ -12,26 +12,28 @@ data class HandlerId(val id: Long) : AbstractCoroutineContextElement(HandlerId) 
  * @param M Type of the model.
  * @param S Signal type (type of the Flow/Channel)
  */
-abstract class Empress<M : Any, S : Any> : BackendFacade<M, S>() {
+abstract class Empress<M : Any, S : Any> {
     internal lateinit var backend: BackendFacade<M, S>
 
     internal abstract fun initialModels(): Collection<M>
 
-    override fun all(): Collection<M> = backend.all()
+    protected fun all(): Collection<M> = backend.all()
 
-    override fun cancelHandler(handlerId: HandlerId) = backend.cancelHandler(handlerId)
+    protected fun cancelHandler(handlerId: HandlerId) = backend.cancelHandler(handlerId)
 
-    override fun <T : M> get(modelClass: Class<T>): T = backend.get(modelClass)
+    protected fun <T : M> get(modelClass: Class<T>): T = backend.get(modelClass)
 
-    override suspend fun handlerId(): HandlerId = backend.handlerId()
+    protected inline fun <reified T : M> get(): T = get(T::class.java)
 
-    override suspend fun signal(signal: S) = backend.signal(signal)
+    protected suspend fun handlerId(): HandlerId = backend.handlerId()
 
-    override suspend fun update(model: M) = backend.update(model)
+    protected suspend fun signal(signal: S) = backend.signal(signal)
 
-    override fun queueSignal(signal: S) = backend.queueSignal(signal)
+    protected suspend fun update(model: M) = backend.update(model)
 
-    override fun queueUpdate(model: M) = backend.queueUpdate(model)
+    protected fun queueSignal(signal: S) = backend.queueSignal(signal)
+
+    protected fun queueUpdate(model: M) = backend.queueUpdate(model)
 }
 
 interface EmpressApi<H : Any, M : Any, S : Any> {

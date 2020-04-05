@@ -8,16 +8,15 @@ import kotlinx.coroutines.sync.Mutex
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.coroutineContext
 
-abstract class BackendFacade<M : Any, S : Any> {
-    abstract fun all(): Collection<M>
-    abstract fun cancelHandler(handlerId: HandlerId)
-    abstract fun <T : M> get(modelClass: Class<T>): T
-    inline fun <reified T : M> get(): T = get(T::class.java)
-    abstract suspend fun handlerId(): HandlerId
-    abstract suspend fun signal(signal: S)
-    abstract suspend fun update(model: M)
-    abstract fun queueSignal(signal: S)
-    abstract fun queueUpdate(model: M)
+internal interface BackendFacade<M : Any, S : Any> {
+    fun all(): Collection<M>
+    fun cancelHandler(handlerId: HandlerId)
+    fun <T : M> get(modelClass: Class<T>): T
+    suspend fun handlerId(): HandlerId
+    suspend fun signal(signal: S)
+    suspend fun update(model: M)
+    fun queueSignal(signal: S)
+    fun queueUpdate(model: M)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -25,7 +24,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     private val empress: E,
     private val handlerScope: CoroutineScope,
     storedModels: Collection<M> = emptyList()
-) : BackendFacade<M, S>(), EmpressApi<E, M, S> {
+) : BackendFacade<M, S>, EmpressApi<E, M, S> {
     /** If interruption was requested, the mutex will be locked. */
     private val interruption = Mutex()
 
