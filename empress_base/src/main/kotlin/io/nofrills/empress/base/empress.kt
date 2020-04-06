@@ -1,5 +1,6 @@
 package io.nofrills.empress.base
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
@@ -16,8 +17,6 @@ abstract class Empress<M : Any, S : Any> {
     internal lateinit var backend: BackendFacade<M, S>
 
     internal abstract fun initialModels(): Collection<M>
-
-    protected fun all(): Collection<M> = backend.all()
 
     protected fun cancelHandler(handlerId: HandlerId) = backend.cancelHandler(handlerId)
 
@@ -38,6 +37,7 @@ abstract class Empress<M : Any, S : Any> {
 
 interface EmpressApi<H : Any, M : Any, S : Any> {
     fun interrupt()
+    fun models(): Collection<M>
     fun post(fn: suspend H.() -> Unit)
     fun signals(): Flow<S>
     fun updates(): Flow<M>

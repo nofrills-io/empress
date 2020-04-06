@@ -41,6 +41,7 @@ class EmpressBackendTest {
             Model.Counter(3)
         )
         assertEquals(expected, updates)
+        assertEquals(setOf(Model.Sender(), Model.Counter(3)), tested.models().toSet())
     }
 
     @Test
@@ -88,6 +89,54 @@ class EmpressBackendTest {
         assertEquals(expectedModels, updates)
         assertEquals(listOf(Signal.SendingCancelled), signals)
     }
+
+    @Test(expected = IllegalStateException::class)
+    fun duplicateInitialModels() {
+        val models = listOf(Model.Counter(0), Model.Counter(1), Model.Sender())
+        EmpressBackend(SampleEmpress(models), scope)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun duplicateStoredModels() {
+        val models = listOf(Model.Counter(0), Model.Counter(1), Model.Sender())
+        EmpressBackend(SampleEmpress(), scope, storedModels = models)
+    }
+
+    @Test
+    fun initialHandlerId() = scope.runBlockingTest {
+        tested = EmpressBackend(SampleEmpress(), scope, initialHandlerId = 11L)
+        val deferredUpdates = async { tested.updates().toList() }
+        tested.post { sendCounter() }
+        tested.interrupt()
+        val updates = deferredUpdates.await()
+        val expected = listOf(
+            Model.Sender(HandlerId(12L)),
+            Model.Sender()
+        )
+        assertEquals(expected, updates)
+    }
+
+    @Test
+    fun argumentIsEvaluatedEagerly() {
+        val scopeA = TestCoroutineScope()
+        val scopeB = TestCoroutineScope()
+        tested = EmpressBackend(SampleEmpress(), scopeA)
+
+        scopeB.runBlockingTest {
+            val deferredUpdates = async { tested.updates().toList() }
+            var d = 1
+            scopeA.pauseDispatcher()
+            tested.post { delta(d) }
+            d = 3
+            tested.post { increment() }
+            tested.interrupt()
+            scopeA.advanceUntilIdle()
+            scopeA.cleanupTestCoroutines()
+
+            val updates = deferredUpdates.await()
+            assertEquals(listOf(Model.Counter(1), Model.Counter(2)), updates)
+        }
+    }
 }
 
 sealed class Model {
@@ -100,9 +149,9 @@ sealed class Signal {
     object SendingCancelled : Signal()
 }
 
-class SampleEmpress : Empress<Model, Signal>() {
+class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Model, Signal>() {
     override fun initialModels(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.Sender())
+        return models ?: listOf(Model.Counter(0), Model.Sender())
     }
 
     fun decrement() {
@@ -116,6 +165,7 @@ class SampleEmpress : Empress<Model, Signal>() {
     }
 
     suspend fun delta(d: Int) {
+        delay(10)
         val count = get<Model.Counter>().count
         update(Model.Counter(count + d))
     }

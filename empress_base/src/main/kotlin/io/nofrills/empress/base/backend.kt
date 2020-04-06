@@ -1,15 +1,18 @@
 package io.nofrills.empress.base
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.sync.Mutex
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.coroutineContext
+import kotlin.coroutines.startCoroutine
 
 internal interface BackendFacade<M : Any, S : Any> {
-    fun all(): Collection<M>
     fun cancelHandler(handlerId: HandlerId)
     fun <T : M> get(modelClass: Class<T>): T
     suspend fun handlerId(): HandlerId
@@ -23,24 +26,25 @@ internal interface BackendFacade<M : Any, S : Any> {
 class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     private val empress: E,
     private val handlerScope: CoroutineScope,
-    storedModels: Collection<M> = emptyList()
+    storedModels: Collection<M> = emptyList(),
+    initialHandlerId: Long = 0
 ) : BackendFacade<M, S>, EmpressApi<E, M, S> {
+    private val handlerJobMap = ConcurrentHashMap<HandlerId, Job>()
+
     /** If interruption was requested, the mutex will be locked. */
     private val interruption = Mutex()
 
-    private val handlerJobMap = ConcurrentHashMap<HandlerId, Job>()
+    private val modelChannel = BroadcastChannel<M>(Channel.BUFFERED)
 
-    private val modelChannel = Channel<M>(Channel.UNLIMITED)
-
-    private val modelFlow = modelChannel.consumeAsFlow()
+    private val modelFlow = modelChannel.asFlow()
 
     private val modelMap = makeModelMap(empress.initialModels(), storedModels)
 
-    private var nextHandlerId = 0L
+    private var nextHandlerId = AtomicLong(initialHandlerId) // TODO should be stored in onSaveInstanceState
 
-    private val signalChannel = Channel<S>(Channel.UNLIMITED)
+    private val signalChannel = BroadcastChannel<S>(Channel.BUFFERED)
 
-    private val signalFlow = signalChannel.consumeAsFlow()
+    private val signalFlow = signalChannel.asFlow()
 
     init {
         handlerScope.coroutineContext[Job]?.invokeOnCompletion {
@@ -56,6 +60,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         interruptIfNeeded()
     }
 
+    override fun models(): Collection<M> {
+        return modelMap.values.toList()
+    }
+
     override fun signals(): Flow<S> {
         return signalFlow
     }
@@ -65,8 +73,6 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     // BackendFacade
-
-    override fun all(): Collection<M> = modelMap.values.toList()
 
     override fun cancelHandler(handlerId: HandlerId) {
         handlerJobMap[handlerId]?.cancel()
@@ -119,8 +125,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     private fun getNextHandlerId(): HandlerId {
-        nextHandlerId += 1
-        return HandlerId(nextHandlerId)
+        return HandlerId(nextHandlerId.incrementAndGet())
     }
 
     private fun interruptIfNeeded() {
@@ -130,7 +135,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     companion object {
-        internal fun <M : Any> makeModelMap(
+        private fun <M : Any> makeModelMap(
             initialModels: Collection<M>,
             storedModels: Collection<M>
         ): ConcurrentHashMap<Class<out M>, M> {
