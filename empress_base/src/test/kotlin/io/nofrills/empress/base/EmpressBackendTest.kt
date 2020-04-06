@@ -27,6 +27,11 @@ class EmpressBackendTest {
     }
 
     @Test
+    fun noModelUpdatesUpdates() = scope.runBlockingTest {
+        tested.post { ping() }
+    }
+
+    @Test
     fun modelUpdates() = scope.runBlockingTest {
         val deferredUpdates = async { tested.updates().toList() }
         tested.post { increment() }
@@ -46,7 +51,7 @@ class EmpressBackendTest {
     }
 
     @Test
-    fun signaling() = scope.runBlockingTest {
+    fun signals() = scope.runBlockingTest {
         val deferredUpdates = async { tested.updates().toList() }
         val deferredSignals = async { tested.signals().toList() }
 
@@ -67,7 +72,7 @@ class EmpressBackendTest {
     }
 
     @Test
-    fun cancelHandler() = scope.runBlockingTest {
+    fun cancellingHandler() = scope.runBlockingTest {
         val deferredUpdates = async { tested.updates().toList() }
         val deferredSignals = async { tested.signals().toList() }
 
@@ -89,6 +94,30 @@ class EmpressBackendTest {
         )
         assertEquals(expectedModels, updates)
         assertEquals(listOf(Signal.SendingCancelled), signals)
+    }
+
+    @Test
+    fun cancellingCompletedHandler() = scope.runBlockingTest {
+        val deferredUpdates = async { tested.updates().toList() }
+        val deferredSignals = async { tested.signals().toList() }
+
+        pauseDispatcher()
+        tested.post { increment() }
+        tested.post { sendCounter() }
+        resumeDispatcher()
+        tested.post { cancelSending() }
+        tested.interrupt()
+
+        val updates = deferredUpdates.await()
+        val signals = deferredSignals.await()
+
+        val expectedModels = listOf(
+            Model.Counter(1),
+            Model.Sender(HandlerId(2L)),
+            Model.Sender(null)
+        )
+        assertEquals(expectedModels, updates)
+        assertEquals(listOf(Signal.CounterSent), signals)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -142,7 +171,7 @@ class EmpressBackendTest {
 
     @Test
     fun handlersAreLaunchedInOrder() {
-        val dispatcherA = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        val dispatcherA = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
         val dispatcherB = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         tested = EmpressBackend(SampleEmpress(), CoroutineScope(dispatcherA))
 
@@ -162,5 +191,80 @@ class EmpressBackendTest {
                 assertEquals(Model.Counter(sum), m)
             }
         }
+    }
+
+    @Test
+    fun delayedFirstObserver() = scope.runBlockingTest {
+        tested.post { decrement() }
+        val deferredUpdates = async { tested.updates().toList() }
+        tested.post { decrement() }
+        tested.interrupt()
+
+        val updates = deferredUpdates.await()
+        assertEquals(listOf(Model.Counter(-2)), updates)
+    }
+
+    @Test
+    fun twoUpdateObservers() = scope.runBlockingTest {
+        val deferredUpdates1 = async { tested.updates().toList() }
+        val deferredUpdates2 = async { tested.updates().toList() }
+
+        tested.post { decrement() }
+        tested.post { decrement() }
+        tested.interrupt()
+
+        val updates1 = deferredUpdates1.await()
+        val updates2 = deferredUpdates2.await()
+
+        assertEquals(listOf(Model.Counter(-1), Model.Counter(-2)), updates1)
+        assertEquals(updates1, updates2)
+    }
+
+    @Test
+    fun delayedSecondObserver() = scope.runBlockingTest {
+        val deferredUpdates1 = async { tested.updates().toList() }
+
+        tested.post { decrement() }
+
+        val deferredUpdates2 = async { tested.updates().toList() }
+
+        tested.post { decrement() }
+        tested.interrupt()
+
+        val updates1 = deferredUpdates1.await()
+        val updates2 = deferredUpdates2.await()
+
+        assertEquals(listOf(Model.Counter(-1), Model.Counter(-2)), updates1)
+        assertEquals(listOf(Model.Counter(-2)), updates2)
+    }
+
+    @Test
+    fun cancellingParentJob() {
+        val job = Job()
+        val scope = CoroutineScope(Dispatchers.Unconfined + job)
+        tested = EmpressBackend(SampleEmpress(), scope)
+
+        try {
+            runBlockingTest {
+                val deferredUpdates = async { tested.updates().toList() }
+                launch {
+                    tested.post { increment() }
+                    tested.post { sendCounter() }
+                    delay(10)
+                    job.cancel()
+                }
+                deferredUpdates.await()
+            }
+        } finally {
+            assertTrue((tested as EmpressBackend).areChannelsClosedForSend())
+        }
+
+        var exceptionCaught = false
+        try {
+            job.ensureActive()
+        } catch (e: CancellationException) {
+            exceptionCaught = true
+        }
+        assertTrue(exceptionCaught)
     }
 }

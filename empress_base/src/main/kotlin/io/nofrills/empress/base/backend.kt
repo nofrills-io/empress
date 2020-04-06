@@ -15,7 +15,7 @@ class Handler internal constructor()
 private val handlerInstance = Handler()
 
 internal interface BackendFacade<M : Any, S : Any> {
-    fun cancelHandler(handlerId: HandlerId)
+    fun cancelHandler(handlerId: HandlerId): Boolean
     fun <T : M> get(modelClass: Class<T>): T
     suspend fun handler(fn: suspend () -> Unit): Handler
     suspend fun handlerId(): HandlerId
@@ -90,8 +90,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
     // BackendFacade
 
-    override fun cancelHandler(handlerId: HandlerId) {
-        handlerJobMap[handlerId]?.cancel()
+    override fun cancelHandler(handlerId: HandlerId): Boolean {
+        val job = handlerJobMap[handlerId] ?: return false
+        job.cancel()
+        return true
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -119,6 +121,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         modelMap[model::class.java] = model
         modelChannel.send(model)
         yield()
+    }
+
+    internal fun areChannelsClosedForSend(): Boolean {
+        return modelChannel.isClosedForSend && signalChannel.isClosedForSend
     }
 
     private fun closeChannels() {

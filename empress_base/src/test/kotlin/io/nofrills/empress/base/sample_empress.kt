@@ -23,11 +23,6 @@ class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Mod
         update(Model.Counter(count - 1))
     }
 
-    suspend fun increment() = handler {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + 1))
-    }
-
     suspend fun delta(d: Int, withDelay: Boolean = false, withAfterDelay: Boolean = false) =
         handler {
             if (withDelay) {
@@ -39,6 +34,15 @@ class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Mod
                 delay(Random.nextLong(100))
             }
         }
+
+    suspend fun increment() = handler {
+        val count = get<Model.Counter>().count
+        update(Model.Counter(count + 1))
+    }
+
+    suspend fun ping() = handler {
+        get<Model.Counter>()
+    }
 
     suspend fun sendCounter() = handler {
         if (get<Model.Sender>().handlerId != null) return@handler
