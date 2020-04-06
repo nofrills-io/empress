@@ -1,6 +1,5 @@
 package io.nofrills.empress.base
 
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
@@ -24,21 +23,19 @@ abstract class Empress<M : Any, S : Any> {
 
     protected inline fun <reified T : M> get(): T = get(T::class.java)
 
+    protected suspend fun handler(fn: suspend () -> Unit): Handler = backend.handler(fn)
+
     protected suspend fun handlerId(): HandlerId = backend.handlerId()
 
     protected suspend fun signal(signal: S) = backend.signal(signal)
 
     protected suspend fun update(model: M) = backend.update(model)
-
-    protected fun queueSignal(signal: S) = backend.queueSignal(signal)
-
-    protected fun queueUpdate(model: M) = backend.queueUpdate(model)
 }
 
-interface EmpressApi<H : Any, M : Any, S : Any> {
+interface EmpressApi<E : Any, M : Any, S : Any> {
     fun interrupt()
     fun models(): Collection<M>
-    fun post(fn: suspend H.() -> Unit)
+    fun post(fn: suspend E.() -> Handler)
     fun signals(): Flow<S>
     fun updates(): Flow<M>
 }

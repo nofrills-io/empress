@@ -8,6 +8,7 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.Executors
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EmpressBackendTest {
@@ -118,72 +119,48 @@ class EmpressBackendTest {
 
     @Test
     fun argumentIsEvaluatedEagerly() {
-        val scopeA = TestCoroutineScope()
-        val scopeB = TestCoroutineScope()
-        tested = EmpressBackend(SampleEmpress(), scopeA)
+        val dispatcherA = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        val dispatcherB = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        tested = EmpressBackend(SampleEmpress(), CoroutineScope(dispatcherA))
 
-        scopeB.runBlockingTest {
+        runBlocking(dispatcherB) {
             val deferredUpdates = async { tested.updates().toList() }
-            var d = 1
-            scopeA.pauseDispatcher()
-            tested.post { delta(d) }
-            d = 3
+            coroutineScope {
+                launch {
+                    var d = 1
+                    tested.post { delta(d, withDelay = true) }
+                    d = 3
+                }
+            }
             tested.post { increment() }
             tested.interrupt()
-            scopeA.advanceUntilIdle()
-            scopeA.cleanupTestCoroutines()
 
             val updates = deferredUpdates.await()
             assertEquals(listOf(Model.Counter(1), Model.Counter(2)), updates)
         }
     }
-}
 
-sealed class Model {
-    data class Counter(val count: Int) : Model()
-    data class Sender(val handlerId: HandlerId? = null) : Model()
-}
+    @Test
+    fun handlersAreLaunchedInOrder() {
+        val dispatcherA = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        val dispatcherB = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+        tested = EmpressBackend(SampleEmpress(), CoroutineScope(dispatcherA))
 
-sealed class Signal {
-    object CounterSent : Signal()
-    object SendingCancelled : Signal()
-}
+        runBlocking(dispatcherB) {
+            val deferredUpdates = async { tested.updates().toList() }
+            coroutineScope {
+                for (i in 0..1_000) {
+                    launch { tested.post { delta(i, withAfterDelay = true) } }
+                }
+            }
+            tested.interrupt()
 
-class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return models ?: listOf(Model.Counter(0), Model.Sender())
-    }
-
-    fun decrement() {
-        val count = get<Model.Counter>().count
-        queueUpdate(Model.Counter(count - 1))
-    }
-
-    suspend fun increment() {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + 1))
-    }
-
-    suspend fun delta(d: Int) {
-        delay(10)
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + d))
-    }
-
-    suspend fun sendCounter() {
-        if (get<Model.Sender>().handlerId != null) return
-
-        update(Model.Sender(handlerId()))
-        val count = get<Model.Counter>().count
-        delay(count * 1000L)
-        signal(Signal.CounterSent)
-        update(Model.Sender(null))
-    }
-
-    fun cancelSending() {
-        val handlerId = get<Model.Sender>().handlerId ?: return
-        cancelHandler(handlerId)
-        queueUpdate(Model.Sender(null))
-        queueSignal(Signal.SendingCancelled)
+            val updates = deferredUpdates.await()
+            var sum = 0
+            for ((i, m) in updates.withIndex()) {
+                sum += i
+                assertEquals(Model.Counter(sum), m)
+            }
+        }
     }
 }
