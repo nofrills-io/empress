@@ -1,97 +1,109 @@
 package io.nofrills.empress.base
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.coroutines.coroutineContext
-
-class Handler internal constructor()
 
 private val handlerInstance = Handler()
 
 internal interface BackendFacade<M : Any, S : Any> {
-    fun cancelHandler(handlerId: HandlerId): Boolean
-    fun <T : M> get(modelClass: Class<T>): T
-    suspend fun handler(fn: suspend () -> Unit): Handler
-    suspend fun handlerId(): HandlerId
-    suspend fun signal(signal: S)
-    suspend fun update(model: M)
+    fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler
+    fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestId
 }
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     private val empress: E,
-    private val handlerScope: CoroutineScope,
+    private val eventHandlerScope: CoroutineScope,
+    private val requestHandlerScope: CoroutineScope,
     storedModels: Collection<M> = emptyList(),
     initialHandlerId: Long = 0
-) : BackendFacade<M, S>, EmpressApi<E, M, S> {
-    private val handlerJobMap = ConcurrentHashMap<HandlerId, Job>()
+) : BackendFacade<M, S>, EmpressApi<E, M, S>, EventHandler<M, S>() {
+    private val dynamicLatch = DynamicLatch()
 
-    /** If interruption was requested, the mutex will be locked. */
-    private val interruption = Mutex()
+    private val handlerChannel = Channel<EventHandler<M, S>.() -> Unit>(Channel.UNLIMITED)
 
-    private val modelChannel = BroadcastChannel<M>(Channel.BUFFERED)
-
-    private val modelFlow = modelChannel.asFlow()
+    private val modelChannels = Collections.synchronizedList(arrayListOf<Channel<M>>())
 
     private val modelMap = makeModelMap(empress.initialModels(), storedModels)
 
     private var nextHandlerId =
         AtomicLong(initialHandlerId) // TODO should be stored in onSaveInstanceState
 
-    private val signalChannel = BroadcastChannel<S>(Channel.BUFFERED)
+    private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
-    private val signalFlow = signalChannel.asFlow()
+    private val signalChannels = Collections.synchronizedList(arrayListOf<Channel<S>>())
 
     init {
-        handlerScope.coroutineContext[Job]?.invokeOnCompletion {
+        empress.backend = this
+        launchHandlerProcessing()
+        eventHandlerScope.coroutineContext[Job]?.invokeOnCompletion {
             closeChannels()
         }
-        empress.backend = this
+    }
+
+    // BackendFacade
+
+    override fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler {
+        dynamicLatch.countUp()
+        handlerChannel.offer(fn)
+        return handlerInstance
+    }
+
+    override fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestId {
+        val requestId = getNextRequestId()
+        val job = requestHandlerScope.launch(start = CoroutineStart.LAZY, block = fn)
+        requestJobMap[requestId] = job
+        job.invokeOnCompletion {
+            requestJobMap.remove(requestId)
+            dynamicLatch.countDown()
+        }
+        dynamicLatch.countUp()
+        job.start()
+        return requestId
     }
 
     // EmpressApi
 
-    override fun interrupt() {
-        interruption.tryLock()
-        interruptIfNeeded()
+    override suspend fun interrupt() {
+        dynamicLatch.close()
+        closeChannels()
     }
 
     override fun models(): Collection<M> {
         return modelMap.values.toList()
     }
 
-    override fun post(fn: suspend E.() -> Handler) {
-        val handlerId = getNextHandlerId()
-        val job = Job()
-        handlerJobMap[handlerId] = job
-        val context = handlerId + job
-
-        handlerScope.launch(context, start = CoroutineStart.UNDISPATCHED) {
-            fn.invoke(empress)
-        }.invokeOnCompletion {
-            handlerJobMap.remove(handlerId)
-            interruptIfNeeded()
-        }
+    override fun post(fn: E.() -> Handler) {
+        fn.invoke(empress)
     }
 
     override fun signals(): Flow<S> {
-        return signalFlow
+        val channel = Channel<S>(Channel.UNLIMITED)
+        return channel
+            .consumeAsFlow()
+            .onStart { signalChannels.add(channel) }
+            .onCompletion { signalChannels.remove(channel) }
     }
 
     override fun updates(): Flow<M> {
-        return modelFlow
+        val channel = Channel<M>(Channel.UNLIMITED)
+        return channel
+            .consumeAsFlow()
+            .onStart { modelChannels.add(channel) }
+            .onCompletion { modelChannels.remove(channel) }
     }
 
-    // BackendFacade
+    // EventHandler
 
-    override fun cancelHandler(handlerId: HandlerId): Boolean {
-        val job = handlerJobMap[handlerId] ?: return false
+    override fun cancelRequest(requestId: RequestId): Boolean {
+        val job = requestJobMap[requestId] ?: return false
         job.cancel()
         return true
     }
@@ -99,46 +111,46 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     @Suppress("UNCHECKED_CAST")
     override fun <T : M> get(modelClass: Class<T>): T = modelMap.getValue(modelClass) as T
 
-    override suspend fun handler(fn: suspend () -> Unit): Handler {
-        coroutineScope {
-            launch {
-                fn.invoke()
-            }
+    override fun signal(signal: S) {
+        val channels = signalChannels.toList()
+        for (chan in channels) {
+            chan.offer(signal)
         }
-        return handlerInstance
     }
 
-    override suspend fun handlerId(): HandlerId {
-        return coroutineContext[HandlerId]!!
-    }
-
-    override suspend fun signal(signal: S) {
-        signalChannel.send(signal)
-        yield()
-    }
-
-    override suspend fun update(model: M) {
+    override fun update(model: M) {
         modelMap[model::class.java] = model
-        modelChannel.send(model)
-        yield()
+        val channels = modelChannels.toList()
+        for (chan in channels) {
+            chan.offer(model)
+        }
     }
+
+    // Implementation details
 
     internal fun areChannelsClosedForSend(): Boolean {
-        return modelChannel.isClosedForSend && signalChannel.isClosedForSend
+        return modelChannels.toList().all { it.isClosedForSend } &&
+                signalChannels.toList().all { it.isClosedForSend } &&
+                handlerChannel.isClosedForSend
     }
 
     private fun closeChannels() {
-        modelChannel.close()
-        signalChannel.close()
+        handlerChannel.close()
+        modelChannels.toList().forEach { it.close() }
+        signalChannels.toList().forEach { it.close() }
     }
 
-    private fun getNextHandlerId(): HandlerId {
-        return HandlerId(nextHandlerId.incrementAndGet())
+    private fun getNextRequestId(): RequestId {
+        return RequestId(nextHandlerId.incrementAndGet())
     }
 
-    private fun interruptIfNeeded() {
-        if (interruption.isLocked && handlerJobMap.isEmpty()) {
-            closeChannels()
+    private fun launchHandlerProcessing() = eventHandlerScope.launch {
+        for (handler in handlerChannel) {
+            try {
+                handler.invoke(this@EmpressBackend)
+            } finally {
+                dynamicLatch.countDown()
+            }
         }
     }
 
