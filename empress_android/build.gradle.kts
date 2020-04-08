@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    api(project(":empress_base"))
     api(project(":empress_core"))
     api(Deps.coroutinesCore)
 

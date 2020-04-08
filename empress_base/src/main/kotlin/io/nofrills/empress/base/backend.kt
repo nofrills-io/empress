@@ -22,8 +22,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
-    storedModels: Collection<M> = emptyList(),
-    initialHandlerId: Long = 0
+    storedModels: Collection<M>? = null,
+    initialHandlerId: Long? = null
 ) : BackendFacade<M, S>, EmpressApi<E, M, S>, EventHandler<M, S>() {
     private val dynamicLatch = DynamicLatch()
 
@@ -31,10 +31,9 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
     private val modelChannels = Collections.synchronizedList(arrayListOf<Channel<M>>())
 
-    private val modelMap = makeModelMap(empress.initialModels(), storedModels)
+    private val modelMap = makeModelMap(empress.initialModels(), storedModels ?: emptyList())
 
-    private var nextHandlerId =
-        AtomicLong(initialHandlerId) // TODO should be stored in onSaveInstanceState
+    private var lastHandlerId = AtomicLong(initialHandlerId ?: 0)
 
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
@@ -46,6 +45,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         eventHandlerScope.coroutineContext[Job]?.invokeOnCompletion {
             closeChannels()
         }
+    }
+
+    fun lastHandlerId(): Long {
+        return lastHandlerId.get()
     }
 
     // BackendFacade
@@ -141,7 +144,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     private fun getNextRequestId(): RequestId {
-        return RequestId(nextHandlerId.incrementAndGet())
+        return RequestId(lastHandlerId.incrementAndGet())
     }
 
     private fun launchHandlerProcessing() = eventHandlerScope.launch {
