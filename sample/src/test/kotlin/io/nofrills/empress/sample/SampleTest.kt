@@ -16,25 +16,26 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.EmpressApi
-import io.nofrills.empress.backend.EmpressBackend
+import io.nofrills.empress.base.EmpressApi
+import io.nofrills.empress.base.EmpressBackend
+import io.nofrills.empress.base.RequestId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
 class SampleTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: EmpressApi<Event, Model>
+    private lateinit var tested: EmpressApi<SampleEmpress, Model, Signal>
 
     @Before
     fun setUp() {
         scope = TestCoroutineScope()
-        tested = EmpressBackend(sampleEmpress, scope, scope)
+        tested = EmpressBackend(SampleEmpress(), scope, scope)
     }
 
     @After
@@ -46,17 +47,18 @@ class SampleTest {
     fun example() = scope.runBlockingTest {
         val deferredUpdates = async { tested.updates().toCollection(mutableListOf()) }
 
-        Assert.assertEquals(Model.Counter(0), tested.models()[Model.Counter::class])
-
-        tested.post(Event.Increment)
-        tested.post(Event.Increment)
-        Assert.assertEquals(Model.Counter(2), tested.models()[Model.Counter::class])
-
-        tested.post(Event.SendCounter)
-
+        tested.post { increment() }
+        tested.post { increment() }
+        tested.post { sendCounter() }
         tested.interrupt()
 
         val updates = deferredUpdates.await()
-        Assert.assertEquals(4, updates.size)
+//        val expected = listOf(
+//            Model.Counter(1),
+//            Model.Counter(2),
+//            Model.Sender(SenderState.Sending(RequestId())),
+//            Model.Sender(SenderState.Idle)
+//        )
+        assertEquals(4, updates.size)
     }
 }

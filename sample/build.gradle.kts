@@ -23,7 +23,6 @@ androidExtensions {
 
 dependencies {
     implementation(project(":empress_android"))
-    implementation(project(":empress_builder"))
     implementation(Deps.lifecycleRuntimeKts)
     implementation(Deps.appCompat)
     implementation(Deps.constraintLayout)

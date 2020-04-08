@@ -2,17 +2,17 @@ package io.nofrills.empress.base
 
 import kotlinx.coroutines.delay
 
-sealed class Model {
+internal sealed class Model {
     data class Counter(val count: Int) : Model()
     data class Sender(val requestId: RequestId? = null) : Model()
 }
 
-sealed class Signal {
+internal sealed class Signal {
     object CounterSent : Signal()
     object SendingCancelled : Signal()
 }
 
-class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Model, Signal>() {
+internal class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Model, Signal>() {
     override fun initialModels(): Collection<Model> {
         return models ?: listOf(Model.Counter(0), Model.Sender())
     }

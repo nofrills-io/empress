@@ -16,67 +16,64 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.consumable.consumableOf
-import io.nofrills.empress.Empress
-import io.nofrills.empress.builder.Empress
+import io.nofrills.empress.base.Empress
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
-val sampleEmpress: Empress<Event, Model, Request> by lazy {
-    Empress<Event, Model, Request> {
-        initializer { Model.Counter(0) }
-        initializer { Model.Sender(SenderState.Idle) }
+class SampleEmpress : Empress<Model, Signal>() {
+    override fun initialModels(): Collection<Model> {
+        return listOf(Model.Counter(0), Model.Sender(SenderState.Idle))
+    }
 
-        onEvent<Event.CancelSendingCounter> {
-            val sender = models[Model.Sender::class]
-            val state = sender.consumableState.peek()
-            if (state is SenderState.Sending) {
-                requests.cancel(state.requestId)
-                listOf(Model.Sender(SenderState.Cancelled) { Event.SenderStateConsumed })
-            } else {
-                listOf()
-            }
+    fun cancelSendingCounter() = onEvent {
+        val sender = get<Model.Sender>()
+        val state = sender.state
+        if (state is SenderState.Sending) {
+            cancelRequest(state.requestId)
+            update(Model.Sender(SenderState.Idle))
+            signal(Signal.CounterSendCancelled)
         }
+    }
 
-        onEvent<Event.CounterSent> { listOf(Model.Sender(SenderState.Sent) { Event.SenderStateConsumed }) }
+    private fun onCounterSent() = onEvent {
+        update(Model.Sender(SenderState.Idle))
+        signal(Signal.CounterSent)
+    }
 
-        onEvent<Event.Decrement> {
-            val counter = models[Model.Counter::class]
-            listOf(counter.copy(count = counter.count - 1))
+    fun decrement() = onEvent {
+        val counter = get<Model.Counter>()
+        update(counter.copy(count = counter.count - 1))
+    }
+
+    fun failure() = onEvent {
+        throw OnEventFailure()
+    }
+
+    fun failureInRequest() = onEvent {
+        failedRequest()
+    }
+
+    fun increment() = onEvent {
+        val counter = get<Model.Counter>()
+        update(counter.copy(count = counter.count + 1))
+    }
+
+    fun sendCounter() = onEvent {
+        val state = get<Model.Sender>().state
+        if (state is SenderState.Sending) {
+            return@onEvent
         }
+        val counter = get<Model.Counter>()
+        val requestId = sendCounter(counter.count)
+        update(Model.Sender(SenderState.Sending(requestId)))
+    }
 
-        onEvent<Event.GetFailure> { throw OnEventFailure() }
+    private fun failedRequest() = onRequest {
+        throw OnRequestFailure()
+    }
 
-        onEvent<Event.GetFailureWithRequest> {
-            requests.post(Request.GetFailure)
-            emptyList()
-        }
-
-        onEvent<Event.Increment> {
-            val counter = models[Model.Counter::class]
-            listOf(counter.copy(count = counter.count + 1))
-        }
-
-        onEvent<Event.SendCounter> {
-            val state = models[Model.Sender::class].consumableState.peek()
-            if (state is SenderState.Sending) {
-                return@onEvent emptyList()
-            }
-            val counter = models[Model.Counter::class]
-            val requestId = requests.post(Request.SendCounter(counter.count))
-            listOf(Model.Sender(SenderState.Sending(requestId)))
-        }
-
-        onEvent<Event.SenderStateConsumed> {
-            val sender = models[Model.Sender::class]
-            listOf(sender.copy(consumableState = consumableOf(SenderState.Idle)))
-        }
-
-        onRequest<Request.GetFailure> { throw OnRequestFailure() }
-
-        onRequest<Request.SendCounter> {
-            delay(abs(request.counterValue) * 1000L)
-            Event.CounterSent
-        }
+    private fun sendCounter(counterValue: Int) = onRequest {
+        delay(abs(counterValue) * 1000L)
+        onCounterSent()
     }
 }
