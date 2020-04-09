@@ -24,7 +24,6 @@ import androidx.test.core.app.ActivityScenario
 import io.nofrills.empress.android.enthrone
 import io.nofrills.empress.test_support.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.Assert.*
 import org.junit.Test
@@ -33,7 +32,7 @@ import org.robolectric.RobolectricTestRunner
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
-class RulerFragmentTest {
+class EmpressFragmentTest {
     @Test
     fun retainedActivity() {
         val scenario = activityScenario()
@@ -62,8 +61,8 @@ class RulerFragmentTest {
     fun doubleEnthrone() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val backend = fragment.enthrone("test", SampleMutableEmpress())
-            assertSame(backend, fragment.enthrone("test", SampleMutableEmpress()))
+            val backend = fragment.enthrone("test", SampleEmpress())
+            assertSame(backend, fragment.enthrone("test", SampleEmpress()))
         }
     }
 
@@ -71,48 +70,43 @@ class RulerFragmentTest {
     fun twoEmperorsWithDistinctIds() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val api1 = fragment.enthrone("empress1", SampleMutableEmpress())
-            val api2 = fragment.enthrone("empress2", SampleMutableEmpress())
+            val api1 = fragment.enthrone("empress1", SampleEmpress())
+            val api2 = fragment.enthrone("empress2", SampleEmpress())
             assertNotSame(api1, api2)
         }
     }
 
-    private fun <T : WithRuler> recreationTest(
+    private fun <T : WithEmpress> recreationTest(
         scenario: CommonScenario<T>,
         retainInstance: Boolean,
         finalCounterValue: Int
     ) {
         val dispatcher = TestCoroutineDispatcher()
 
-        scenario.onScenario {
-            val empressApi = it.enthroneEmpress(dispatcher, retainInstance)
-            val mutableEmpressApi = it.enthroneMutableEmpress(dispatcher, retainInstance)
+        scenario.onScenario { s ->
+            val empressApi = s.enthroneEmpress(dispatcher, retainInstance)
+            empressApi.post { increment() }
 
-            empressApi.post(Event.Increment)
-            mutableEmpressApi.post(Event.Increment)
-
-            runBlocking {
-                assertEquals(1, empressApi.models()[Model.Counter::class].count)
-                assertEquals(1, empressApi.models()[Model.ParcelableCounter::class].count)
-            }
-
-            assertEquals(1, mutableEmpressApi.models()[Model.Counter::class].count)
-            assertEquals(1, mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
+            assertEquals(Model.Counter(1), empressApi.models().first { it is Model.Counter })
+            assertEquals(
+                Model.ParcelableCounter(1),
+                empressApi.models().first { it is Model.ParcelableCounter }
+            )
         }
 
         scenario.recreate()
 
-        scenario.onScenario {
-            val empressApi = it.enthroneEmpress(dispatcher, retainInstance)
-            val mutableEmpressApi = it.enthroneMutableEmpress(dispatcher, retainInstance)
+        scenario.onScenario { s ->
+            val empressApi = s.enthroneEmpress(dispatcher, retainInstance)
 
-            runBlocking {
-                assertEquals(finalCounterValue, empressApi.models()[Model.Counter::class].count)
-                assertEquals(1, empressApi.models()[Model.ParcelableCounter::class].count)
-            }
-
-            assertEquals(finalCounterValue, mutableEmpressApi.models()[Model.Counter::class].count)
-            assertEquals(1, mutableEmpressApi.models()[Model.ParcelableCounter::class].count)
+            assertEquals(
+                Model.Counter(finalCounterValue),
+                empressApi.models().first { it is Model.Counter }
+            )
+            assertEquals(
+                Model.ParcelableCounter(1),
+                empressApi.models().first { it is Model.ParcelableCounter }
+            )
         }
     }
 
