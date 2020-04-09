@@ -18,7 +18,6 @@ package io.nofrills.empress.sample
 
 import io.nofrills.empress.base.EmpressApi
 import io.nofrills.empress.base.EmpressBackend
-import io.nofrills.empress.base.RequestId
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -53,12 +52,12 @@ class SampleTest {
         tested.interrupt()
 
         val updates = deferredUpdates.await()
-//        val expected = listOf(
-//            Model.Counter(1),
-//            Model.Counter(2),
-//            Model.Sender(SenderState.Sending(RequestId())),
-//            Model.Sender(SenderState.Idle)
-//        )
-        assertEquals(4, updates.size)
+        val expected = listOf(
+            Model.Counter(1),
+            Model.Counter(2),
+            Model.Sender(SenderState.Sending(1)),
+            Model.Sender(SenderState.Idle)
+        )
+        assertEquals(expected, updates)
     }
 }

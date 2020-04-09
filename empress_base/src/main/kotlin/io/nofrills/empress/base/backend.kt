@@ -30,7 +30,7 @@ private val handlerInstance = Handler()
 
 internal interface BackendFacade<M : Any, S : Any> {
     fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler
-    fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestId
+    fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
 }
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -75,7 +75,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         return handlerInstance
     }
 
-    override fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestId {
+    override fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request {
         val requestId = getNextRequestId()
         val job = requestHandlerScope.launch(start = CoroutineStart.LAZY, block = fn)
         requestJobMap[requestId] = job
@@ -85,7 +85,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         }
         dynamicLatch.countUp()
         job.start()
-        return requestId
+        return Request(requestId)
     }
 
     // EmpressApi
@@ -160,7 +160,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     private fun getNextRequestId(): RequestId {
-        return RequestId(lastHandlerId.incrementAndGet())
+        return lastHandlerId.incrementAndGet()
     }
 
     private fun launchHandlerProcessing() = eventHandlerScope.launch {

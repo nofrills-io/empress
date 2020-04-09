@@ -20,9 +20,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
 class Handler internal constructor()
-// TODO use class Request internal constructor(internal val id: RequestId) when returning from onRequest
-// and then make the RequestId constructor public; should be available for testing
-data class RequestId internal constructor(val id: Long)
+
+typealias RequestId = Long
+
+class Request internal constructor(val id: RequestId)
 
 abstract class EventHandler<M : Any, S : Any> {
     abstract fun cancelRequest(requestId: RequestId): Boolean
@@ -42,8 +43,7 @@ abstract class Empress<M : Any, S : Any> {
     abstract fun initialModels(): Collection<M>
 
     protected fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler = backend.onEvent(fn)
-    protected fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestId =
-        backend.onRequest(fn)
+    protected fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request = backend.onRequest(fn)
 }
 
 interface EmpressApi<E : Any, M : Any, S : Any> {

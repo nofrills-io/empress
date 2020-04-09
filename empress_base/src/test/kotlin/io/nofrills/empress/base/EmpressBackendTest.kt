@@ -70,7 +70,7 @@ class EmpressBackendTest {
 
         val expectedUpdates = listOf(
             Model.Counter(1),
-            Model.Sender(RequestId(1L)),
+            Model.Sender(1L),
             Model.Sender(null)
         )
         assertEquals(expectedUpdates, updates)
@@ -96,7 +96,7 @@ class EmpressBackendTest {
 
         val expectedModels = listOf(
             Model.Counter(1),
-            Model.Sender(RequestId(1L)),
+            Model.Sender(1L),
             Model.Sender(null)
         )
         assertEquals(expectedModels, updates)
@@ -127,7 +127,7 @@ class EmpressBackendTest {
 
         val expectedModels = listOf(
             Model.Counter(1),
-            Model.Sender(RequestId(1L)),
+            Model.Sender(1L),
             Model.Sender(null)
         )
         assertEquals(expectedModels, updates)
@@ -154,7 +154,7 @@ class EmpressBackendTest {
         tested.interrupt()
         val updates = deferredUpdates.await()
         val expected = listOf(
-            Model.Sender(RequestId(12)),
+            Model.Sender(12),
             Model.Sender()
         )
         assertEquals(expected, updates)

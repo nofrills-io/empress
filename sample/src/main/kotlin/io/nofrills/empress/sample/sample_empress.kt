@@ -64,8 +64,8 @@ class SampleEmpress : Empress<Model, Signal>() {
             return@onEvent
         }
         val counter = get<Model.Counter>()
-        val requestId = sendCounter(counter.count)
-        update(Model.Sender(SenderState.Sending(requestId)))
+        val request = sendCounter(counter.count)
+        update(Model.Sender(SenderState.Sending(request.id)))
     }
 
     private fun failedRequest() = onRequest {

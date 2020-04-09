@@ -67,7 +67,7 @@ class EmpressFragmentTest {
     }
 
     @Test
-    fun twoEmperorsWithDistinctIds() {
+    fun distinctEmpressIds() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
             val api1 = fragment.enthrone("empress1", SampleEmpress())

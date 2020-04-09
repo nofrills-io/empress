@@ -54,8 +54,8 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) : Em
         if (get<Model.Sender>().requestId != null) return@onEvent
 
         val count = get<Model.Counter>().count
-        val requestId = sendCounter(count)
-        update(Model.Sender(requestId))
+        val request = sendCounter(count)
+        update(Model.Sender(request.id))
     }
 
     private fun onCounterSent() = onEvent {

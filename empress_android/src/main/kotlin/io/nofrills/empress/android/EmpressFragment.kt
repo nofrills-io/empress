@@ -34,16 +34,14 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        storedHandlerId = savedInstanceState?.let {
-            if (it.containsKey(HANDLER_ID_KEY)) {
-                it.getLong(HANDLER_ID_KEY)
-            } else {
-                null
-            }
+        savedInstanceState?.let {
+            assert(it.containsKey(HANDLER_ID_KEY))
+            assert(it.containsKey(MODELS_KEY))
+
+            storedHandlerId = it.getLong(HANDLER_ID_KEY)
+            @Suppress("UNCHECKED_CAST")
+            storedModels = it.getParcelableArrayList<Parcelable>(MODELS_KEY) as ArrayList<M>?
         }
-        @Suppress("UNCHECKED_CAST")
-        storedModels =
-            savedInstanceState?.getParcelableArrayList<Parcelable>(MODELS_KEY) as ArrayList<M>?
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -67,10 +65,16 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
 
     fun initialize(specFactory: () -> EmpressSpec<E, M, S>) {
         if (!this::backend.isInitialized) {
-           val result = specFactory()
-           val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)
-           val requestHandlerScope = CoroutineScope(result.requestDispatcher + job)
-            backend = EmpressBackend(result.empress, eventHandlerScope, requestHandlerScope, storedModels, storedHandlerId)
+            val result = specFactory()
+            val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)
+            val requestHandlerScope = CoroutineScope(result.requestDispatcher + job)
+            backend = EmpressBackend(
+                result.empress,
+                eventHandlerScope,
+                requestHandlerScope,
+                storedModels,
+                storedHandlerId
+            )
         }
     }
 
