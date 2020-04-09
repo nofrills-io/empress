@@ -56,6 +56,26 @@ class EmpressBackendTest {
     }
 
     @Test
+    fun updatesWithInitialModels() = runBlockingTest {
+        val tested = makeTested(this)
+        val deferredUpdates = updatesAsync(tested, withInitialModels = true)
+        tested.post { increment() }
+        tested.interrupt()
+
+        val updates = deferredUpdates.await()
+
+        // The order of the first two models (the initial set)
+        // is not deterministic.
+        val expected = setOf(
+            Model.Sender(),
+            Model.Counter(0)
+        )
+        assertEquals(3, updates.size)
+        assertEquals(expected, updates.subList(0, 2).toSet())
+        assertEquals(Model.Counter(1), updates[2])
+    }
+
+    @Test
     fun signals() = runBlockingTest {
         val tested = makeTested(this)
         val deferredUpdates = updatesAsync(tested)
@@ -321,9 +341,12 @@ class EmpressBackendTest {
         }
     }
 
-    private fun <M : Any> CoroutineScope.updatesAsync(api: EmpressApi<*, M, *>): Deferred<List<M>> {
+    private fun <M : Any> CoroutineScope.updatesAsync(
+        api: EmpressApi<*, M, *>,
+        withInitialModels: Boolean = false
+    ): Deferred<List<M>> {
         return async(start = CoroutineStart.UNDISPATCHED) {
-            api.updates().toList()
+            api.updates(withInitialModels).toList()
         }
     }
 }

@@ -51,5 +51,5 @@ interface EmpressApi<E : Any, M : Any, S : Any> {
     fun models(): Collection<M>
     fun post(fn: E.() -> Handler)
     fun signals(): Flow<S>
-    fun updates(): Flow<M>
+    fun updates(withInitialModels: Boolean = true): Flow<M>
 }

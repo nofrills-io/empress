@@ -44,7 +44,8 @@ class SampleTest {
 
     @Test
     fun example() = scope.runBlockingTest {
-        val deferredUpdates = async { tested.updates().toCollection(mutableListOf()) }
+        val deferredUpdates =
+            async { tested.updates(withInitialModels = false).toCollection(mutableListOf()) }
 
         tested.post { increment() }
         tested.post { increment() }

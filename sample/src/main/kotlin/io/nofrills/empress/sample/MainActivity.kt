@@ -40,7 +40,6 @@ class MainActivity : AppCompatActivity() {
             .launchIn(lifecycle.coroutineScope)
 
         empressApi.updates()
-            .onStart { empressApi.models().forEach { emit(it) } }
             .onEach { render(it) }
             .launchIn(lifecycle.coroutineScope)
 

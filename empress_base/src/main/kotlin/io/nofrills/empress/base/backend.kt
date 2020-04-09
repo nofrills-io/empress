@@ -111,11 +111,16 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
             .onCompletion { signalChannels.remove(channel) }
     }
 
-    override fun updates(): Flow<M> {
+    override fun updates(withInitialModels: Boolean): Flow<M> {
         val channel = Channel<M>(Channel.UNLIMITED)
         return channel
             .consumeAsFlow()
-            .onStart { modelChannels.add(channel) }
+            .onStart {
+                modelChannels.add(channel)
+                if (withInitialModels) {
+                    modelMap.values.forEach { emit(it) }
+                }
+            }
             .onCompletion { modelChannels.remove(channel) }
     }
 
