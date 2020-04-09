@@ -25,6 +25,7 @@ internal class DynamicLatch(initialValue: Long = 0) {
 
     init {
         check(initialValue >= 0)
+        channel.offer(atomic.get())
     }
 
     fun countUp() {

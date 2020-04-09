@@ -34,6 +34,12 @@ internal class DynamicLatchTest {
     }
 
     @Test
+    fun immediateClose() = runBlockingTest {
+        val tested = DynamicLatch()
+        tested.close()
+    }
+
+    @Test
     fun initialValue() = runBlockingTest {
         val tested = DynamicLatch(1)
         tested.countDown()
