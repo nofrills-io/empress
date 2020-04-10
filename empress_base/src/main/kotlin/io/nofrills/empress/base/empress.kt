@@ -19,7 +19,7 @@ package io.nofrills.empress.base
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
-class Handler internal constructor()
+class Event internal constructor()
 
 typealias RequestId = Long
 
@@ -35,21 +35,21 @@ abstract class EventHandler<M : Any, S : Any> {
 }
 
 /**
- * @param M Type of the model.
- * @param S Signal type (type of the Flow/Channel)
+ * @param M Model type.
+ * @param S Signal type.
  */
 abstract class Empress<M : Any, S : Any> {
     internal lateinit var backend: BackendFacade<M, S>
     abstract fun initialModels(): Collection<M>
 
-    protected fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler = backend.onEvent(fn)
+    protected fun onEvent(fn: EventHandler<M, S>.() -> Unit): Event = backend.onEvent(fn)
     protected fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request = backend.onRequest(fn)
 }
 
 interface EmpressApi<E : Any, M : Any, S : Any> {
     suspend fun interrupt()
     fun models(): Collection<M>
-    fun post(fn: E.() -> Handler)
+    fun post(fn: E.() -> Event)
     fun signals(): Flow<S>
     fun updates(withInitialModels: Boolean = true): Flow<M>
 }

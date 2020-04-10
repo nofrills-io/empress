@@ -26,10 +26,10 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-private val handlerInstance = Handler()
+private val handlerInstance = Event()
 
 internal interface BackendFacade<M : Any, S : Any> {
-    fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler
+    fun onEvent(fn: EventHandler<M, S>.() -> Unit): Event
     fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
 }
 
@@ -69,7 +69,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
     // BackendFacade
 
-    override fun onEvent(fn: EventHandler<M, S>.() -> Unit): Handler {
+    override fun onEvent(fn: EventHandler<M, S>.() -> Unit): Event {
         dynamicLatch.countUp()
         handlerChannel.offer(fn)
         return handlerInstance
@@ -99,7 +99,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         return modelMap.values.toList()
     }
 
-    override fun post(fn: E.() -> Handler) {
+    override fun post(fn: E.() -> Event) {
         fn.invoke(empress)
     }
 
