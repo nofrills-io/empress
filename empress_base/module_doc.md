@@ -23,8 +23,8 @@ class MyEmpress : Empress<Model, Signal> {
 
     // Now, implement your event handlers, e.g.:
     fun someEvent() = onEvent {
-        // Here you can access the models, send updates or signals,
-        // issue a request, or cancel an existing one.
+        // Here you can access and modify your models, send updates or signals,
+        // issue requests, or cancel existing ones.
         // By default we're on the main thread.
         // The event handler should be quick, 
         // and cannot perform blocking actions (use requests for that).
@@ -35,6 +35,7 @@ class MyEmpress : Empress<Model, Signal> {
         // By default we're off the main thread,
         // so you can do some network requests, read files etc.
         // and when you're ready, call one or more of your event handlers.
+        // You should not modify your models here.
     }
 }
 ```

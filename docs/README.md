@@ -16,7 +16,7 @@ Empress is similar to androidx ViewModel library in a way that it:
 Additionally:
 - supports "save & restore" flow (it's automatic, as long as your model is `Parcelable`)
 - supports long-running suspending requests
-- uses `kotlinx.coroutines.flow.Flow` for propagating changes (for immutable models)
+- uses `kotlinx.coroutines.flow.Flow` for propagating changes
 - aims for compatibility with Jetpack Compose (with mutable models)
 
 ### Install
@@ -46,15 +46,6 @@ Let's say you need to build an app to count things, and send the final value to 
 1. First, define your events, model and requests:
 
 ```kotlin
-
-// Events represent events originating from your UI, and also results from performing Requests
-sealed class Event {
-    object Decrement : Event()
-    object Increment : Event()
-    object SendCounter : Event()
-    object CounterSent : Event()
-}
-
 // In Empress, your model can be defined as a set of subclasses,
 // where each subclass is responsible for single aspect of application state.
 // Your model should be either fully immutable, or fully mutable.
@@ -69,67 +60,44 @@ sealed class Model {
     data class Sender(val requestId: RequestId?) : Model()
 }
 
-sealed class Request {
-    // Represents an intent to send the counter value to a server
-    class SendCounter(val counterValue: Int) : Request()
+sealed class Signal {
+    object CounterSent : Signal()
 }
 ```
 
 2. Next, define your empress.
 
-For __immutable__ models, implement [Empress](https://nofrills.io/empress/dokka/empress/io.nofrills.empress/-empress/index.html)
-interface. Alternatively, for __mutable__ models, use [MutableEmpress](https://nofrills.io/empress/dokka/empress/io.nofrills.empress/-mutable-empress/index.html)
-
-You can also use an [Empress DSL builder](https://nofrills.io/empress/dokka/empress/io.nofrills.empress.builder/index.html), like below:
+Implement [Empress](https://nofrills.io/empress/dokka/empress/io.nofrills.empress.base/-empress/index.html)
+interface:
 
 ```kotlin
-val empress = Empress<Event, Model, Request> {
-    initializer { Model.Counter(0) }
-    initializer { Model.Sender(null) }
-
-    onEvent<Event.Decrement> {
-        val counter = models[Model.Counter::class]
-        // return a collection of models that have changed
-        listOf(counter.copy(count = counter.count - 1))
+class SampleEmpress : Empress<Model, Signal>() {
+    override fun initialModels(): Collection<Model> {
+        return models ?: listOf(Model.Counter(0), Model.Sender(null))
     }
 
-    onEvent<Event.Increment> {
-        val counter = models[Model.Counter::class]
-        listOf(counter.copy(count = counter.count + 1))
+    fun increment() = onEvent {
+        val count = get<Model.Counter>().count
+        update(Model.Counter(count + 1))
     }
 
-    onEvent<Event.SendCounter> {
-        val sender = models[Model.Sender::class]
-        if (sender.requestId != null) {
-            // Counter value is already being sent,
-            // so we return an empty collection, since there's nothing to be done.
-            listOf()
-
-            // Alternatively, we could cancel current request 
-            // (using requests.cancel(sender.requestId)) 
-            // and then create a new one.
-        } else {
-            // We create a request and queue it..
-            val counter = models[Model.Counter::class]
-            val requestId = requests.post(Request.SendCounter(counter.count))
-
-            // ..while returning an updated model.
-            listOf(Model.Sender(requestId))
-        }
+    fun sendCounter() = onEvent {
+        // If request is already in progress, return early.
+        if (get<Model.Sender>().requestId != null) return@onEvent
+    
+        val count = get<Model.Counter>().count
+        val request = sendCounter(count) // schedule a request
+        update(Model.Sender(request.id))
     }
 
-    onEvent<Event.CounterSent> {
-        val sender = models[Model.Sender::class]
-        if (sender.requestId == null) {
-            listOf()
-        } else {
-            listOf(Model.Sender(null))
-        }
+    private fun sendCounter(count: Int) = onRequest {
+        delay(count * 1000L) // emulate sending the value
+        onCounterSent() // call an event handler
     }
 
-    onRequest<Request.SendCounter> {
-        delay(abs(request.counterValue) * 1000L)
-        Event.CounterSent
+    private fun onCounterSent() = onEvent {
+        signal(Signal.CounterSent)
+        update(Model.Sender(null))
     }
 }
 ```
@@ -137,39 +105,39 @@ val empress = Empress<Event, Model, Request> {
 3. In your `Activity` or `Fragment`, attach your empress, send events and listen for updates:
 
 ```kotlin
-private lateinit var api: EmpressApi<Event, Model>
+private lateinit var api: EmpressApi<SampleEmpress, Model, Signal>
 
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
     // install our empress
-    api = enthrone(empress)
+    api = enthrone(SampleEmpress())
     
     // pass events to empress
-    decrement_button.setOnClickListener {
-        api.post(Event.Decrement)
-    }
     increment_button.setOnClickListener {
-        api.post(Event.Increment)
+        api.post { increment() }
+    }
+    send_button.setOnClickListener {
+        api.post { sendCounter() }
     }
 
+    // Listen for updated models and signals:
     lifecycle.coroutineScope.launch {
-        // first, we can render the whole UI
-        render(api.models().all())
-
-        // then we listen for updates and render only the updated models
-        api.updates().collect { update ->
-            render(update.updated)
+        api.updates().collect { model ->
+            render(model)
+        }
+        api.signals().collect { signal ->
+            if (signal is Signal.CounterSent) {
+                Toast.makeText(context, "Counter has been sent!", Toast.LENGTH_LONG).show()
+            }
         }
     }
 }
 
-private fun render(models: Collection<Model>) {
-    for (model in models) {
-        when (model) {
-            is Model.Counter -> text_view.text = model.count.toString()
-            is Model.Sender -> updateProgress(showLoader = model.requestId != null)
-        }
+private fun render(model: Model) {
+    when (model) {
+        is Model.Counter -> text_view.text = model.count.toString()
+        is Model.Sender -> loader_view.visibility = if (model.requestId != null) View.VISIBLE else View.GONE
     }
 }
 ```
