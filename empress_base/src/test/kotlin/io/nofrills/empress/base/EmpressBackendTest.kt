@@ -58,7 +58,7 @@ class EmpressBackendTest {
     @Test
     fun updatesWithInitialModels() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredUpdates = updatesAsync(tested, withInitialModels = true)
+        val deferredUpdates = updatesAsync(tested, withCurrentModels = true)
         tested.post { increment() }
         tested.interrupt()
 
@@ -328,7 +328,7 @@ class EmpressBackendTest {
                 empress,
                 coroutineScope,
                 coroutineScope,
-                initialHandlerId = initialHandlerId
+                initialRequestId = initialHandlerId
             )
         } else {
             EmpressBackend(empress, coroutineScope, coroutineScope)
@@ -343,10 +343,10 @@ class EmpressBackendTest {
 
     private fun <M : Any> CoroutineScope.updatesAsync(
         api: EmpressApi<*, M, *>,
-        withInitialModels: Boolean = false
+        withCurrentModels: Boolean = false
     ): Deferred<List<M>> {
         return async(start = CoroutineStart.UNDISPATCHED) {
-            api.updates(withInitialModels).toList()
+            api.updates(withCurrentModels).toList()
         }
     }
 }

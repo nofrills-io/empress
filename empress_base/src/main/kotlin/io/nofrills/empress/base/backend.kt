@@ -29,27 +29,34 @@ import java.util.concurrent.atomic.AtomicLong
 private val handlerInstance = Event()
 
 internal interface BackendFacade<M : Any, S : Any> {
-    fun onEvent(fn: EventHandler<M, S>.() -> Unit): Event
+    fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event
     fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
 }
 
+/** Runs and manages an Empress instance.
+ * @param empress Empress instance that we want to run.
+ * @param eventHandlerScope A coroutine scope where events will be processed.
+ * @param requestHandlerScope A coroutine scope where requests will be processed.
+ * @param storedModels Models that were previously stored, which will be used instead of the ones returned from [Empress.initialModels] function.
+ * @param initialRequestId The number from which to start generating requests IDs.
+ */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>? = null,
-    initialHandlerId: Long? = null
-) : BackendFacade<M, S>, EmpressApi<E, M, S>, EventHandler<M, S>() {
+    initialRequestId: RequestId? = null
+) : BackendFacade<M, S>, EmpressApi<E, M, S>, EventHandlerContext<M, S>() {
     private val dynamicLatch = DynamicLatch()
 
-    private val handlerChannel = Channel<EventHandler<M, S>.() -> Unit>(Channel.UNLIMITED)
+    private val handlerChannel = Channel<EventHandlerContext<M, S>.() -> Unit>(Channel.UNLIMITED)
 
     private val modelChannels = Collections.synchronizedList(arrayListOf<Channel<M>>())
 
     private val modelMap = makeModelMap(empress.initialModels(), storedModels ?: emptyList())
 
-    private var lastHandlerId = AtomicLong(initialHandlerId ?: 0)
+    private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
@@ -63,13 +70,13 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         }
     }
 
-    fun lastHandlerId(): Long {
-        return lastHandlerId.get()
+    fun lastRequestId(): Long {
+        return lastRequestId.get()
     }
 
     // BackendFacade
 
-    override fun onEvent(fn: EventHandler<M, S>.() -> Unit): Event {
+    override fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event {
         dynamicLatch.countUp()
         handlerChannel.offer(fn)
         return handlerInstance
@@ -111,13 +118,13 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
             .onCompletion { signalChannels.remove(channel) }
     }
 
-    override fun updates(withInitialModels: Boolean): Flow<M> {
+    override fun updates(withCurrentModels: Boolean): Flow<M> {
         val channel = Channel<M>(Channel.UNLIMITED)
         return channel
             .consumeAsFlow()
             .onStart {
                 modelChannels.add(channel)
-                if (withInitialModels) {
+                if (withCurrentModels) {
                     modelMap.values.forEach { emit(it) }
                 }
             }
@@ -165,7 +172,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     private fun getNextRequestId(): RequestId {
-        return lastHandlerId.incrementAndGet()
+        return lastRequestId.incrementAndGet()
     }
 
     private fun launchHandlerProcessing() = eventHandlerScope.launch {

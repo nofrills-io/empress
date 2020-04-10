@@ -35,10 +35,10 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         savedInstanceState?.let {
-            assert(it.containsKey(HANDLER_ID_KEY))
+            assert(it.containsKey(REQUEST_ID_KEY))
             assert(it.containsKey(MODELS_KEY))
 
-            storedHandlerId = it.getLong(HANDLER_ID_KEY)
+            storedHandlerId = it.getLong(REQUEST_ID_KEY)
             @Suppress("UNCHECKED_CAST")
             storedModels = it.getParcelableArrayList<Parcelable>(MODELS_KEY) as ArrayList<M>?
         }
@@ -54,7 +54,7 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
                 parcelablePatches.add(model)
             }
         }
-        outState.putLong(HANDLER_ID_KEY, backend.lastHandlerId())
+        outState.putLong(REQUEST_ID_KEY, backend.lastRequestId())
         outState.putParcelableArrayList(MODELS_KEY, parcelablePatches)
     }
 
@@ -79,7 +79,7 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
     }
 
     companion object {
-        private const val HANDLER_ID_KEY = "io.nofrills.empress.android.handler_id"
+        private const val REQUEST_ID_KEY = "io.nofrills.empress.android.request_id"
         private const val MODELS_KEY = "io.nofrills.empress.android.models"
     }
 }
