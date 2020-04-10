@@ -45,7 +45,6 @@ class CounterFragment : Fragment() {
         empressApi.updates()
             .filter { it is Model.Counter }
             .map { it as Model.Counter }
-            .onStart { emit(empressApi.models().first { it is Model.Counter } as Model.Counter) }
             .onEach { renderCount(it) }
             .launchIn(lifecycle.coroutineScope)
     }
