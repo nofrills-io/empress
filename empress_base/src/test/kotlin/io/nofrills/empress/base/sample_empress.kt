@@ -24,7 +24,7 @@ internal sealed class Model {
 }
 
 internal sealed class Signal {
-    object CounterSent : Signal()
+    data class CounterSent(val sentValue: Int) : Signal()
     object SendingCancelled : Signal()
 }
 
@@ -48,6 +48,19 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) : Em
         update(Model.Counter(count + 1))
     }
 
+    fun indirectIncrementAndSend() = onEvent {
+        increment()
+        val count = get<Model.Counter>().count
+        val request = indirectSendCounter(count)
+        update(Model.Sender(request.id))
+    }
+
+    fun indirectSend() = onEvent {
+        val count = get<Model.Counter>().count
+        val request = indirectSendCounter(count)
+        update(Model.Sender(request.id))
+    }
+
     fun ping() = onEvent {}
 
     fun sendCounter() = onEvent {
@@ -58,8 +71,8 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) : Em
         update(Model.Sender(request.id))
     }
 
-    private fun onCounterSent() = onEvent {
-        signal(Signal.CounterSent)
+    private fun onCounterSent(sentValue: Int) = onEvent {
+        signal(Signal.CounterSent(sentValue))
         update(Model.Sender(null))
     }
 
@@ -70,8 +83,12 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) : Em
         signal(Signal.SendingCancelled)
     }
 
+    private fun indirectSendCounter(count: Int) = onRequest {
+        sendCounter(count)
+    }
+
     private fun sendCounter(count: Int) = onRequest {
         delay(count * 1000L)
-        onCounterSent()
+        onCounterSent(count)
     }
 }

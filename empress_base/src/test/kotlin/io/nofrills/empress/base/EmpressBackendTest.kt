@@ -94,11 +94,11 @@ class EmpressBackendTest {
             Model.Sender(null)
         )
         assertEquals(expectedUpdates, updates)
-        assertEquals(listOf(Signal.CounterSent), signals)
+        assertEquals(listOf(Signal.CounterSent(1)), signals)
     }
 
     @Test
-    fun cancellingHandler() = runBlockingTest {
+    fun cancellingRequest() = runBlockingTest {
         val tested = makeTested(this)
         val deferredUpdates = updatesAsync(tested)
         val deferredSignals = signalsAsync(tested)
@@ -124,7 +124,7 @@ class EmpressBackendTest {
     }
 
     @Test
-    fun cancellingCompletedHandler() = runBlockingTest {
+    fun cancellingCompletedRequest() = runBlockingTest {
         val testScope = TestCoroutineScope()
         val tested = makeTested(testScope)
         val deferredUpdates = updatesAsync(tested)
@@ -151,7 +151,7 @@ class EmpressBackendTest {
             Model.Sender(null)
         )
         assertEquals(expectedModels, updates)
-        assertEquals(listOf(Signal.CounterSent), signals)
+        assertEquals(listOf(Signal.CounterSent(1)), signals)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -300,6 +300,56 @@ class EmpressBackendTest {
             exceptionCaught = true
         }
         assertTrue(exceptionCaught)
+    }
+
+    @Test
+    fun indirectActions() = runBlockingTest {
+        val tested = makeTested(this)
+        val deferredSignals = signalsAsync(tested)
+        val deferredUpdates = updatesAsync(tested)
+
+        tested.post { indirectIncrementAndSend() }
+        tested.interrupt()
+
+        val signals = deferredSignals.await()
+        val updates = deferredUpdates.await()
+
+        val expectedSignals = listOf(Signal.CounterSent(1))
+        assertEquals(expectedSignals, signals)
+
+        val expectedUpdates = listOf(
+            Model.Counter(1),
+            Model.Sender(1),
+            Model.Sender(null)
+        )
+        assertEquals(expectedUpdates, updates)
+    }
+
+    @Test
+    fun cancellingIndirectRequest() = runBlockingTest {
+        val tested = makeTested(this)
+        val deferredUpdates = updatesAsync(tested)
+        val deferredSignals = signalsAsync(tested)
+
+        pauseDispatcher()
+        tested.post { increment() }
+        tested.post { indirectSend() }
+        advanceTimeBy(500L)
+        tested.post { cancelSending() }
+        tested.interrupt()
+        resumeDispatcher()
+
+        val updates = deferredUpdates.await()
+        val signals = deferredSignals.await()
+
+        assertEquals(listOf(Signal.SendingCancelled), signals)
+
+        val expectedModels = listOf(
+            Model.Counter(1),
+            Model.Sender(1L),
+            Model.Sender(null)
+        )
+        assertEquals(expectedModels, updates)
     }
 
     private fun makeTested(
