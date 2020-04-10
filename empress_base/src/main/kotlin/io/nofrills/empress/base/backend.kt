@@ -25,12 +25,14 @@ import kotlinx.coroutines.flow.onStart
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.coroutineContext
 
-private val handlerInstance = Event()
+private val eventInstance = Event()
+private val requestInstance = Request()
 
 internal interface BackendFacade<M : Any, S : Any> {
     fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event
-    fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
+    suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
 }
 
 /** Extends [EmpressApi] with additional methods useful in unit tests. */
@@ -88,20 +90,14 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     override fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event {
         dynamicLatch.countUp()
         handlerChannel.offer(fn)
-        return handlerInstance
+        return eventInstance
     }
 
-    override fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request {
-        val requestId = getNextRequestId()
-        val job = requestHandlerScope.launch(start = CoroutineStart.LAZY, block = fn)
-        requestJobMap[requestId] = job
-        job.invokeOnCompletion {
-            requestJobMap.remove(requestId)
-            dynamicLatch.countDown()
+    override suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request {
+        coroutineScope {
+            fn(this)
         }
-        dynamicLatch.countUp()
-        job.start()
-        return Request(requestId)
+        return requestInstance
     }
 
     // TestEmpressApi
@@ -152,6 +148,21 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : M> get(modelClass: Class<T>): T = modelMap.getValue(modelClass) as T
+
+    override fun request(fn: suspend () -> Request): RequestId {
+        val requestId = getNextRequestId()
+        val job = requestHandlerScope.launch(start = CoroutineStart.LAZY) {
+            fn.invoke()
+        }
+        requestJobMap[requestId] = job
+        job.invokeOnCompletion {
+            requestJobMap.remove(requestId)
+            dynamicLatch.countDown()
+        }
+        dynamicLatch.countUp()
+        job.start()
+        return requestId
+    }
 
     override fun signal(signal: S) {
         val channels = signalChannels.toList()

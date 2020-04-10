@@ -86,11 +86,11 @@ class SampleEmpress : Empress<Model, Signal>() {
         if (get<Model.Sender>().requestId != null) return@onEvent
     
         val count = get<Model.Counter>().count
-        val request = sendCounter(count) // schedule a request
-        update(Model.Sender(request.id))
+        val requestId = request { sendCounter(count) } // schedule a request
+        update(Model.Sender(requestId))
     }
 
-    private fun sendCounter(count: Int) = onRequest {
+    private suspend fun sendCounter(count: Int) = onRequest {
         delay(count * 1000L) // emulate sending the value
         onCounterSent() // call an event handler
     }

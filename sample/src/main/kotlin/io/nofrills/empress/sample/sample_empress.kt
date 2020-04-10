@@ -50,7 +50,7 @@ class SampleEmpress : Empress<Model, Signal>() {
     }
 
     fun failureInRequest() = onEvent {
-        failedRequest()
+        request { failedRequest() }
     }
 
     fun increment() = onEvent {
@@ -64,15 +64,15 @@ class SampleEmpress : Empress<Model, Signal>() {
             return@onEvent
         }
         val counter = get<Model.Counter>()
-        val request = sendCounter(counter.count)
-        update(Model.Sender(SenderState.Sending(request.id)))
+        val requestId = request { sendCounter(counter.count) }
+        update(Model.Sender(SenderState.Sending(requestId)))
     }
 
-    private fun failedRequest() = onRequest {
+    private suspend fun failedRequest() = onRequest {
         throw OnRequestFailure()
     }
 
-    private fun sendCounter(counterValue: Int) = onRequest {
+    private suspend fun sendCounter(counterValue: Int) = onRequest {
         delay(abs(counterValue) * 1000L)
         onCounterSent()
     }

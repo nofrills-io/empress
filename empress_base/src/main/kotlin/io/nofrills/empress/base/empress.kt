@@ -26,7 +26,7 @@ class Event internal constructor()
 typealias RequestId = Long
 
 /** Representation for a request handler. */
-class Request internal constructor(val id: RequestId)
+class Request internal constructor()
 
 /** Context for defining an event handler.
  * @see Empress.onEvent
@@ -37,6 +37,8 @@ abstract class EventHandlerContext<M : Any, S : Any> {
 
     /** Returns a model with given [modelClass]. */
     abstract fun <T : M> get(modelClass: Class<T>): T
+
+    abstract fun request(fn: suspend () -> Request): RequestId
 
     /** Pushes a [signal] that can be later obtained in [EmpressApi.signals]. */
     abstract fun signal(signal: S)
@@ -66,7 +68,8 @@ abstract class Empress<M : Any, S : Any> {
     /** Allows to define a request handler.
      * @param fn The definition of the request handler.
      */
-    protected fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request = backend.onRequest(fn)
+    protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request =
+        backend.onRequest(fn)
 }
 
 /** Allows to communicate with your [Empress] instance. */

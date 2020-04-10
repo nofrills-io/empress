@@ -31,7 +31,7 @@ class MyEmpress : Empress<Model, Signal> {
     }
 
     // Define request handlers:
-    fun someRequest() = onRequest {
+    suspend fun someRequest() = onRequest {
         // By default we're off the main thread,
         // so you can do some network requests, read files etc.
         // and when you're ready, call one or more of your event handlers.

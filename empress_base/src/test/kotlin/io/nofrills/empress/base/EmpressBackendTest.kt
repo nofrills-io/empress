@@ -167,8 +167,8 @@ class EmpressBackendTest {
     }
 
     @Test
-    fun initialHandlerId() = runBlockingTest {
-        val tested = makeTested(this, initialHandlerId = 11)
+    fun initialRequestId() = runBlockingTest {
+        val tested = makeTested(this, initialRequestId = 11)
         val deferredUpdates = updatesAsync(tested)
         tested.post { sendCounter() }
         tested.interrupt()
@@ -200,7 +200,7 @@ class EmpressBackendTest {
     }
 
     @Test
-    fun handlersAreLaunchedInOrder() {
+    fun eventHandlersAreLaunchedInOrder() {
         val clientDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         val dispatcherForTested = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
         val tested = makeTested(CoroutineScope(dispatcherForTested))
@@ -352,19 +352,40 @@ class EmpressBackendTest {
         assertEquals(expectedModels, updates)
     }
 
+    @Test
+    fun requestArgumentsAreEvaluatedEagerly() = runBlockingTest {
+        val tested = makeTested(this)
+        val deferredUpdates = updatesAsync(tested)
+        val deferredSignals = signalsAsync(tested)
+
+        tested.post { sendCounterVariableCount() }
+        tested.interrupt()
+
+        val updates = deferredUpdates.await()
+        val signals = deferredSignals.await()
+
+        assertEquals(listOf(Signal.CounterSent(0)), signals)
+
+        val expectedModels = listOf(
+            Model.Sender(1L),
+            Model.Sender(null)
+        )
+        assertEquals(expectedModels, updates)
+    }
+
     private fun makeTested(
         coroutineScope: CoroutineScope,
         empress: SampleEmpress = SampleEmpress(),
         storedModels: Collection<Model>? = null,
-        initialHandlerId: Long? = null
+        initialRequestId: Long? = null
     ): TestEmpressApi<SampleEmpress, Model, Signal> {
-        return if (storedModels != null && initialHandlerId != null) {
+        return if (storedModels != null && initialRequestId != null) {
             EmpressBackend(
                 empress,
                 coroutineScope,
                 coroutineScope,
                 storedModels,
-                initialHandlerId
+                initialRequestId
             )
         } else if (storedModels != null) {
             EmpressBackend(
@@ -373,12 +394,12 @@ class EmpressBackendTest {
                 coroutineScope,
                 storedModels
             )
-        } else if (initialHandlerId != null) {
+        } else if (initialRequestId != null) {
             EmpressBackend(
                 empress,
                 coroutineScope,
                 coroutineScope,
-                initialRequestId = initialHandlerId
+                initialRequestId = initialRequestId
             )
         } else {
             EmpressBackend(empress, coroutineScope, coroutineScope)
