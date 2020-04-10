@@ -1,11 +1,6 @@
 $dokka.format:html
 $dokka.linkExtension:html
-$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.Fragment, kotlin.String, io.nofrills.empress.Empress((io.nofrills.empress.android.enthrone.E, io.nofrills.empress.android.enthrone.M, io.nofrills.empress.android.enthrone.R)), kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineDispatcher, kotlin.Boolean)io.nofrills.empress.android/androidx.fragment.app.-fragment/enthrone.html
-$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.Fragment, kotlin.String, io.nofrills.empress.MutableEmpress((io.nofrills.empress.android.enthrone.E, io.nofrills.empress.android.enthrone.M, io.nofrills.empress.android.enthrone.R)), kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineDispatcher, kotlin.Boolean)io.nofrills.empress.android/androidx.fragment.app.-fragment/enthrone.html
-$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.FragmentActivity, kotlin.String, io.nofrills.empress.Empress((io.nofrills.empress.android.enthrone.E, io.nofrills.empress.android.enthrone.M, io.nofrills.empress.android.enthrone.R)), kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineDispatcher, kotlin.Boolean)io.nofrills.empress.android/androidx.fragment.app.-fragment-activity/enthrone.html
-$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.FragmentActivity, kotlin.String, io.nofrills.empress.MutableEmpress((io.nofrills.empress.android.enthrone.E, io.nofrills.empress.android.enthrone.M, io.nofrills.empress.android.enthrone.R)), kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineDispatcher, kotlin.Boolean)io.nofrills.empress.android/androidx.fragment.app.-fragment-activity/enthrone.html
-io.nofrills.empress
+$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.Fragment, kotlin.String, io.nofrills.empress.android.enthrone.E, kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineDispatcher, kotlin.Boolean)io.nofrills.empress.android/androidx.fragment.app.-fragment/enthrone.html
+$dokka.location:io.nofrills.empress.android$enthrone(androidx.fragment.app.FragmentActivity, kotlin.String, io.nofrills.empress.android.enthrone.E, kotlinx.coroutines.CoroutineDispatcher, kotlinx.coroutines.CoroutineDispatcher, kotlin.Boolean)io.nofrills.empress.android/androidx.fragment.app.-fragment-activity/enthrone.html
 io.nofrills.empress.android
-io.nofrills.empress.backend
-io.nofrills.empress.builder
-io.nofrills.empress.consumable
+io.nofrills.empress.base

@@ -1,0 +1,136 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>EmpressBackend - empress</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress.base</a>&nbsp;/&nbsp;<a href="./index.html">EmpressBackend</a><br/>
+<br/>
+<h1>EmpressBackend</h1>
+<code><span class="keyword">class </span><span class="identifier">EmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-empress/index.html"><span class="identifier">Empress</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">BackendFacade</span><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-empress-api/index.html"><span class="identifier">EmpressApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-test-empress-api/index.html"><span class="identifier">TestEmpressApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-event-handler-context/index.html"><span class="identifier">EventHandlerContext</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span></code>
+<p>Runs and manages an Empress instance.</p>
+<h3>Parameters</h3>
+<p><a name="empress"></a>
+<code>empress</code> - Empress instance that we want to run.</p>
+<p><a name="eventHandlerScope"></a>
+<code>eventHandlerScope</code> - A coroutine scope where events will be processed.</p>
+<p><a name="requestHandlerScope"></a>
+<code>requestHandlerScope</code> - A coroutine scope where requests will be processed.</p>
+<p><a name="storedModels"></a>
+<code>storedModels</code> - Models that were previously stored, which will be used instead of the ones returned from <a href="../-empress/initial-models.html">Empress.initialModels</a> function.</p>
+<p><a name="initialRequestId"></a>
+<code>initialRequestId</code> - The number from which to start generating requests IDs.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<h4><a href="-init-.html">&lt;init&gt;</a></h4>
+</td>
+<td>
+<p>Runs and manages an Empress instance.</p>
+<code><span class="identifier">EmpressBackend</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$<init>(io.nofrills.empress.base.EmpressBackend.E, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, kotlin.collections.Collection((io.nofrills.empress.base.EmpressBackend.M)), kotlin.Long)/empress">empress</span><span class="symbol">:</span>&nbsp;<span class="identifier">E</span><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$<init>(io.nofrills.empress.base.EmpressBackend.E, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, kotlin.collections.Collection((io.nofrills.empress.base.EmpressBackend.M)), kotlin.Long)/eventHandlerScope">eventHandlerScope</span><span class="symbol">:</span>&nbsp;<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html"><span class="identifier">CoroutineScope</span></a><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$<init>(io.nofrills.empress.base.EmpressBackend.E, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, kotlin.collections.Collection((io.nofrills.empress.base.EmpressBackend.M)), kotlin.Long)/requestHandlerScope">requestHandlerScope</span><span class="symbol">:</span>&nbsp;<a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html"><span class="identifier">CoroutineScope</span></a><span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$<init>(io.nofrills.empress.base.EmpressBackend.E, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, kotlin.collections.Collection((io.nofrills.empress.base.EmpressBackend.M)), kotlin.Long)/storedModels">storedModels</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">, </span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$<init>(io.nofrills.empress.base.EmpressBackend.E, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, kotlin.collections.Collection((io.nofrills.empress.base.EmpressBackend.M)), kotlin.Long)/initialRequestId">initialRequestId</span><span class="symbol">:</span>&nbsp;<a href="../-request-id.html"><span class="identifier">RequestId</span></a><span class="symbol">?</span>&nbsp;<span class="symbol">=</span>&nbsp;null<span class="symbol">)</span></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<h4><a href="cancel-request.html">cancelRequest</a></h4>
+</td>
+<td>
+<p>Cancels a request with given <a href="../-event-handler-context/cancel-request.html#io.nofrills.empress.base.EventHandlerContext$cancelRequest(kotlin.Long)/requestId">requestId</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">cancelRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$cancelRequest(kotlin.Long)/requestId">requestId</span><span class="symbol">:</span>&nbsp;<a href="../-request-id.html"><span class="identifier">RequestId</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="get.html">get</a></h4>
+</td>
+<td>
+<p>Returns a model with given <a href="../-event-handler-context/get.html#io.nofrills.empress.base.EventHandlerContext$get(java.lang.Class((io.nofrills.empress.base.EventHandlerContext.get.T)))/modelClass">modelClass</a>.</p>
+<code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span> <span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$get(java.lang.Class((io.nofrills.empress.base.EmpressBackend.get.T)))/modelClass">modelClass</span><span class="symbol">:</span>&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">T</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="interrupt.html">interrupt</a></h4>
+</td>
+<td>
+<p>Interrupts event processing loop.</p>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">interrupt</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="last-request-id.html">lastRequestId</a></h4>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">lastRequestId</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="models.html">models</a></h4>
+</td>
+<td>
+<p>Returns current models.</p>
+<code><span class="keyword">fun </span><span class="identifier">models</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-collection/index.html"><span class="identifier">Collection</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="on-event.html">onEvent</a></h4>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onEvent</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$onEvent(kotlin.Function1((io.nofrills.empress.base.EventHandlerContext((io.nofrills.empress.base.EmpressBackend.M, io.nofrills.empress.base.EmpressBackend.S)), kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<a href="../-event-handler-context/index.html"><span class="identifier">EventHandlerContext</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-event.html"><span class="identifier">Event</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="on-request.html">onRequest</a></h4>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">onRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$onRequest(kotlin.coroutines.SuspendFunction1((kotlinx.coroutines.CoroutineScope, kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html"><span class="identifier">CoroutineScope</span></a><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-request/index.html"><span class="identifier">Request</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="post.html">post</a></h4>
+</td>
+<td>
+<p>Allows to call an event handler defined in <a href="../-empress/index.html">Empress</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$post(kotlin.Function1((io.nofrills.empress.base.EmpressBackend.E, io.nofrills.empress.base.Event)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="identifier">E</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-event.html"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="signal.html">signal</a></h4>
+</td>
+<td>
+<p>Pushes a <a href="../-event-handler-context/signal.html#io.nofrills.empress.base.EventHandlerContext$signal(io.nofrills.empress.base.EventHandlerContext.S)/signal">signal</a> that can be later obtained in <a href="../-empress-api/signals.html">EmpressApi.signals</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">signal</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$signal(io.nofrills.empress.base.EmpressBackend.S)/signal">signal</span><span class="symbol">:</span>&nbsp;<span class="identifier">S</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="signals.html">signals</a></h4>
+</td>
+<td>
+<p>Allows to listen for signals sent from <a href="../-empress/index.html">Empress</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">signals</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html"><span class="identifier">Flow</span></a><span class="symbol">&lt;</span><span class="identifier">S</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="update.html">update</a></h4>
+</td>
+<td>
+<p>Pushes an updated <a href="../-event-handler-context/update.html#io.nofrills.empress.base.EventHandlerContext$update(io.nofrills.empress.base.EventHandlerContext.M)/model">model</a> that can be later obtained in <a href="../-empress-api/updates.html">EmpressApi.updates</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">update</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$update(io.nofrills.empress.base.EmpressBackend.M)/model">model</span><span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="updates.html">updates</a></h4>
+</td>
+<td>
+<p>Allows to listen for model updates sent from <a href="../-empress/index.html">Empress</a>.</p>
+<code><span class="keyword">fun </span><span class="identifier">updates</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$updates(kotlin.Boolean)/withCurrentModels">withCurrentModels</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-flow/index.html"><span class="identifier">Flow</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
