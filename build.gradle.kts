@@ -108,8 +108,8 @@ multimodule {
 }
 
 subprojects {
-    group = "com.github.nofrills-io"
-    version = EmpressLib.versionName
+    group = property("group") ?: "com.github.nofrills-io"
+    version = property("version") ?: EmpressLib.versionName
 }
 
 tasks.register("clean", Delete::class.java) {
