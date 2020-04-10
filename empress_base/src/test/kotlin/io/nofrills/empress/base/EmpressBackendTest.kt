@@ -307,7 +307,7 @@ class EmpressBackendTest {
         empress: SampleEmpress = SampleEmpress(),
         storedModels: Collection<Model>? = null,
         initialHandlerId: Long? = null
-    ): EmpressApi<SampleEmpress, Model, Signal> {
+    ): TestEmpressApi<SampleEmpress, Model, Signal> {
         return if (storedModels != null && initialHandlerId != null) {
             EmpressBackend(
                 empress,

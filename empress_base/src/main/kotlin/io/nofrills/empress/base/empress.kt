@@ -71,12 +71,6 @@ abstract class Empress<M : Any, S : Any> {
 
 /** Allows to communicate with your [Empress] instance. */
 interface EmpressApi<E : Any, M : Any, S : Any> {
-    /** Interrupts event processing loop. Usually only needed in tests. */
-    suspend fun interrupt()
-
-    /** Return current snapshot of the model. */
-    fun models(): Collection<M>
-
     /** Allows to call an event handler defined in [Empress]. */
     fun post(fn: E.() -> Event)
 

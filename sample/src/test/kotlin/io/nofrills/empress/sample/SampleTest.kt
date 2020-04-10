@@ -16,8 +16,8 @@
 
 package io.nofrills.empress.sample
 
-import io.nofrills.empress.base.EmpressApi
 import io.nofrills.empress.base.EmpressBackend
+import io.nofrills.empress.base.TestEmpressApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -29,7 +29,7 @@ import org.junit.Test
 
 class SampleTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: EmpressApi<SampleEmpress, Model, Signal>
+    private lateinit var tested: TestEmpressApi<SampleEmpress, Model, Signal>
 
     @Before
     fun setUp() {

@@ -48,9 +48,9 @@ you should use [io.nofrills.empress.base.EmpressBackend] like below:
 
 ```kotlin
 val empress = MyEmpress()
-val coroutineScope = ... // e.g. `TestCoroutineScope` or a scope of your activity
+val coroutineScope = ... // e.g. `TestCoroutineScope` or a scope of your activity/fragment
 val api: EmpressApi<MyEmpress, Model, Signal> = EmpressBackend(empress, scope, scope)
 ```
 
-Finally you can send events and listen for updates using [EmpressApi] interface,
-which is implemented by [EmpressBackend].
+Finally you can send events and listen for updates using [EmpressApi]
+(or [TestEmpressApi]) interface, which is implemented by [EmpressBackend].

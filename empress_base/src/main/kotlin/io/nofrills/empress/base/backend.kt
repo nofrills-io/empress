@@ -33,6 +33,15 @@ internal interface BackendFacade<M : Any, S : Any> {
     fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
 }
 
+/** Extends [EmpressApi] with additional methods useful in unit tests. */
+interface TestEmpressApi<E : Any, M : Any, S : Any> : EmpressApi<E, M, S> {
+    /** Interrupts event processing loop. */
+    suspend fun interrupt()
+
+    /** Returns current models. */
+    fun models(): Collection<M>
+}
+
 /** Runs and manages an Empress instance.
  * @param empress Empress instance that we want to run.
  * @param eventHandlerScope A coroutine scope where events will be processed.
@@ -47,7 +56,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     private val requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>? = null,
     initialRequestId: RequestId? = null
-) : BackendFacade<M, S>, EmpressApi<E, M, S>, EventHandlerContext<M, S>() {
+) : BackendFacade<M, S>, EmpressApi<E, M, S>, TestEmpressApi<E, M, S>, EventHandlerContext<M, S>() {
     private val dynamicLatch = DynamicLatch()
 
     private val handlerChannel = Channel<EventHandlerContext<M, S>.() -> Unit>(Channel.UNLIMITED)
@@ -95,7 +104,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         return Request(requestId)
     }
 
-    // EmpressApi
+    // TestEmpressApi
 
     override suspend fun interrupt() {
         dynamicLatch.close()
@@ -105,6 +114,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     override fun models(): Collection<M> {
         return modelMap.values.toList()
     }
+
+    // EmpressApi
 
     override fun post(fn: E.() -> Event) {
         fn.invoke(empress)
