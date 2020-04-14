@@ -28,6 +28,7 @@ object EmpressLib {
     const val versionCode = 9
 
     fun versionName(project: Project): String {
+        System.getenv("TRAVIS_BUILD_NUMBER")?.let { return "travis-$it" }
         return project.property("version") as String? ?: "ad-hoc"
     }
 }
