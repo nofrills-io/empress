@@ -9,55 +9,24 @@
 <table>
 <tbody>
 <tr>
-<h5><a href="../io.nofrills.empress.consumable/-consumable/index.html">io.nofrills.empress.consumable.Consumable</a></h5>
-<p>Wraps a value of type <a href="../io.nofrills.empress.consumable/-consumable/index.html#V">V</a> that can be consumed.
-When it's <a href="../io.nofrills.empress.consumable/-consumable/consume.html">consumed</a>, an <a href="../io.nofrills.empress/-effect.html">Effect</a> of type <a href="../io.nofrills.empress.consumable/-consumable/index.html#E">E</a> may be produced.</p>
+<h5><a href="../io.nofrills.empress.base/-empress/index.html">io.nofrills.empress.base.Empress</a></h5>
+<p>Allows you define your initial models, event and request handlers.</p>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress/-effect.html">io.nofrills.empress.Effect</a></h5>
-<p>Function that produces an object (usually an event).</p>
+<h5><a href="../io.nofrills.empress.base/-empress-api/index.html">io.nofrills.empress.base.EmpressApi</a></h5>
+<p>Allows to communicate with your <a href="../io.nofrills.empress.base/-empress/index.html">Empress</a> instance.</p>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress/-effect-commander/index.html">io.nofrills.empress.EffectCommander</a></h5>
-<p>Allows to send effects.</p>
+<h5><a href="../io.nofrills.empress.base/-empress-backend/index.html">io.nofrills.empress.base.EmpressBackend</a></h5>
+<p>Runs and manages an Empress instance.</p>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress/-empress/index.html">io.nofrills.empress.Empress</a></h5>
-<p>Allows to define <strong>immutable</strong> models, event and request handlers.</p>
+<h5><a href="../io.nofrills.empress.base/-event.html">io.nofrills.empress.base.Event</a></h5>
+<p>Opaque representation for an event handler.</p>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress/-empress-api/index.html">io.nofrills.empress.EmpressApi</a></h5>
-<p>Allows to manage an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.backend/-empress-backend/index.html">io.nofrills.empress.backend.EmpressBackend</a></h5>
-<p>Runs and manages an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-empress-builder/index.html">io.nofrills.empress.builder.EmpressBuilder</a></h5>
-<p>Allows to build an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-empress-dsl-marker/index.html">io.nofrills.empress.builder.EmpressDslMarker</a></h5>
-<p>DSL Marker for <a href="../io.nofrills.empress.builder/-empress-builder/index.html">EmpressBuilder</a>.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-event-commander/index.html">io.nofrills.empress.EventCommander</a></h5>
-<p>Allows to send events.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-event-handler.html">io.nofrills.empress.builder.EventHandler</a></h5>
-<p>Handles an event.
-Event handler should return a collection of models that have changed.
-If nothing has changed, it should return an empty collection.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-event-handler-context/index.html">io.nofrills.empress.builder.EventHandlerContext</a></h5>
-<p>Context for handling events.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-event-listener/index.html">io.nofrills.empress.EventListener</a></h5>
-<p>Allows to listen to processed events.</p>
+<h5><a href="../io.nofrills.empress.base/-event-handler-context/index.html">io.nofrills.empress.base.EventHandlerContext</a></h5>
+<p>Context for defining an event handler.</p>
 </tr>
 <tr>
  (extensions in package io.nofrills.empress.android)
@@ -68,82 +37,16 @@ If nothing has changed, it should return an empty collection.</p>
 <h5><a href="../io.nofrills.empress.android/androidx.fragment.app.-fragment-activity/index.html">androidx.fragment.app.FragmentActivity</a></h5>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress.builder/-initializer.html">io.nofrills.empress.builder.Initializer</a></h5>
-<p>Creates an initial model value.</p>
+<h5><a href="../io.nofrills.empress.base/-request/index.html">io.nofrills.empress.base.Request</a></h5>
+<p>Representation for a request handler.</p>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress.builder/-initializer-context.html">io.nofrills.empress.builder.InitializerContext</a></h5>
-<p>Context for model initializers.</p>
+<h5><a href="../io.nofrills.empress.base/-request-id.html">io.nofrills.empress.base.RequestId</a></h5>
+<p>An ID for a request, which can be used to <a href="../io.nofrills.empress.base/-event-handler-context/cancel-request.html">cancel</a> it.</p>
 </tr>
 <tr>
-<h5><a href="../io.nofrills.empress/-model-initializer/index.html">io.nofrills.empress.ModelInitializer</a></h5>
-<p>Initializes the models.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-models/index.html">io.nofrills.empress.Models</a></h5>
-<p>Allows to access the models.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-mutable-empress/index.html">io.nofrills.empress.MutableEmpress</a></h5>
-<p>Allows to define <strong>mutable</strong> models, event and request handlers.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-mutable-empress-api.html">io.nofrills.empress.MutableEmpressApi</a></h5>
-<p>Allows to manage an <a href="../io.nofrills.empress/-mutable-empress/index.html">MutableEmpress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.backend/-mutable-empress-backend/index.html">io.nofrills.empress.backend.MutableEmpressBackend</a></h5>
-<p>Runs and manages an <a href="../io.nofrills.empress/-mutable-empress/index.html">MutableEmpress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-mutable-empress-builder/index.html">io.nofrills.empress.builder.MutableEmpressBuilder</a></h5>
-<p>Allows to build an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-mutable-event-handler.html">io.nofrills.empress.builder.MutableEventHandler</a></h5>
-<p>Handles an event.
-Intended for mutable models.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-request-commander/index.html">io.nofrills.empress.RequestCommander</a></h5>
-<p>Manages requests.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-request-handler.html">io.nofrills.empress.builder.RequestHandler</a></h5>
-<p>Handles (executes) a request.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-request-handler/index.html">io.nofrills.empress.RequestHandler</a></h5>
-<p>Handles requests.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-request-handler-context/index.html">io.nofrills.empress.builder.RequestHandlerContext</a></h5>
-<p>Context for handling requests.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-request-id.html">io.nofrills.empress.RequestId</a></h5>
-<p>Represents a running request.
-Note: This class does not implement <code>android.os.Parcelable</code> interface.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-ruler.html">io.nofrills.empress.Ruler</a></h5>
-<p>Common interface for defining models and handling requests.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-ruler-api/index.html">io.nofrills.empress.RulerApi</a></h5>
-<p>Common interface for managing a <a href="../io.nofrills.empress/-ruler.html">Ruler</a>.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.backend/-ruler-backend/index.html">io.nofrills.empress.backend.RulerBackend</a></h5>
-<p>Common backend for running and managing a <a href="../io.nofrills.empress/-ruler.html">Ruler</a>.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress.builder/-ruler-builder/index.html">io.nofrills.empress.builder.RulerBuilder</a></h5>
-<p>Allows to build an <a href="../io.nofrills.empress/-empress/index.html">Empress</a> instance.</p>
-</tr>
-<tr>
-<h5><a href="../io.nofrills.empress/-update/index.html">io.nofrills.empress.Update</a></h5>
-<p>Represents an update, that resulted from processing an event.</p>
+<h5><a href="../io.nofrills.empress.base/-test-empress-api/index.html">io.nofrills.empress.base.TestEmpressApi</a></h5>
+<p>Extends <a href="../io.nofrills.empress.base/-empress-api/index.html">EmpressApi</a> with additional methods useful in unit tests.</p>
 </tr>
 </tbody>
 </table>

@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    id("io.nofrills.multimodule") version "0.5.1"
+    id("io.nofrills.multimodule") version "0.5.2"
 }
 
 allprojects {
@@ -54,11 +54,8 @@ multimodule {
                     java.net.URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
             }
             includes = listOf(
-                "${rootProject.projectDir}/empress_core/module_doc.md",
-                "${rootProject.projectDir}/empress_core/module_doc_backend.md",
-                "${rootProject.projectDir}/empress_core/module_doc_consumable.md",
-                "${rootProject.projectDir}/empress_android/module_doc.md",
-                "${rootProject.projectDir}/empress_builder/module_doc.md"
+                "${rootProject.projectDir}/empress_base/module_doc.md",
+                "${rootProject.projectDir}/empress_android/module_doc.md"
             )
             moduleName = "empress"
         }
@@ -111,8 +108,8 @@ multimodule {
 }
 
 subprojects {
-    group = "com.github.nofrills-io"
-    version = EmpressLib.versionName
+    group = property("group") ?: "com.github.nofrills-io"
+    version = property("version") ?: EmpressLib.versionName
 }
 
 tasks.register("clean", Delete::class.java) {

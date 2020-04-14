@@ -24,8 +24,8 @@ object EmpressLib {
     const val compileSdkVersion = 28
     const val minSdkVersion = 18
     const val targetSdkVersion = 28
-    const val versionCode = 7
-    const val versionName = "0.6.4"
+    const val versionCode = 8
+    const val versionName = "0.7.0-beta1"
 }
 
 object Vers {

@@ -1,0 +1,125 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>io.nofrills.empress.base - empress</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">empress</a>&nbsp;/&nbsp;<a href="./index.html">io.nofrills.empress.base</a><br/>
+<br/>
+<h2>Package io.nofrills.empress.base</h2>
+<p>Base functionality.</p>
+<h2>Usage</h2>
+<p>First, you need to define two (usually <code>sealed</code>) classes: <code>Model</code> and <code>Signal</code>
+(though you can call them whatever you want).</p>
+<ul><li>Model — represents application state;
+    each subclass should be relatively small, and be related to a single aspect of the app;
+    can implement <code>android.os.Parcelable</code> (in which case it will be restored when needed) </li>
+<li>Signal — represents a one-time action to be performed; it is never persisted</li>
+</ul>
+<p>Next, implement an <a href="-empress/index.html">io.nofrills.empress.base.Empress</a> interface:</p>
+<pre><code class="lang-kotlin">class MyEmpress : Empress&lt;Model, Signal&gt; {
+    override fun initialModels(): Collection&lt;Model&gt; {
+        // return a collection of initial values for all of your model classes
+        return listOf()
+    }
+
+    // Now, implement your event handlers, e.g.:
+    fun someEvent() = onEvent {
+        // Here you can access and modify your models, send updates or signals,
+        // issue requests, or cancel existing ones.
+        // By default we're on the main thread.
+        // The event handler should be quick, 
+        // and cannot perform blocking actions (use requests for that).
+    }
+
+    // Define request handlers:
+    fun someRequest() = onRequest {
+        // By default we're off the main thread,
+        // so you can do some network requests, read files etc.
+        // and when you're ready, call one or more of your event handlers.
+        // You should not modify your models here.
+    }
+}
+</code></pre>
+<p>Once you have defined your <a href="-empress/index.html">io.nofrills.empress.base.Empress</a>, you need a way to run it.
+If you want to use it with <strong>Android</strong> activity or fragment, refer to <a href="../io.nofrills.empress.android/index.html">io.nofrills.empress.android</a>.</p>
+<p>Otherwise, for standalone usage (e.g. in a unit test)
+you should use <a href="-empress-backend/index.html">io.nofrills.empress.base.EmpressBackend</a> like below:</p>
+<pre><code class="lang-kotlin">val empress = MyEmpress()
+val coroutineScope = ... // e.g. `TestCoroutineScope` or a scope of your activity/fragment
+val api: EmpressApi&lt;MyEmpress, Model, Signal&gt; = EmpressBackend(empress, scope, scope)
+</code></pre>
+<p>Finally you can send events and listen for updates using <a href="-empress-api/index.html">EmpressApi</a>
+(or <a href="-test-empress-api/index.html">TestEmpressApi</a>) interface, which is implemented by <a href="-empress-backend/index.html">EmpressBackend</a>.</p>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<h4><a href="-empress/index.html">Empress</a></h4>
+</td>
+<td>
+<p>Allows you define your initial models, event and request handlers.</p>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">Empress</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-empress-api/index.html">EmpressApi</a></h4>
+</td>
+<td>
+<p>Allows to communicate with your <a href="-empress/index.html">Empress</a> instance.</p>
+<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-empress-backend/index.html">EmpressBackend</a></h4>
+</td>
+<td>
+<p>Runs and manages an Empress instance.</p>
+<code><span class="keyword">class </span><span class="identifier">EmpressBackend</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-empress/index.html"><span class="identifier">Empress</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">BackendFacade</span><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-empress-api/index.html"><span class="identifier">EmpressApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-test-empress-api/index.html"><span class="identifier">TestEmpressApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-event-handler-context/index.html"><span class="identifier">EventHandlerContext</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-event.html">Event</a></h4>
+</td>
+<td>
+<p>Opaque representation for an event handler.</p>
+<code><span class="keyword">class </span><span class="identifier">Event</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-event-handler-context/index.html">EventHandlerContext</a></h4>
+</td>
+<td>
+<p>Context for defining an event handler.</p>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EventHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-request/index.html">Request</a></h4>
+</td>
+<td>
+<p>Representation for a request handler.</p>
+<code><span class="keyword">class </span><span class="identifier">Request</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-request-id.html">RequestId</a></h4>
+</td>
+<td>
+<p>An ID for a request, which can be used to <a href="-event-handler-context/cancel-request.html">cancel</a> it.</p>
+<code><span class="keyword">typealias </span><span class="identifier">RequestId</span>&nbsp;<span class="symbol">=</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html"><span class="identifier">Long</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-test-empress-api/index.html">TestEmpressApi</a></h4>
+</td>
+<td>
+<p>Extends <a href="-empress-api/index.html">EmpressApi</a> with additional methods useful in unit tests.</p>
+<code><span class="keyword">interface </span><span class="identifier">TestEmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-empress-api/index.html"><span class="identifier">EmpressApi</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">,</span>&nbsp;<span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span></code></td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,10 +1,7 @@
 package io.nofrills.empress.test_support
 
 import android.os.Parcelable
-import io.nofrills.empress.MutableEmpress
-import io.nofrills.empress.Empress
-import io.nofrills.empress.Models
-import io.nofrills.empress.RequestCommander
+import io.nofrills.empress.base.Empress
 import kotlinx.android.parcel.Parcelize
 
 sealed class Event {
@@ -18,51 +15,17 @@ sealed class Model {
     data class ParcelableCounter(var count: Int) : Model(), Parcelable
 }
 
-sealed class Request
+sealed class Signal
 
-class SampleEmpress : Empress<Event, Model, Request> {
-    override fun initialize(): Collection<Model> {
+class SampleEmpress : Empress<Model, Signal>() {
+    override fun initialModels(): Collection<Model> {
         return listOf(Model.Counter(0), Model.ParcelableCounter(0))
     }
 
-    override fun onEvent(
-        event: Event,
-        models: Models<Model>,
-        requests: RequestCommander<Request>
-    ): Collection<Model> {
-        return when (event) {
-            Event.Increment -> {
-                val counter = models[Model.Counter::class]
-                val parcelableCounter = models[Model.ParcelableCounter::class]
-                listOf(
-                    counter.copy(count = counter.count + 1),
-                    parcelableCounter.copy(count = parcelableCounter.count + 1)
-                )
-            }
-        }
-    }
-
-    override suspend fun onRequest(request: Request): Event {
-        error("mock")
-    }
-}
-
-
-class SampleMutableEmpress : MutableEmpress<Event, Model, Request> {
-    override fun initialize(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.ParcelableCounter(0))
-    }
-
-    override fun onEvent(event: Event, models: Models<Model>, requests: RequestCommander<Request>) {
-        return when (event) {
-            Event.Increment -> {
-                models[Model.Counter::class].count += 1
-                models[Model.ParcelableCounter::class].count += 1
-            }
-        }
-    }
-
-    override suspend fun onRequest(request: Request): Event {
-        error("mock")
+    suspend fun increment() = onEvent {
+        val counter = get<Model.Counter>()
+        val parcelableCounter = get<Model.ParcelableCounter>()
+        update(counter.copy(count = counter.count + 1))
+        update(parcelableCounter.copy(count = parcelableCounter.count + 1))
     }
 }
