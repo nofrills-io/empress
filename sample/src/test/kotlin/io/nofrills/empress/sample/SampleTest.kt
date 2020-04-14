@@ -17,6 +17,7 @@
 package io.nofrills.empress.sample
 
 import io.nofrills.empress.base.EmpressBackend
+import io.nofrills.empress.base.RequestId
 import io.nofrills.empress.base.TestEmpressApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toCollection
@@ -56,7 +57,7 @@ class SampleTest {
         val expected = listOf(
             Model.Counter(1),
             Model.Counter(2),
-            Model.Sender(SenderState.Sending(1)),
+            Model.Sender(SenderState.Sending(RequestId(1))),
             Model.Sender(SenderState.Idle)
         )
         assertEquals(expected, updates)
