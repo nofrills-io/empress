@@ -47,6 +47,14 @@
 </tr>
 <tr>
 <td>
+<h4><a href="event.html">event</a></h4>
+</td>
+<td>
+<p>Executes an event in current context.</p>
+<code><span class="keyword">fun </span><span class="identifier">event</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$event(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.base.Event)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-event.html"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
 <h4><a href="get.html">get</a></h4>
 </td>
 <td>
@@ -81,14 +89,14 @@
 <h4><a href="on-event.html">onEvent</a></h4>
 </td>
 <td>
-<code><span class="keyword">fun </span><span class="identifier">onEvent</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$onEvent(kotlin.Function1((io.nofrills.empress.base.EventHandlerContext((io.nofrills.empress.base.EmpressBackend.M, io.nofrills.empress.base.EmpressBackend.S)), kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<a href="../-event-handler-context/index.html"><span class="identifier">EventHandlerContext</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-event.html"><span class="identifier">Event</span></a></code></td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">onEvent</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$onEvent(kotlin.Function1((io.nofrills.empress.base.EventHandlerContext((io.nofrills.empress.base.EmpressBackend.M, io.nofrills.empress.base.EmpressBackend.S)), kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<a href="../-event-handler-context/index.html"><span class="identifier">EventHandlerContext</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">,</span>&nbsp;<span class="identifier">S</span><span class="symbol">&gt;</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-event.html"><span class="identifier">Event</span></a></code></td>
 </tr>
 <tr>
 <td>
 <h4><a href="on-request.html">onRequest</a></h4>
 </td>
 <td>
-<code><span class="keyword">fun </span><span class="identifier">onRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$onRequest(kotlin.coroutines.SuspendFunction1((kotlinx.coroutines.CoroutineScope, kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html"><span class="identifier">CoroutineScope</span></a><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-request/index.html"><span class="identifier">Request</span></a></code></td>
+<code><span class="keyword">suspend</span> <span class="keyword">fun </span><span class="identifier">onRequest</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$onRequest(kotlin.coroutines.SuspendFunction1((kotlinx.coroutines.CoroutineScope, kotlin.Unit)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><a href="https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/index.html"><span class="identifier">CoroutineScope</span></a><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-request.html"><span class="identifier">Request</span></a></code></td>
 </tr>
 <tr>
 <td>
@@ -96,7 +104,15 @@
 </td>
 <td>
 <p>Allows to call an event handler defined in <a href="../-empress/index.html">Empress</a>.</p>
-<code><span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$post(kotlin.Function1((io.nofrills.empress.base.EmpressBackend.E, io.nofrills.empress.base.Event)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="identifier">E</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-event.html"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+<code><span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$post(kotlin.coroutines.SuspendFunction1((io.nofrills.empress.base.EmpressBackend.E, io.nofrills.empress.base.Event)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="identifier">E</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-event.html"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="request.html">request</a></h4>
+</td>
+<td>
+<p>Schedules a request for execution.</p>
+<code><span class="keyword">fun </span><span class="identifier">request</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressBackend$request(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.base.Request)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-request.html"><span class="identifier">Request</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-request-id.html"><span class="identifier">RequestId</span></a></code></td>
 </tr>
 <tr>
 <td>

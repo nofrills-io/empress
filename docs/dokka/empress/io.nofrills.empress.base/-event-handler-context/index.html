@@ -39,6 +39,14 @@
 </tr>
 <tr>
 <td>
+<h4><a href="event.html">event</a></h4>
+</td>
+<td>
+<p>Executes an event in current context.</p>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">event</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EventHandlerContext$event(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.base.Event)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-event.html"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
 <h4><a href="get.html">get</a></h4>
 </td>
 <td>
@@ -46,6 +54,14 @@
 <code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span> <span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EventHandlerContext$get(java.lang.Class((io.nofrills.empress.base.EventHandlerContext.get.T)))/modelClass">modelClass</span><span class="symbol">:</span>&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">T</span></code>
 <p>Returns a model with given <a href="get.html#T">type</a>.</p>
 <code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span> <span class="identifier">get</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">T</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="request.html">request</a></h4>
+</td>
+<td>
+<p>Schedules a request for execution.</p>
+<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">request</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EventHandlerContext$request(kotlin.coroutines.SuspendFunction0((io.nofrills.empress.base.Request)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-request.html"><span class="identifier">Request</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="../-request-id.html"><span class="identifier">RequestId</span></a></code></td>
 </tr>
 <tr>
 <td>

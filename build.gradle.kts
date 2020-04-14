@@ -42,7 +42,7 @@ multimodule {
             minSdkVersion(EmpressLib.minSdkVersion)
             targetSdkVersion(EmpressLib.targetSdkVersion)
             versionCode = EmpressLib.versionCode
-            versionName = EmpressLib.versionName
+            versionName = EmpressLib.versionName(project)
             testInstrumentationRunner = "androidx.benchmark.junit4.AndroidBenchmarkRunner"
         }
     }
@@ -109,7 +109,7 @@ multimodule {
 
 subprojects {
     group = property("group") ?: "com.github.nofrills-io"
-    version = property("version") ?: EmpressLib.versionName
+    version = EmpressLib.versionName(this)
 }
 
 tasks.register("clean", Delete::class.java) {

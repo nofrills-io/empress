@@ -1,4 +1,5 @@
 import org.gradle.api.Action
+import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.MutableVersionConstraint
 import org.gradle.kotlin.dsl.DependencyHandlerScope
@@ -24,8 +25,11 @@ object EmpressLib {
     const val compileSdkVersion = 28
     const val minSdkVersion = 18
     const val targetSdkVersion = 28
-    const val versionCode = 8
-    const val versionName = "0.7.0-beta1"
+    const val versionCode = 9
+
+    fun versionName(project: Project): String {
+        return project.property("version") as String? ?: "ad-hoc"
+    }
 }
 
 object Vers {
