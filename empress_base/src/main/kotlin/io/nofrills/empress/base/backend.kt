@@ -25,13 +25,15 @@ import kotlinx.coroutines.flow.onStart
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
 private val eventInstance = Event()
 private val requestInstance = Request()
 
 internal interface BackendFacade<M : Any, S : Any> {
-    fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event
+    suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event
     suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request
 }
 
@@ -61,13 +63,13 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 ) : BackendFacade<M, S>, EmpressApi<E, M, S>, TestEmpressApi<E, M, S>, EventHandlerContext<M, S>() {
     private val dynamicLatch = DynamicLatch()
 
-    private val handlerChannel = Channel<EventHandlerContext<M, S>.() -> Unit>(Channel.UNLIMITED)
+    private val eventChannel = Channel<EventHandlerContext<M, S>.() -> Unit>(Channel.UNLIMITED)
+
+    private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
     private val modelChannels = Collections.synchronizedList(arrayListOf<Channel<M>>())
 
     private val modelMap = makeModelMap(empress.initialModels(), storedModels ?: emptyList())
-
-    private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
@@ -87,9 +89,14 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
     // BackendFacade
 
-    override fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event {
-        dynamicLatch.countUp()
-        handlerChannel.offer(fn)
+    override suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event {
+        if (coroutineContext[SameEventHandler] != null) {
+            fn(this)
+        } else {
+            dynamicLatch.countUp()
+            val added = eventChannel.offer(fn)
+            assert(added)
+        }
         return eventInstance
     }
 
@@ -113,8 +120,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
     // EmpressApi
 
-    override fun post(fn: E.() -> Event) {
-        fn.invoke(empress)
+    override fun post(fn: suspend E.() -> Event) {
+        eventHandlerScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            fn.invoke(empress)
+        }
     }
 
     override fun signals(): Flow<S> {
@@ -146,6 +155,12 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         return true
     }
 
+    override fun event(fn: suspend () -> Event) {
+        eventHandlerScope.launch(SameEventHandler(), start = CoroutineStart.UNDISPATCHED) {
+            fn()
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     override fun <T : M> get(modelClass: Class<T>): T = modelMap.getValue(modelClass) as T
 
@@ -167,7 +182,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     override fun signal(signal: S) {
         val channels = signalChannels.toList()
         for (chan in channels) {
-            chan.offer(signal)
+            val added = chan.offer(signal)
+            assert(added)
         }
     }
 
@@ -175,7 +191,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
         modelMap[model::class.java] = model
         val channels = modelChannels.toList()
         for (chan in channels) {
-            chan.offer(model)
+            val added = chan.offer(model)
+            assert(added)
         }
     }
 
@@ -184,11 +201,11 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     internal fun areChannelsClosedForSend(): Boolean {
         return modelChannels.toList().all { it.isClosedForSend } &&
                 signalChannels.toList().all { it.isClosedForSend } &&
-                handlerChannel.isClosedForSend
+                eventChannel.isClosedForSend
     }
 
     private fun closeChannels() {
-        handlerChannel.close()
+        eventChannel.close()
         modelChannels.toList().forEach { it.close() }
         signalChannels.toList().forEach { it.close() }
     }
@@ -198,7 +215,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     private fun launchHandlerProcessing() = eventHandlerScope.launch {
-        for (handler in handlerChannel) {
+        for (handler in eventChannel) {
             try {
                 handler.invoke(this@EmpressBackend)
             } finally {
@@ -230,5 +247,9 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
 
             return modelMap
         }
+    }
+
+    private class SameEventHandler : AbstractCoroutineContextElement(SameEventHandler) {
+        companion object Key : CoroutineContext.Key<SameEventHandler>
     }
 }

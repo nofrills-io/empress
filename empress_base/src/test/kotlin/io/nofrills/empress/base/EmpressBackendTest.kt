@@ -373,6 +373,40 @@ class EmpressBackendTest {
         assertEquals(expectedModels, updates)
     }
 
+    @Test(expected = OnEventError::class)
+    fun eventHandlerError() = runBlockingTest {
+        val tested = makeTested(this)
+        tested.post { generateError() }
+    }
+
+    @Test(expected = OnEventError::class)
+    fun eventHandlerIndirectError() = runBlockingTest {
+        val tested = makeTested(this)
+        tested.post { generateErrorIndirect() }
+    }
+
+    @Test(expected = OnRequestError::class)
+    fun requestHandlerError() = runBlockingTest {
+        val tested = makeTested(this)
+        val deferredUpdates = updatesAsync(tested)
+        tested.post { errorInRequest() }
+        tested.interrupt()
+        val updates = deferredUpdates.await()
+        val expected = listOf(Model.Counter(1), Model.Counter(2))
+        assertEquals(expected, updates)
+    }
+
+    @Test(expected = OnRequestError::class)
+    fun requestHandlerErrorIndirect() = runBlockingTest {
+        val tested = makeTested(this)
+        val deferredUpdates = updatesAsync(tested)
+        tested.post { errorInRequestIndirect() }
+        tested.interrupt()
+        val updates = deferredUpdates.await()
+        val expected = listOf(Model.Counter(1), Model.Counter(2))
+        assertEquals(expected, updates)
+    }
+
     private fun makeTested(
         coroutineScope: CoroutineScope,
         empress: SampleEmpress = SampleEmpress(),

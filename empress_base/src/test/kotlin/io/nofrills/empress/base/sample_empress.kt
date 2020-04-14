@@ -28,42 +28,43 @@ internal sealed class Signal {
     object SendingCancelled : Signal()
 }
 
-internal class SampleEmpress(private val models: Collection<Model>? = null) : Empress<Model, Signal>() {
+internal class SampleEmpress(private val models: Collection<Model>? = null) :
+    Empress<Model, Signal>() {
     override fun initialModels(): Collection<Model> {
         return models ?: listOf(Model.Counter(0), Model.Sender())
     }
 
-    fun decrement() = onEvent {
+    suspend fun decrement() = onEvent {
         val count = get<Model.Counter>().count
         update(Model.Counter(count - 1))
     }
 
-    fun delta(d: Int) = onEvent {
+    suspend fun delta(d: Int) = onEvent {
         val count = get<Model.Counter>().count
         update(Model.Counter(count + d))
     }
 
-    fun increment() = onEvent {
+    suspend fun increment() = onEvent {
         val count = get<Model.Counter>().count
         update(Model.Counter(count + 1))
     }
 
-    fun indirectIncrementAndSend() = onEvent {
-        increment()
+    suspend fun indirectIncrementAndSend() = onEvent {
+        event { increment() }
         val count = get<Model.Counter>().count
         val requestId = request { indirectSendCounter(count) }
         update(Model.Sender(requestId))
     }
 
-    fun indirectSend() = onEvent {
+    suspend fun indirectSend() = onEvent {
         val count = get<Model.Counter>().count
         val requestId = request { indirectSendCounter(count) }
         update(Model.Sender(requestId))
     }
 
-    fun ping() = onEvent {}
+    suspend fun ping() = onEvent {}
 
-    fun sendCounter() = onEvent {
+    suspend fun sendCounter() = onEvent {
         if (get<Model.Sender>().requestId != null) return@onEvent
 
         val count = get<Model.Counter>().count
@@ -71,23 +72,47 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) : Em
         update(Model.Sender(requestId))
     }
 
-    fun sendCounterVariableCount() = onEvent {
+    suspend fun sendCounterVariableCount() = onEvent {
         var count = get<Model.Counter>().count
         val requestId = request { sendCounter(count) }
         count += 3
         update(Model.Sender(requestId))
     }
 
-    private fun onCounterSent(sentValue: Int) = onEvent {
+    private suspend fun onCounterSent(sentValue: Int) = onEvent {
         signal(Signal.CounterSent(sentValue))
         update(Model.Sender(null))
     }
 
-    fun cancelSending() = onEvent {
+    suspend fun cancelSending() = onEvent {
         val requestId = get<Model.Sender>().requestId ?: return@onEvent
         cancelRequest(requestId)
         update(Model.Sender(null))
         signal(Signal.SendingCancelled)
+    }
+
+    suspend fun generateError() = onEvent {
+        val counter = get<Model.Counter>()
+        update(Model.Counter(counter.count + 1))
+        throw OnEventError()
+    }
+
+    suspend fun generateErrorIndirect() = onEvent {
+        event { increment() }
+        event { generateError() }
+        event { increment() }
+    }
+
+    suspend fun errorInRequest() = onEvent {
+        event { increment() }
+        request { onRequestError() }
+        event { increment() }
+    }
+
+    suspend fun errorInRequestIndirect() = onEvent {
+        event { increment() }
+        request { onRequestErrorIndirect() }
+        event { increment() }
     }
 
     private suspend fun indirectSendCounter(count: Int) = onRequest {
@@ -98,4 +123,15 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) : Em
         delay(count * 1000L)
         onCounterSent(count)
     }
+
+    private suspend fun onRequestError() = onRequest {
+        throw OnRequestError()
+    }
+
+    private suspend fun onRequestErrorIndirect() = onRequest {
+        onRequestError()
+    }
 }
+
+internal class OnEventError : Throwable()
+internal class OnRequestError : Throwable()

@@ -73,15 +73,15 @@ interface:
 ```kotlin
 class SampleEmpress : Empress<Model, Signal>() {
     override fun initialModels(): Collection<Model> {
-        return models ?: listOf(Model.Counter(0), Model.Sender(null))
+        return listOf(Model.Counter(0), Model.Sender(null))
     }
 
-    fun increment() = onEvent {
+    suspend fun increment() = onEvent {
         val count = get<Model.Counter>().count
         update(Model.Counter(count + 1))
     }
 
-    fun sendCounter() = onEvent {
+    suspend fun sendCounter() = onEvent {
         // If request is already in progress, return early.
         if (get<Model.Sender>().requestId != null) return@onEvent
     
@@ -95,7 +95,7 @@ class SampleEmpress : Empress<Model, Signal>() {
         onCounterSent() // call an event handler
     }
 
-    private fun onCounterSent() = onEvent {
+    private suspend fun onCounterSent() = onEvent {
         signal(Signal.CounterSent)
         update(Model.Sender(null))
     }

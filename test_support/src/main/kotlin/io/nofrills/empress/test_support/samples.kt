@@ -22,7 +22,7 @@ class SampleEmpress : Empress<Model, Signal>() {
         return listOf(Model.Counter(0), Model.ParcelableCounter(0))
     }
 
-    fun increment() = onEvent {
+    suspend fun increment() = onEvent {
         val counter = get<Model.Counter>()
         val parcelableCounter = get<Model.ParcelableCounter>()
         update(counter.copy(count = counter.count + 1))

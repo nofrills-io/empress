@@ -22,7 +22,7 @@ class MyEmpress : Empress<Model, Signal> {
     }
 
     // Now, implement your event handlers, e.g.:
-    fun someEvent() = onEvent {
+    suspend fun someEvent() = onEvent {
         // Here you can access and modify your models, send updates or signals,
         // issue requests, or cancel existing ones.
         // By default we're on the main thread.

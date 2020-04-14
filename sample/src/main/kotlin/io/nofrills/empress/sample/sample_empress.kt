@@ -25,7 +25,7 @@ class SampleEmpress : Empress<Model, Signal>() {
         return listOf(Model.Counter(0), Model.Sender(SenderState.Idle))
     }
 
-    fun cancelSendingCounter() = onEvent {
+    suspend fun cancelSendingCounter() = onEvent {
         val sender = get<Model.Sender>()
         val state = sender.state
         if (state is SenderState.Sending) {
@@ -35,30 +35,30 @@ class SampleEmpress : Empress<Model, Signal>() {
         }
     }
 
-    private fun onCounterSent() = onEvent {
+    private suspend fun onCounterSent() = onEvent {
         update(Model.Sender(SenderState.Idle))
         signal(Signal.CounterSent)
     }
 
-    fun decrement() = onEvent {
+    suspend fun decrement() = onEvent {
         val counter = get<Model.Counter>()
         update(counter.copy(count = counter.count - 1))
     }
 
-    fun failure() = onEvent {
+    suspend fun failure() = onEvent {
         throw OnEventFailure()
     }
 
-    fun failureInRequest() = onEvent {
+    suspend fun failureInRequest() = onEvent {
         request { failedRequest() }
     }
 
-    fun increment() = onEvent {
+    suspend fun increment() = onEvent {
         val counter = get<Model.Counter>()
         update(counter.copy(count = counter.count + 1))
     }
 
-    fun sendCounter() = onEvent {
+    suspend fun sendCounter() = onEvent {
         val state = get<Model.Sender>().state
         if (state is SenderState.Sending) {
             return@onEvent

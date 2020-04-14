@@ -35,9 +35,13 @@ abstract class EventHandlerContext<M : Any, S : Any> {
     /** Cancels a request with given [requestId]. */
     abstract fun cancelRequest(requestId: RequestId): Boolean
 
+    /** Executes an event in current context. */
+    abstract fun event(fn: suspend () -> Event)
+
     /** Returns a model with given [modelClass]. */
     abstract fun <T : M> get(modelClass: Class<T>): T
 
+    /** Schedules a request for execution. */
     abstract fun request(fn: suspend () -> Request): RequestId
 
     /** Pushes a [signal] that can be later obtained in [EmpressApi.signals]. */
@@ -63,7 +67,8 @@ abstract class Empress<M : Any, S : Any> {
     /** Allows to define an event handler.
      * @param fn The definition of the event handler
      */
-    protected fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event = backend.onEvent(fn)
+    protected suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event =
+        backend.onEvent(fn)
 
     /** Allows to define a request handler.
      * @param fn The definition of the request handler.
@@ -75,7 +80,7 @@ abstract class Empress<M : Any, S : Any> {
 /** Allows to communicate with your [Empress] instance. */
 interface EmpressApi<E : Any, M : Any, S : Any> {
     /** Allows to call an event handler defined in [Empress]. */
-    fun post(fn: E.() -> Event)
+    fun post(fn: suspend E.() -> Event)
 
     /** Allows to listen for signals sent from [Empress]. */
     fun signals(): Flow<S>
