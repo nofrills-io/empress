@@ -25,7 +25,7 @@ object EmpressLib {
     const val compileSdkVersion = 28
     const val minSdkVersion = 18
     const val targetSdkVersion = 28
-    const val versionCode = 9
+    const val versionCode = 10
 
     fun versionName(project: Project): String {
         System.getenv("TRAVIS_BUILD_NUMBER")?.let { return "travis-$it" }

@@ -54,12 +54,12 @@ interface TestEmpressApi<E : Any, M : Any, S : Any> : EmpressApi<E, M, S> {
  * @param initialRequestId The number from which to start generating requests IDs.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
+class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
     storedModels: Collection<M>? = null,
-    initialRequestId: RequestId? = null
+    initialRequestId: Long? = null
 ) : BackendFacade<M, S>, EmpressApi<E, M, S>, TestEmpressApi<E, M, S>, EventHandlerContext<M, S>() {
     private val dynamicLatch = DynamicLatch()
 
@@ -211,7 +211,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any>(
     }
 
     private fun getNextRequestId(): RequestId {
-        return lastRequestId.incrementAndGet()
+        return RequestId(lastRequestId.incrementAndGet())
     }
 
     private fun launchHandlerProcessing() = eventHandlerScope.launch {

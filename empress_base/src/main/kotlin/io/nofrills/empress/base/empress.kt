@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
 class Event internal constructor()
 
 /** An ID for a request, which can be used to [cancel][EventHandlerContext.cancelRequest] it. */
-typealias RequestId = Long
+data class RequestId(private val id: Long)
 
 /** Representation for a request handler. */
 class Request internal constructor()
