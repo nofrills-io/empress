@@ -87,26 +87,16 @@ class EmpressFragmentTest {
             val empressApi = s.enthroneEmpress(dispatcher, retainInstance)
             empressApi.post { increment() }
 
-            assertEquals(Model.Counter(1), empressApi.models().first { it is Model.Counter })
-            assertEquals(
-                Model.ParcelableCounter(1),
-                empressApi.models().first { it is Model.ParcelableCounter }
-            )
+            assertEquals(Model.Counter(1), empressApi.get(Model.Counter::class))
+            assertEquals(Model.ParcelableCounter(1), empressApi.get(Model.ParcelableCounter::class))
         }
 
         scenario.recreate()
 
         scenario.onScenario { s ->
             val empressApi = s.enthroneEmpress(dispatcher, retainInstance)
-
-            assertEquals(
-                Model.Counter(finalCounterValue),
-                empressApi.models().first { it is Model.Counter }
-            )
-            assertEquals(
-                Model.ParcelableCounter(1),
-                empressApi.models().first { it is Model.ParcelableCounter }
-            )
+            assertEquals(Model.Counter(finalCounterValue), empressApi.get(Model.Counter::class))
+            assertEquals(Model.ParcelableCounter(1), empressApi.get(Model.ParcelableCounter::class))
         }
     }
 

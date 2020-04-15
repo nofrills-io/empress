@@ -18,6 +18,7 @@ package io.nofrills.empress.base
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlin.reflect.KClass
 
 /** Opaque representation for an event handler. */
 class Event internal constructor()
@@ -28,18 +29,22 @@ data class RequestId(private val id: Long)
 /** Representation for a request handler. */
 class Request internal constructor()
 
+interface ModelRepository<M : Any> {
+    /** Returns a model with given [modelClass]. */
+    fun <T : M> get(modelClass: Class<T>): T
+
+    fun <T : M> get(modelClass: KClass<T>): T = get(modelClass.java)
+}
+
 /** Context for defining an event handler.
  * @see Empress.onEvent
  */
-abstract class EventHandlerContext<M : Any, S : Any> {
+abstract class EventHandlerContext<M : Any, S : Any> : ModelRepository<M> {
     /** Cancels a request with given [requestId]. */
     abstract fun cancelRequest(requestId: RequestId): Boolean
 
     /** Executes an event in current context. */
     abstract fun event(fn: suspend () -> Event)
-
-    /** Returns a model with given [modelClass]. */
-    abstract fun <T : M> get(modelClass: Class<T>): T
 
     /** Schedules a request for execution. */
     abstract fun request(fn: suspend () -> Request): RequestId
@@ -77,13 +82,13 @@ abstract class Empress<M : Any, S : Any> {
         backend.onRequest(fn)
 }
 
-/** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any, M : Any, S : Any> {
-    fun <T : M> get(modelClass: Class<T>): T
-
-    /** Allows to call an event handler defined in [Empress]. */
+interface EventCommander<E : Any> {
+    /** Allows to call an event handler defined in [E]. */
     fun post(fn: suspend E.() -> Event)
+}
 
+/** Allows to communicate with your [Empress] instance. */
+interface EmpressApi<E : Any, M : Any, S : Any> : EventCommander<E>, ModelRepository<M> {
     /** Allows to listen for signals sent from [Empress]. */
     fun signals(): Flow<S>
 
