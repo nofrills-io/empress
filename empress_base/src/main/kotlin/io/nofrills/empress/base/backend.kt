@@ -115,7 +115,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
     }
 
     override fun models(): Collection<M> {
-        return modelMap.values.toList()
+        return synchronized(modelMap) { modelMap.values.toList() }
     }
 
     // EmpressApi
@@ -141,7 +141,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
             .onStart {
                 modelChannels.add(channel)
                 if (withCurrentModels) {
-                    modelMap.values.forEach { emit(it) }
+                    val currentModels = synchronized(modelMap) { modelMap.values.toList() }
+                    currentModels.forEach { emit(it) }
                 }
             }
             .onCompletion { modelChannels.remove(channel) }
@@ -180,28 +181,34 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
     }
 
     override fun signal(signal: S) {
-        val channels = signalChannels.toList()
-        for (chan in channels) {
-            val added = chan.offer(signal)
-            assert(added)
+        synchronized(signalChannels) {
+            for (chan in signalChannels) {
+                val added = chan.offer(signal)
+                assert(added)
+            }
         }
     }
 
     override fun update(model: M) {
         modelMap[model::class.java] = model
-        val channels = modelChannels.toList()
-        for (chan in channels) {
-            val added = chan.offer(model)
-            assert(added)
+        synchronized(modelChannels) {
+            for (chan in modelChannels) {
+                val added = chan.offer(model)
+                assert(added)
+            }
         }
     }
 
     // Implementation details
 
     internal fun areChannelsClosedForSend(): Boolean {
-        return modelChannels.toList().all { it.isClosedForSend } &&
-                signalChannels.toList().all { it.isClosedForSend } &&
-                eventChannel.isClosedForSend
+        synchronized(modelChannels) {
+            synchronized(signalChannels) {
+                return modelChannels.all { it.isClosedForSend } &&
+                        signalChannels.all { it.isClosedForSend } &&
+                        eventChannel.isClosedForSend
+            }
+        }
     }
 
     private fun closeChannels() {
