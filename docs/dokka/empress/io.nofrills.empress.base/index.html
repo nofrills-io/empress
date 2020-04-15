@@ -69,7 +69,7 @@ val api: EmpressApi&lt;MyEmpress, Model, Signal&gt; = EmpressBackend(empress, sc
 </td>
 <td>
 <p>Allows to communicate with your <a href="-empress/index.html">Empress</a> instance.</p>
-<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
+<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-event-commander/index.html"><span class="identifier">EventCommander</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="-model-repository/index.html"><span class="identifier">ModelRepository</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>
@@ -89,11 +89,27 @@ val api: EmpressApi&lt;MyEmpress, Model, Signal&gt; = EmpressBackend(empress, sc
 </tr>
 <tr>
 <td>
+<h4><a href="-event-commander/index.html">EventCommander</a></h4>
+</td>
+<td>
+<p>Allows to execute an event handler.</p>
+<code><span class="keyword">interface </span><span class="identifier">EventCommander</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
 <h4><a href="-event-handler-context/index.html">EventHandlerContext</a></h4>
 </td>
 <td>
 <p>Context for defining an event handler.</p>
-<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EventHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EventHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="-model-repository/index.html"><span class="identifier">ModelRepository</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<h4><a href="-model-repository/index.html">ModelRepository</a></h4>
+</td>
+<td>
+<p>Provides access to the models.</p>
+<code><span class="keyword">interface </span><span class="identifier">ModelRepository</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code></td>
 </tr>
 <tr>
 <td>

@@ -8,7 +8,7 @@
 <a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress.base</a>&nbsp;/&nbsp;<a href="./index.html">EventHandlerContext</a><br/>
 <br/>
 <h1>EventHandlerContext</h1>
-<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EventHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">EventHandlerContext</span><span class="symbol">&lt;</span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-model-repository/index.html"><span class="identifier">ModelRepository</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span></code>
 <p>Context for defining an event handler.</p>
 <p><strong>See Also</strong><br/>
 <p><a href="../-empress/on-event.html">Empress.onEvent</a></p>
@@ -50,8 +50,6 @@
 <h4><a href="get.html">get</a></h4>
 </td>
 <td>
-<p>Returns a model with given <a href="get.html#io.nofrills.empress.base.EventHandlerContext$get(java.lang.Class((io.nofrills.empress.base.EventHandlerContext.get.T)))/modelClass">modelClass</a>.</p>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span> <span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EventHandlerContext$get(java.lang.Class((io.nofrills.empress.base.EventHandlerContext.get.T)))/modelClass">modelClass</span><span class="symbol">:</span>&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">T</span></code>
 <p>Returns a model with given <a href="get.html#T">type</a>.</p>
 <code><span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span> <span class="identifier">get</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">T</span></code></td>
 </tr>

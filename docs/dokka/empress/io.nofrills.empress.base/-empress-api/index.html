@@ -8,26 +8,11 @@
 <a href="../../index.html">empress</a>&nbsp;/&nbsp;<a href="../index.html">io.nofrills.empress.base</a>&nbsp;/&nbsp;<a href="./index.html">EmpressApi</a><br/>
 <br/>
 <h1>EmpressApi</h1>
-<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span></code>
+<code><span class="keyword">interface </span><span class="identifier">EmpressApi</span><span class="symbol">&lt;</span><span class="identifier">E</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">M</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">, </span><span class="identifier">S</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html"><span class="identifier">Any</span></a><span class="symbol">&gt;</span>&nbsp;<span class="symbol">:</span>&nbsp;<a href="../-event-commander/index.html"><span class="identifier">EventCommander</span></a><span class="symbol">&lt;</span><span class="identifier">E</span><span class="symbol">&gt;</span><span class="symbol">, </span><a href="../-model-repository/index.html"><span class="identifier">ModelRepository</span></a><span class="symbol">&lt;</span><span class="identifier">M</span><span class="symbol">&gt;</span></code>
 <p>Allows to communicate with your <a href="../-empress/index.html">Empress</a> instance.</p>
 <h3>Functions</h3>
 <table>
 <tbody>
-<tr>
-<td>
-<h4><a href="get.html">get</a></h4>
-</td>
-<td>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="symbol">&lt;</span><span class="identifier">T</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">M</span><span class="symbol">&gt;</span> <span class="identifier">get</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressApi$get(java.lang.Class((io.nofrills.empress.base.EmpressApi.get.T)))/modelClass">modelClass</span><span class="symbol">:</span>&nbsp;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html"><span class="identifier">Class</span></a><span class="symbol">&lt;</span><span class="identifier">T</span><span class="symbol">&gt;</span><span class="symbol">)</span><span class="symbol">: </span><span class="identifier">T</span></code></td>
-</tr>
-<tr>
-<td>
-<h4><a href="post.html">post</a></h4>
-</td>
-<td>
-<p>Allows to call an event handler defined in <a href="../-empress/index.html">Empress</a>.</p>
-<code><span class="keyword">abstract</span> <span class="keyword">fun </span><span class="identifier">post</span><span class="symbol">(</span><span class="identifier" id="io.nofrills.empress.base.EmpressApi$post(kotlin.coroutines.SuspendFunction1((io.nofrills.empress.base.EmpressApi.E, io.nofrills.empress.base.Event)))/fn">fn</span><span class="symbol">:</span>&nbsp;<span class="keyword">suspend </span><span class="identifier">E</span><span class="symbol">.</span><span class="symbol">(</span><span class="symbol">)</span>&nbsp;<span class="symbol">-&gt;</span>&nbsp;<a href="../-event.html"><span class="identifier">Event</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
-</tr>
 <tr>
 <td>
 <h4><a href="signals.html">signals</a></h4>

@@ -29,10 +29,12 @@ data class RequestId(private val id: Long)
 /** Representation for a request handler. */
 class Request internal constructor()
 
+/** Provides access to the models. */
 interface ModelRepository<M : Any> {
     /** Returns a model with given [modelClass]. */
     fun <T : M> get(modelClass: Class<T>): T
 
+    /** Returns a model with given [modelClass]. */
     fun <T : M> get(modelClass: KClass<T>): T = get(modelClass.java)
 }
 
@@ -82,8 +84,9 @@ abstract class Empress<M : Any, S : Any> {
         backend.onRequest(fn)
 }
 
+/** Allows to execute an event handler. */
 interface EventCommander<E : Any> {
-    /** Allows to call an event handler defined in [E]. */
+    /** Schedules a call to an event handler defined in [E]. */
     fun post(fn: suspend E.() -> Event)
 }
 
