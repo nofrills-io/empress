@@ -79,6 +79,8 @@ abstract class Empress<M : Any, S : Any> {
 
 /** Allows to communicate with your [Empress] instance. */
 interface EmpressApi<E : Any, M : Any, S : Any> {
+    fun <T : M> get(modelClass: Class<T>): T
+
     /** Allows to call an event handler defined in [Empress]. */
     fun post(fn: suspend E.() -> Event)
 
