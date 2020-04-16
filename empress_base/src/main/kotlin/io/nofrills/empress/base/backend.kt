@@ -121,7 +121,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
     // EmpressApi
 
     override fun post(fn: suspend E.() -> Event) {
-        eventHandlerScope.launch(start = CoroutineStart.UNDISPATCHED) {
+        eventHandlerScope.launch(
+            CoroutineName("empress-api-post"),
+            start = CoroutineStart.UNDISPATCHED
+        ) {
             fn.invoke(empress)
         }
     }
@@ -157,7 +160,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
     }
 
     override fun event(fn: suspend () -> Event) {
-        eventHandlerScope.launch(SameEventHandler(), start = CoroutineStart.UNDISPATCHED) {
+        eventHandlerScope.launch(
+            CoroutineName("empress-event") + SameEventHandler(),
+            start = CoroutineStart.UNDISPATCHED
+        ) {
             fn()
         }
     }
@@ -167,7 +173,10 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     override fun request(fn: suspend () -> Request): RequestId {
         val requestId = getNextRequestId()
-        val job = requestHandlerScope.launch(start = CoroutineStart.LAZY) {
+        val job = requestHandlerScope.launch(
+            CoroutineName("empress-request-$requestId"),
+            start = CoroutineStart.LAZY
+        ) {
             fn.invoke()
         }
         requestJobMap[requestId] = job
@@ -221,12 +230,14 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         return RequestId(lastRequestId.incrementAndGet())
     }
 
-    private fun launchHandlerProcessing() = eventHandlerScope.launch {
-        for (handler in eventChannel) {
-            try {
-                handler.invoke(this@EmpressBackend)
-            } finally {
-                dynamicLatch.countDown()
+    private fun launchHandlerProcessing() {
+        eventHandlerScope.launch(CoroutineName("empress-event-receiver")) {
+            for (handler in eventChannel) {
+                try {
+                    handler.invoke(this@EmpressBackend)
+                } finally {
+                    dynamicLatch.countDown()
+                }
             }
         }
     }
