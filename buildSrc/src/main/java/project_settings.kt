@@ -34,25 +34,23 @@ object EmpressLib {
 }
 
 object Vers {
-    val androidBuildTools = Ver(preferred = "3.6.1", required = "3.6.0")
-    val coroutines = Ver(preferred = "1.3.5", required = "1.3.3")
+    val androidBuildTools = Ver(preferred = "4.0.0", required = "3.6.0")
+    val coroutines = Ver(preferred = "1.3.7", required = "1.3.3")
     val dokka = Ver(preferred = "0.10.1", required = "0.10.1")
-    val kotlin = Ver(preferred = "1.3.70", required = "1.3.70")
+    val kotlin = Ver(preferred = "1.3.72", required = "1.3.70")
 }
 
 object Deps {
     private val coroutines = DepGroup("org.jetbrains.kotlinx", Vers.coroutines)
-    private val androidXFragment = DepGroup("androidx.fragment", "1.2.2", "1.2.0")
+    private val androidXFragment = DepGroup("androidx.fragment", "1.2.5", "1.2.0")
     private val kotlin = DepGroup("org.jetbrains.kotlin", Vers.kotlin)
 
-    const val androidxAnnotations = "androidx.annotation:annotation:1.1.0"
     const val appCompat = "androidx.appcompat:appcompat:1.1.0"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val lifecycleRuntimeKts = "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
 
     val coroutinesCore = Dep(coroutines, "kotlinx-coroutines-core")
     val fragment = Dep(androidXFragment, "fragment")
-    val kotlinReflect = Dep(kotlin, "kotlin-reflect")
     val kotlinStdLib = Dep(kotlin, "kotlin-stdlib-jdk8")
 
     // Testing

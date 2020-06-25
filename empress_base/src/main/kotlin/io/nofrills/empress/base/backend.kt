@@ -95,7 +95,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         } else {
             dynamicLatch.countUp()
             val added = eventChannel.offer(fn)
-            assert(added)
+            check(added)
         }
         return eventInstance
     }
@@ -193,7 +193,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         synchronized(signalChannels) {
             for (chan in signalChannels) {
                 val added = chan.offer(signal)
-                assert(added)
+                check(added)
             }
         }
     }
@@ -203,7 +203,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         synchronized(modelChannels) {
             for (chan in modelChannels) {
                 val added = chan.offer(model)
-                assert(added)
+                check(added)
             }
         }
     }
