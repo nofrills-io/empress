@@ -4,6 +4,10 @@ plugins {
 }
 
 android {
+    defaultConfig {
+        minSdkVersion(21)
+    }
+
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
