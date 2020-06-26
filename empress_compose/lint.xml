@@ -1,0 +1,6 @@
+<lint>
+    <issue id="InvalidPackage">
+        <!-- Fixed in kotlinx.coroutines 1.3.7 -->
+        <ignore path="**/kotlinx-coroutines-core-*.jar" />
+    </issue>
+</lint>
