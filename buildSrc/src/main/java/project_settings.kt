@@ -35,7 +35,7 @@ object EmpressLib {
 
 object Vers {
     val androidBuildTools = Ver(preferred = "4.0.0", required = "3.6.0")
-    val coroutines = Ver(preferred = "1.3.7", required = "1.3.3")
+    val coroutines = Ver(preferred = "1.3.7", required = "1.3.7")
     val dokka = Ver(preferred = "0.10.1", required = "0.10.1")
     val kotlin = Ver(preferred = "1.3.72", required = "1.3.70")
 }

@@ -16,13 +16,21 @@
 
 package io.nofrills.empress.base
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
-import java.util.*
+import kotlinx.coroutines.launch
+import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.AbstractCoroutineContextElement
@@ -39,6 +47,8 @@ internal interface BackendFacade<M : Any, S : Any> {
 
 /** Extends [EmpressApi] with additional methods useful in unit tests. */
 interface TestEmpressApi<E : Any, M : Any, S : Any> : EmpressApi<E, M, S> {
+    fun <T : M> get(modelClass: Class<out T>): T
+
     /** Interrupts event processing loop. */
     suspend fun interrupt()
 
@@ -50,7 +60,7 @@ interface TestEmpressApi<E : Any, M : Any, S : Any> : EmpressApi<E, M, S> {
  * @param empress Empress instance that we want to run.
  * @param eventHandlerScope A coroutine scope where events will be processed.
  * @param requestHandlerScope A coroutine scope where requests will be processed.
- * @param storedModels Models that were previously stored, which will be used instead of the ones returned from [Empress.initialModels] function.
+ * @param storedModels Models that were previously stored, which will be used instead of the initial values.
  * @param initialRequestId The number from which to start generating requests IDs.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -67,16 +77,13 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
-    private val modelChannels = Collections.synchronizedList(arrayListOf<Channel<M>>())
-
-    private val modelMap = makeModelMap(empress.initialModels(), storedModels ?: emptyList())
-
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
     private val signalChannels = Collections.synchronizedList(arrayListOf<Channel<S>>())
 
     init {
         empress.backend = this
+        storedModels?.let { loadStoredModels(it) }
         launchHandlerProcessing()
         eventHandlerScope.coroutineContext[Job]?.invokeOnCompletion {
             closeChannels()
@@ -109,16 +116,26 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     // TestEmpressApi
 
+    override fun <T : M> get(modelClass: Class<out T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return empress.modelStateFlows.getValue(modelClass).value as T
+    }
+
     override suspend fun interrupt() {
         dynamicLatch.close()
         closeChannels()
     }
 
     override fun models(): Collection<M> {
-        return synchronized(modelMap) { modelMap.values.toList() }
+        return empress.modelStateFlows.map { it.value.value }
     }
 
     // EmpressApi
+
+    @ExperimentalCoroutinesApi
+    override fun <T : M> listen(fn: E.() -> Mod<T>): StateFlow<T> {
+        return fn(empress).flow
+    }
 
     override fun post(fn: suspend E.() -> Event) {
         eventHandlerScope.launch(
@@ -137,20 +154,6 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
             .onCompletion { signalChannels.remove(channel) }
     }
 
-    override fun updates(withCurrentModels: Boolean): Flow<M> {
-        val channel = Channel<M>(Channel.UNLIMITED)
-        return channel
-            .consumeAsFlow()
-            .onStart {
-                modelChannels.add(channel)
-                if (withCurrentModels) {
-                    val currentModels = synchronized(modelMap) { modelMap.values.toList() }
-                    currentModels.forEach { emit(it) }
-                }
-            }
-            .onCompletion { modelChannels.remove(channel) }
-    }
-
     // EventHandler
 
     override fun cancelRequest(requestId: RequestId): Boolean {
@@ -167,9 +170,6 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
             fn()
         }
     }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : M> get(modelClass: Class<T>): T = modelMap.getValue(modelClass) as T
 
     override fun request(fn: suspend () -> Request): RequestId {
         val requestId = getNextRequestId()
@@ -198,32 +198,27 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         }
     }
 
-    override fun update(model: M) {
-        modelMap[model::class.java] = model
-        synchronized(modelChannels) {
-            for (chan in modelChannels) {
-                val added = chan.offer(model)
-                check(added)
-            }
-        }
+    override fun <T : M> Mod<T>.get(): T {
+        return this.flow.value
+    }
+
+    override fun <T : M> Mod<T>.update(value: T) {
+        this.flow.value = value
     }
 
     // Implementation details
 
     internal fun areChannelsClosedForSend(): Boolean {
-        synchronized(modelChannels) {
-            synchronized(signalChannels) {
-                return modelChannels.all { it.isClosedForSend } &&
-                        signalChannels.all { it.isClosedForSend } &&
-                        eventChannel.isClosedForSend
-            }
+        synchronized(signalChannels) {
+            return signalChannels.all { it.isClosedForSend } && eventChannel.isClosedForSend
         }
     }
 
     private fun closeChannels() {
         eventChannel.close()
-        modelChannels.toList().forEach { it.close() }
-        signalChannels.toList().forEach { it.close() }
+        synchronized(signalChannels) { signalChannels.toList() }.let { channelList ->
+            channelList.forEach { it.close() }
+        }
     }
 
     private fun getNextRequestId(): RequestId {
@@ -242,28 +237,11 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         }
     }
 
-    companion object {
-        private fun <M : Any> makeModelMap(
-            initialModels: Collection<M>,
-            storedModels: Collection<M>
-        ): ConcurrentHashMap<Class<out M>, M> {
-            val modelMap = ConcurrentHashMap<Class<out M>, M>()
-            for (model in initialModels) {
-                check(modelMap.put(model::class.java, model) == null) {
-                    "Model for ${model::class.java} was already added."
-                }
-            }
-
-            val storedModelsMap = mutableMapOf<Class<out M>, M>()
-            for (model in storedModels) {
-                check(storedModelsMap.put(model::class.java, model) == null) {
-                    "Model for ${model::class.java} was added more than once."
-                }
-            }
-
-            modelMap.putAll(storedModelsMap)
-
-            return modelMap
+    private fun loadStoredModels(storedModels: Collection<M>) {
+        val loaded = mutableSetOf<Class<out M>>()
+        for (m in storedModels) {
+            check(loaded.add(m::class.java)) { "Model ${m.javaClass} was already loaded." }
+            empress.modelStateFlows.getValue(m::class.java).value = m
         }
     }
 

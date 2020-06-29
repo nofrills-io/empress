@@ -21,28 +21,25 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 class SampleEmpress : Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.Sender(SenderState.Idle))
-    }
+    val counter = model(Model.Counter(0))
+    val sender = model(Model.Sender(SenderState.Idle))
 
     suspend fun cancelSendingCounter() = onEvent {
-        val sender = get<Model.Sender>()
-        val state = sender.state
+        val state = sender.get().state
         if (state is SenderState.Sending) {
             cancelRequest(state.requestId)
-            update(Model.Sender(SenderState.Idle))
+            sender.update(Model.Sender(SenderState.Idle))
             signal(Signal.CounterSendCancelled)
         }
     }
 
     private suspend fun onCounterSent() = onEvent {
-        update(Model.Sender(SenderState.Idle))
+        sender.update(Model.Sender(SenderState.Idle))
         signal(Signal.CounterSent)
     }
 
     suspend fun decrement() = onEvent {
-        val counter = get<Model.Counter>()
-        update(counter.copy(count = counter.count - 1))
+        counter.updateWith { it.copy(count = it.count - 1) }
     }
 
     suspend fun failure() = onEvent {
@@ -54,18 +51,16 @@ class SampleEmpress : Empress<Model, Signal>() {
     }
 
     suspend fun increment() = onEvent {
-        val counter = get<Model.Counter>()
-        update(counter.copy(count = counter.count + 1))
+        counter.updateWith { it.copy(count = it.count + 1) }
     }
 
     suspend fun sendCounter() = onEvent {
-        val state = get<Model.Sender>().state
+        val state = sender.get().state
         if (state is SenderState.Sending) {
             return@onEvent
         }
-        val counter = get<Model.Counter>()
-        val requestId = request { sendCounter(counter.count) }
-        update(Model.Sender(SenderState.Sending(requestId)))
+        val requestId = request { sendCounter(counter.get().count) }
+        sender.update(Model.Sender(SenderState.Sending(requestId)))
     }
 
     private suspend fun failedRequest() = onRequest {

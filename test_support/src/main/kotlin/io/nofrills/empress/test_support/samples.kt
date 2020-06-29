@@ -18,14 +18,11 @@ sealed class Model {
 sealed class Signal
 
 class SampleEmpress : Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.ParcelableCounter(0))
-    }
+    val counter = model(Model.Counter(0))
+    val parcelableCounter = model(Model.ParcelableCounter(0))
 
     suspend fun increment() = onEvent {
-        val counter = get<Model.Counter>()
-        val parcelableCounter = get<Model.ParcelableCounter>()
-        update(counter.copy(count = counter.count + 1))
-        update(parcelableCounter.copy(count = parcelableCounter.count + 1))
+        counter.updateWith { it.copy(count = it.count + 1) }
+        parcelableCounter.updateWith { it.copy(count = it.count + 1) }
     }
 }

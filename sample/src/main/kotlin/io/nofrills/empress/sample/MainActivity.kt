@@ -23,10 +23,14 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.cancel_button
+import kotlinx.android.synthetic.main.activity_main.counter_value
+import kotlinx.android.synthetic.main.activity_main.decrement_button
+import kotlinx.android.synthetic.main.activity_main.increment_button
+import kotlinx.android.synthetic.main.activity_main.progress_bar
+import kotlinx.android.synthetic.main.activity_main.send_button
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 
 class MainActivity : AppCompatActivity() {
     private val empressApi by lazy { enthrone(EMPRESS_ID, SampleEmpress()) }
@@ -39,8 +43,12 @@ class MainActivity : AppCompatActivity() {
             .onEach { onSignal(it) }
             .launchIn(lifecycle.coroutineScope)
 
-        empressApi.updates()
-            .onEach { render(it) }
+        empressApi.listen { counter }
+            .onEach { renderCount(it.count) }
+            .launchIn(lifecycle.coroutineScope)
+
+        empressApi.listen { sender }
+            .onEach { renderProgress(it.state) }
             .launchIn(lifecycle.coroutineScope)
 
         setupButtonListeners()

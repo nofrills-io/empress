@@ -20,7 +20,9 @@ import io.nofrills.empress.base.EmpressBackend
 import io.nofrills.empress.base.RequestId
 import io.nofrills.empress.base.TestEmpressApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.toCollection
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
@@ -45,16 +47,23 @@ class SampleTest {
 
     @Test
     fun example() = scope.runBlockingTest {
-        val deferredUpdates =
-            async { tested.updates(withCurrentModels = false).toCollection(mutableListOf()) }
+        val deferredUpdates = async {
+            val list = mutableListOf<Model>()
+            launch { tested.listen { counter }.collect { list.add(it) } }
+            launch { tested.listen { sender }.collect { list.add(it) } }
+            list
+        }
 
         tested.post { increment() }
         tested.post { increment() }
         tested.post { sendCounter() }
         tested.interrupt()
 
+        deferredUpdates.cancelChildren()
         val updates = deferredUpdates.await()
         val expected = listOf(
+            Model.Counter(0),
+            Model.Sender(SenderState.Idle),
             Model.Counter(1),
             Model.Counter(2),
             Model.Sender(SenderState.Sending(RequestId(1))),

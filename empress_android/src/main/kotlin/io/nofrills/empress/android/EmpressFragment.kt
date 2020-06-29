@@ -35,8 +35,8 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         savedInstanceState?.let {
-            assert(it.containsKey(REQUEST_ID_KEY))
-            assert(it.containsKey(MODELS_KEY))
+            require(it.containsKey(REQUEST_ID_KEY))
+            require(it.containsKey(MODELS_KEY))
 
             storedHandlerId = it.getLong(REQUEST_ID_KEY)
             @Suppress("UNCHECKED_CAST")

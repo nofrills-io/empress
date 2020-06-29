@@ -28,72 +28,69 @@ internal sealed class Signal {
     object SendingCancelled : Signal()
 }
 
-internal class SampleEmpress(private val models: Collection<Model>? = null) :
-    Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return models ?: listOf(Model.Counter(0), Model.Sender())
-    }
+internal class SampleEmpress : Empress<Model, Signal>() {
+    val counter = model(Model.Counter(0))
+    val sender = model(Model.Sender())
 
     suspend fun decrement() = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count - 1))
+        val count = counter.get().count
+        counter.update(Model.Counter(count - 1))
     }
 
     suspend fun delta(d: Int) = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + d))
+        val count = counter.get().count
+        counter.update(Model.Counter(count + d))
     }
 
     suspend fun increment() = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + 1))
+        val count = counter.get().count
+        counter.update(Model.Counter(count + 1))
     }
 
     suspend fun indirectIncrementAndSend() = onEvent {
         event { increment() }
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { indirectSendCounter(count) }
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender(requestId))
     }
 
     suspend fun indirectSend() = onEvent {
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { indirectSendCounter(count) }
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender(requestId))
     }
 
     suspend fun ping() = onEvent {}
 
     suspend fun sendCounter() = onEvent {
-        if (get<Model.Sender>().requestId != null) return@onEvent
+        if (sender.get().requestId != null) return@onEvent
 
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { sendCounter(count) }
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender(requestId))
     }
 
     suspend fun sendCounterVariableCount() = onEvent {
-        var count = get<Model.Counter>().count
+        var count = counter.get().count
         val requestId = request { sendCounter(count) }
         count += 3
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender(requestId))
     }
 
     private suspend fun onCounterSent(sentValue: Int) = onEvent {
         signal(Signal.CounterSent(sentValue))
-        update(Model.Sender(null))
+        sender.update(Model.Sender(null))
     }
 
     suspend fun cancelSending() = onEvent {
-        val requestId = get<Model.Sender>().requestId ?: return@onEvent
+        val requestId = sender.get().requestId ?: return@onEvent
         cancelRequest(requestId)
-        update(Model.Sender(null))
+        sender.update(Model.Sender(null))
         signal(Signal.SendingCancelled)
     }
 
     suspend fun generateError() = onEvent {
-        val counter = get<Model.Counter>()
-        update(Model.Counter(counter.count + 1))
+        counter.updateWith { it.copy(count = it.count + 1) }
         throw OnEventError()
     }
 
@@ -131,6 +128,11 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) :
     private suspend fun onRequestErrorIndirect() = onRequest {
         onRequestError()
     }
+}
+
+internal class DuplicateModelEmpress : Empress<Model, Signal>() {
+    val counter = model(Model.Counter(0))
+    val anotherCounter = model(Model.Counter(0))
 }
 
 internal class OnEventError : Throwable()

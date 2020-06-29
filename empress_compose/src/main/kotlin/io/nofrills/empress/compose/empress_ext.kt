@@ -22,13 +22,13 @@ import io.nofrills.empress.base.EmpressApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
-fun <EM : EmpressApi<E, M, S>, E : Any, M : Any, S : Any, T : M> EM.state(modelClass: Class<T>): State<T> {
-    return updates().filter { it.javaClass == modelClass }.map {
-        @Suppress("UNCHECKED_CAST")
-        it as T
-    }.collectAsState(get(modelClass))
-}
-
-inline fun <EM : EmpressApi<E, M, S>, E : Any, M : Any, S : Any, reified T : M> EM.state(): State<T> {
-    return state(T::class.java)
-}
+// fun <EM : EmpressApi<E, M, S>, E : Any, M : Any, S : Any, T : M> EM.state(modelClass: Class<T>): State<T> {
+//     return updates().filter { it.javaClass == modelClass }.map {
+//         @Suppress("UNCHECKED_CAST")
+//         it as T
+//     }.collectAsState(get(modelClass))
+// }
+//
+// inline fun <EM : EmpressApi<E, M, S>, E : Any, M : Any, S : Any, reified T : M> EM.state(): State<T> {
+//     return state(T::class.java)
+// }

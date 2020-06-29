@@ -42,9 +42,7 @@ class CounterFragment : Fragment() {
         // since we want to share the Empress instance
         val empressApi = requireActivity().enthrone(MainActivity.EMPRESS_ID, SampleEmpress())
 
-        empressApi.updates()
-            .filter { it is Model.Counter }
-            .map { it as Model.Counter }
+        empressApi.listen { counter }
             .onEach { renderCount(it) }
             .launchIn(lifecycle.coroutineScope)
     }
