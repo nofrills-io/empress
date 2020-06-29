@@ -17,19 +17,19 @@
 package io.nofrills.empress.base
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import java.util.Collections
 
 /** Opaque representation for an event handler. */
-class Event internal constructor()
+class EventDeclaration internal constructor()
+
+class ModelDeclaration<T> internal constructor(internal val modelClass: Class<out T>)
 
 /** An ID for a request, which can be used to [cancel][EventHandlerContext.cancelRequest] it. */
 data class RequestId(private val id: Long)
 
 /** Representation for a request handler. */
-class Request internal constructor()
+class RequestDeclaration internal constructor()
 
 /** Context for defining an event handler.
  * @see Empress.onEvent
@@ -39,27 +39,24 @@ abstract class EventHandlerContext<M : Any, S : Any> {
     abstract fun cancelRequest(requestId: RequestId): Boolean
 
     /** Executes an event in current context. */
-    abstract fun event(fn: suspend () -> Event)
+    abstract fun event(fn: suspend () -> EventDeclaration)
 
     /** Schedules a request for execution. */
-    abstract fun request(fn: suspend () -> Request): RequestId
+    abstract fun request(fn: suspend () -> RequestDeclaration): RequestId
 
     /** Pushes a [signal] that can be later obtained in [EmpressApi.signals]. */
     abstract fun signal(signal: S)
 
-    abstract fun <T : M> Mod<T>.get(): T
+    abstract fun <T : M> ModelDeclaration<T>.get(): T
 
-    abstract fun <T : M> Mod<T>.update(value: T)
+    abstract fun <T : M> ModelDeclaration<T>.update(value: T)
 
-    fun <T : M> Mod<T>.updateWith(updater: (T) -> T) {
+    fun <T : M> ModelDeclaration<T>.updateWith(updater: (T) -> T) {
         val oldValue = get()
         val newValue = updater(oldValue)
         update(newValue)
     }
 }
-
-// TODO rename
-class Mod<T> @ExperimentalCoroutinesApi internal constructor(internal val flow: MutableStateFlow<T>)
 
 /** Allows you define your initial models, event and request handlers.
  * @param M Model type.
@@ -68,52 +65,41 @@ class Mod<T> @ExperimentalCoroutinesApi internal constructor(internal val flow: 
 abstract class Empress<M : Any, S : Any> {
     internal lateinit var backend: BackendFacade<M, S>
 
-    @ExperimentalCoroutinesApi
-    internal val modelStateFlows = mutableMapOf<Class<out M>, MutableStateFlow<M>>()
+    internal val modelValues = Collections.synchronizedMap(mutableMapOf<Class<out M>, M>())
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    protected fun <T : M> model(initialValue: T): Mod<T> {
-        val stateFlow = MutableStateFlow(initialValue)
-        val wasNotYetAdded = modelStateFlows.put(initialValue::class.java, stateFlow) == null
+    protected fun <T : M> model(initialValue: T): ModelDeclaration<T> {
+        val wasNotYetAdded = modelValues.put(initialValue::class.java, initialValue) == null
         check(wasNotYetAdded) { "The value for class ${initialValue::class} has been already added." }
-        return Mod(stateFlow)
+        return ModelDeclaration(initialValue::class.java)
     }
 
     /** Allows to define an event handler.
      * @param fn The definition of the event handler
      */
-    protected suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event =
+    protected suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): EventDeclaration =
         backend.onEvent(fn)
 
     /** Allows to define a request handler.
      * @param fn The definition of the request handler.
      */
-    protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request =
+    protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration =
         backend.onRequest(fn)
-
-    @ExperimentalCoroutinesApi
-    private fun <M : Any, T : M> MutableMap<Class<out M>, MutableStateFlow<M>>.put(
-        key: Class<out M>,
-        value: MutableStateFlow<T>
-    ): MutableStateFlow<T>? {
-        @Suppress("UNCHECKED_CAST")
-        return put(key, value as MutableStateFlow<M>) as MutableStateFlow<T>?
-    }
 }
 
 /** Allows to execute an event handler. */
 interface EventCommander<E : Any> {
     /** Schedules a call to an event handler defined in [E]. */
-    fun post(fn: suspend E.() -> Event)
+    fun post(fn: suspend E.() -> EventDeclaration)
 }
 
 interface ModelListener<E : Any, M : Any> {
-    @ExperimentalCoroutinesApi
-    fun <T : M> listen(fn: E.() -> Mod<T>): StateFlow<T>
+    fun listen(withCurrentValues: Boolean = true): Flow<M>
+
+    fun <T : M> listen(withCurrentValues: Boolean = true, fn: E.() -> ModelDeclaration<T>): Flow<T>
 }
 
 /** Allows to communicate with your [Empress] instance. */
 interface EmpressApi<E : Any, M : Any, S : Any> : EventCommander<E>, ModelListener<E, M> {
     /** Allows to listen for signals sent from [Empress]. */
-    fun signals(): Flow<S> // TODO replace by SharedFlow (?)
+    fun signals(): Flow<S>
 }
