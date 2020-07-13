@@ -20,7 +20,11 @@ import kotlinx.coroutines.delay
 
 internal sealed class Model {
     data class Counter(val count: Int) : Model()
-    data class Sender(val requestId: RequestId? = null) : Model()
+
+    sealed class Sender : Model() {
+        object Idle : Sender()
+        data class Loading(val requestId: RequestId) : Sender()
+    }
 }
 
 internal sealed class Signal {
@@ -30,7 +34,7 @@ internal sealed class Signal {
 
 internal class SampleEmpress : Empress<Model, Signal>() {
     val counter = model(Model.Counter(0))
-    val sender = model(Model.Sender())
+    val sender = model<Model.Sender>(Model.Sender.Idle)
 
     suspend fun decrement() = onEvent {
         val count = counter.get().count
@@ -51,41 +55,41 @@ internal class SampleEmpress : Empress<Model, Signal>() {
         event { increment() }
         val count = counter.get().count
         val requestId = request { indirectSendCounter(count) }
-        sender.update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     suspend fun indirectSend() = onEvent {
         val count = counter.get().count
         val requestId = request { indirectSendCounter(count) }
-        sender.update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     suspend fun ping() = onEvent {}
 
     suspend fun sendCounter() = onEvent {
-        if (sender.get().requestId != null) return@onEvent
+        if (sender.get() is Model.Sender.Loading) return@onEvent
 
         val count = counter.get().count
         val requestId = request { sendCounter(count) }
-        sender.update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     suspend fun sendCounterVariableCount() = onEvent {
         var count = counter.get().count
         val requestId = request { sendCounter(count) }
         count += 3
-        sender.update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     private suspend fun onCounterSent(sentValue: Int) = onEvent {
         signal(Signal.CounterSent(sentValue))
-        sender.update(Model.Sender(null))
+        sender.update(Model.Sender.Idle)
     }
 
     suspend fun cancelSending() = onEvent {
-        val requestId = sender.get().requestId ?: return@onEvent
-        cancelRequest(requestId)
-        sender.update(Model.Sender(null))
+        val loading = sender.get() as? Model.Sender.Loading ?: return@onEvent
+        cancelRequest(loading.requestId)
+        sender.update(Model.Sender.Idle)
         signal(Signal.SendingCancelled)
     }
 

@@ -140,7 +140,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
             .onStart {
                 modelChannels.add(channel)
                 if (withCurrentValues) {
-                    val currentValues = synchronized(empress.modelValues) { empress.modelValues.values.toList() }
+                    val currentValues =
+                        synchronized(empress.modelValues) { empress.modelValues.values.toList() }
                     currentValues.forEach { emit(it) }
                 }
             }
@@ -149,10 +150,13 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
             }
     }
 
-    override fun <T : M> listen(withCurrentValues: Boolean, fn: E.() -> ModelDeclaration<T>): Flow<T> {
+    override fun <T : M> listen(
+        withCurrentValues: Boolean,
+        fn: E.() -> ModelDeclaration<T>
+    ): Flow<T> {
         val modelClass = fn(empress).modelClass
         @Suppress("UNCHECKED_CAST")
-        return listen(withCurrentValues).filter { it::class.java == modelClass } as Flow<T>
+        return listen(withCurrentValues).filter { modelClass.isAssignableFrom(it::class.java) } as Flow<T>
     }
 
     override fun post(fn: suspend E.() -> EventDeclaration) {

@@ -55,7 +55,7 @@ class EmpressBackendTest {
             Model.Counter(3)
         )
         assertEquals(expected, updates)
-        assertEquals(setOf(Model.Sender(), Model.Counter(3)), tested.models().toSet())
+        assertEquals(setOf(Model.Sender.Idle, Model.Counter(3)), tested.models().toSet())
     }
 
     @Test
@@ -70,7 +70,7 @@ class EmpressBackendTest {
         val senders = deferredSenders.await()
 
         assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender()), senders)
+        assertEquals(listOf(Model.Sender.Idle), senders)
     }
 
     @Test
@@ -89,7 +89,13 @@ class EmpressBackendTest {
         val signals = deferredSignals.await()
 
         assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender(), Model.Sender(RequestId(1L)), Model.Sender(null)), senders)
+        assertEquals(
+            listOf(
+                Model.Sender.Idle,
+                Model.Sender.Loading(RequestId(1L)),
+                Model.Sender.Idle
+            ), senders
+        )
         assertEquals(listOf(Signal.CounterSent(1)), signals)
     }
 
@@ -113,7 +119,13 @@ class EmpressBackendTest {
         val signals = deferredSignals.await()
 
         assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender(), Model.Sender(RequestId(1L)), Model.Sender()), senders)
+        assertEquals(
+            listOf(
+                Model.Sender.Idle,
+                Model.Sender.Loading(RequestId(1L)),
+                Model.Sender.Idle
+            ), senders
+        )
         assertEquals(listOf(Signal.SendingCancelled), signals)
     }
 
@@ -142,7 +154,13 @@ class EmpressBackendTest {
         testScope.cleanupTestCoroutines()
 
         assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender(), Model.Sender(RequestId(1L)), Model.Sender()), senders)
+        assertEquals(
+            listOf(
+                Model.Sender.Idle,
+                Model.Sender.Loading(RequestId(1L)),
+                Model.Sender.Idle
+            ), senders
+        )
         assertEquals(listOf(Signal.CounterSent(1)), signals)
     }
 
@@ -153,7 +171,7 @@ class EmpressBackendTest {
 
     @Test(expected = IllegalStateException::class)
     fun duplicateStoredModels() = runBlockingTest {
-        val models = listOf(Model.Counter(0), Model.Counter(1), Model.Sender())
+        val models = listOf(Model.Counter(0), Model.Counter(1), Model.Sender.Idle)
         makeTested(this, storedModels = models)
     }
 
@@ -165,9 +183,9 @@ class EmpressBackendTest {
         tested.interrupt()
         val senders = deferredSenders.await()
         val expected = listOf(
-            Model.Sender(),
-            Model.Sender(RequestId(12)),
-            Model.Sender()
+            Model.Sender.Idle,
+            Model.Sender.Loading(RequestId(12)),
+            Model.Sender.Idle
         )
         assertEquals(expected, senders)
     }
@@ -312,7 +330,13 @@ class EmpressBackendTest {
         assertEquals(expectedSignals, signals)
 
         assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender(), Model.Sender(RequestId(1)), Model.Sender()), senders)
+        assertEquals(
+            listOf(
+                Model.Sender.Idle,
+                Model.Sender.Loading(RequestId(1)),
+                Model.Sender.Idle
+            ), senders
+        )
     }
 
     @Test
@@ -337,7 +361,13 @@ class EmpressBackendTest {
         assertEquals(listOf(Signal.SendingCancelled), signals)
 
         assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender(), Model.Sender(RequestId(1L)), Model.Sender()), senders)
+        assertEquals(
+            listOf(
+                Model.Sender.Idle,
+                Model.Sender.Loading(RequestId(1L)),
+                Model.Sender.Idle
+            ), senders
+        )
     }
 
     @Test
@@ -355,9 +385,9 @@ class EmpressBackendTest {
         assertEquals(listOf(Signal.CounterSent(0)), signals)
 
         val expectedSenders = listOf(
-            Model.Sender(),
-            Model.Sender(RequestId(1L)),
-            Model.Sender()
+            Model.Sender.Idle,
+            Model.Sender.Loading(RequestId(1L)),
+            Model.Sender.Idle
         )
         assertEquals(expectedSenders, senders)
     }

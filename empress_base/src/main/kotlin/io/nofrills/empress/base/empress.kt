@@ -67,10 +67,14 @@ abstract class Empress<M : Any, S : Any> {
 
     internal val modelValues = Collections.synchronizedMap(mutableMapOf<Class<out M>, M>())
 
-    protected fun <T : M> model(initialValue: T): ModelDeclaration<T> {
-        val wasNotYetAdded = modelValues.put(initialValue::class.java, initialValue) == null
-        check(wasNotYetAdded) { "The value for class ${initialValue::class} has been already added." }
-        return ModelDeclaration(initialValue::class.java)
+    protected fun <T : M> model(modelClass: Class<out T>, initialValue: T): ModelDeclaration<T> {
+        val wasNotYetAdded = modelValues.put(modelClass, initialValue) == null
+        check(wasNotYetAdded) { "The value for class $modelClass has been already added." }
+        return ModelDeclaration(modelClass)
+    }
+
+    protected inline fun <reified T : M> model(initialValue: T): ModelDeclaration<T> {
+        return model(T::class.java, initialValue)
     }
 
     /** Allows to define an event handler.
