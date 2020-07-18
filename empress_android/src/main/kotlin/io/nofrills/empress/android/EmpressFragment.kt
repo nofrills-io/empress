@@ -25,12 +25,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import java.util.ArrayList
 
-internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment() {
-    lateinit var backend: EmpressBackend<E, M, S>
+internal class EmpressFragment<E : Empress<S>, S : Any> : Fragment() {
+    lateinit var backend: EmpressBackend<E, S>
         private set
     private val job = Job()
     private var storedHandlerId: Long? = null
-    private var storedModels: ArrayList<M>? = null
+    private var storedModels: ArrayList<Any>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +40,7 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
 
             storedHandlerId = it.getLong(REQUEST_ID_KEY)
             @Suppress("UNCHECKED_CAST")
-            storedModels = it.getParcelableArrayList<Parcelable>(MODELS_KEY) as ArrayList<M>?
+            storedModels = it.getParcelableArrayList<Parcelable>(MODELS_KEY) as ArrayList<Any>?
         }
     }
 
@@ -63,7 +63,7 @@ internal class EmpressFragment<E : Empress<M, S>, M : Any, S : Any> : Fragment()
         super.onDestroy()
     }
 
-    fun initialize(specFactory: () -> EmpressSpec<E, M, S>) {
+    fun initialize(specFactory: () -> EmpressSpec<E, S>) {
         if (!this::backend.isInitialized) {
             val result = specFactory()
             val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)

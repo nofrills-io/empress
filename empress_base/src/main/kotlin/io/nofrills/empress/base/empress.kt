@@ -36,7 +36,7 @@ class RequestDeclaration internal constructor()
 /** Context for defining an event handler.
  * @see Empress.onEvent
  */
-abstract class EventHandlerContext<M : Any, S : Any> {
+abstract class EventHandlerContext<S : Any> {
     /** Cancels a request with given [requestId]. */
     abstract fun cancelRequest(requestId: RequestId): Boolean
 
@@ -49,11 +49,11 @@ abstract class EventHandlerContext<M : Any, S : Any> {
     /** Pushes a [signal] that can be later obtained in [EmpressApi.signals]. */
     abstract fun signal(signal: S)
 
-    abstract fun <T : M> ModelDeclaration<T>.get(): T
+    abstract fun <T : Any> ModelDeclaration<T>.get(): T
 
-    abstract fun <T : M> ModelDeclaration<T>.update(value: T)
+    abstract fun <T : Any> ModelDeclaration<T>.update(value: T)
 
-    fun <T : M> ModelDeclaration<T>.updateWith(updater: (T) -> T) {
+    fun <T : Any> ModelDeclaration<T>.updateWith(updater: (T) -> T) {
         val oldValue = get()
         val newValue = updater(oldValue)
         update(newValue)
@@ -65,25 +65,25 @@ abstract class EventHandlerContext<M : Any, S : Any> {
  * @param S Signal type.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-abstract class Empress<M : Any, S : Any> {
-    internal lateinit var backend: BackendFacade<M, S>
+abstract class Empress<S : Any> {
+    internal lateinit var backend: BackendFacade<S>
 
-    internal val modelStateFlows = mutableMapOf<Class<out M>, MutableStateFlow<M>>()
+    internal val modelStateFlows = mutableMapOf<Class<out Any>, MutableStateFlow<Any>>()
 
-    protected fun <T : M> model(modelClass: Class<out T>, initialValue: T): ModelDeclaration<T> {
+    protected fun <T : Any> model(modelClass: Class<out T>, initialValue: T): ModelDeclaration<T> {
         val wasNotYetAdded = modelStateFlows.put(modelClass, MutableStateFlow(initialValue)) == null
         check(wasNotYetAdded) { "The value for class $modelClass has been already added." }
         return ModelDeclaration(modelClass)
     }
 
-    protected inline fun <reified T : M> model(initialValue: T): ModelDeclaration<T> {
+    protected inline fun <reified T : Any> model(initialValue: T): ModelDeclaration<T> {
         return model(T::class.java, initialValue)
     }
 
     /** Allows to define an event handler.
      * @param fn The definition of the event handler
      */
-    protected suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): EventDeclaration =
+    protected suspend fun onEvent(fn: EventHandlerContext<S>.() -> Unit): EventDeclaration =
         backend.onEvent(fn)
 
     /** Allows to define a request handler.
@@ -100,12 +100,12 @@ interface EventCommander<E : Any> {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-interface ModelListener<E : Any, M : Any> {
-    fun <T : M> listen(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
+interface ModelListener<E : Any> {
+    fun <T : Any> listen(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
 }
 
 /** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any, M : Any, S : Any> : EventCommander<E>, ModelListener<E, M> {
+interface EmpressApi<E : Any, S : Any> : EventCommander<E>, ModelListener<E> {
     /** Allows to listen for signals sent from [Empress]. */
     fun signals(): Flow<S>
 }

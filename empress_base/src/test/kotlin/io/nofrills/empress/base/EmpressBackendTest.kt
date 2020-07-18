@@ -364,7 +364,7 @@ class EmpressBackendTest {
         empress: SampleEmpress = SampleEmpress(),
         storedModels: Collection<Model>? = null,
         initialRequestId: Long? = null
-    ): TestEmpressApi<SampleEmpress, Model, Signal> {
+    ): TestEmpressApi<SampleEmpress, Signal> {
         return if (storedModels != null && initialRequestId != null) {
             EmpressBackend(
                 empress,
@@ -392,7 +392,7 @@ class EmpressBackendTest {
         }
     }
 
-    private fun CoroutineScope.signalsAsync(api: EmpressApi<SampleEmpress, Model, Signal>): Deferred<List<Signal>> {
+    private fun CoroutineScope.signalsAsync(api: EmpressApi<SampleEmpress, Signal>): Deferred<List<Signal>> {
         return async(start = CoroutineStart.UNDISPATCHED) {
             api.signals().toList()
         }

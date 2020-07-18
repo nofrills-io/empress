@@ -20,7 +20,7 @@ import io.nofrills.empress.base.Empress
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
-class SampleEmpress : Empress<Model, Signal>() {
+class SampleEmpress : Empress<Signal>() {
     val counter = model(Counter(0))
     val sender = model<Sender>(Sender.Idle)
 

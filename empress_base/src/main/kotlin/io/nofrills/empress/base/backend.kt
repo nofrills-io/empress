@@ -35,20 +35,20 @@ import kotlin.coroutines.coroutineContext
 private val eventInstance = EventDeclaration()
 private val requestInstance = RequestDeclaration()
 
-internal interface BackendFacade<M : Any, S : Any> {
-    suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): EventDeclaration
+internal interface BackendFacade<S : Any> {
+    suspend fun onEvent(fn: EventHandlerContext<S>.() -> Unit): EventDeclaration
     suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration
 }
 
 /** Extends [EmpressApi] with additional methods useful in unit tests. */
-interface TestEmpressApi<E : Any, M : Any, S : Any> : EmpressApi<E, M, S> {
-    fun <T : M> get(modelClass: Class<out T>): T
+interface TestEmpressApi<E : Any, S : Any> : EmpressApi<E, S> {
+    fun <T : Any> get(modelClass: Class<out T>): T
 
     /** Interrupts event processing loop. */
     suspend fun interrupt()
 
     /** Returns current models. */
-    fun models(): Collection<M>
+    fun models(): Collection<Any>
 }
 
 /** Runs and manages an Empress instance.
@@ -59,16 +59,16 @@ interface TestEmpressApi<E : Any, M : Any, S : Any> : EmpressApi<E, M, S> {
  * @param initialRequestId The number from which to start generating requests IDs.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
+class EmpressBackend<E : Empress<S>, S : Any> constructor(
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
-    storedModels: Collection<M>? = null,
+    storedModels: Collection<Any>? = null,
     initialRequestId: Long? = null
-) : BackendFacade<M, S>, EmpressApi<E, M, S>, TestEmpressApi<E, M, S>, EventHandlerContext<M, S>() {
+) : BackendFacade<S>, EmpressApi<E, S>, TestEmpressApi<E, S>, EventHandlerContext<S>() {
     private val dynamicLatch = DynamicLatch()
 
-    private val eventChannel = Channel<EventHandlerContext<M, S>.() -> Unit>(Channel.UNLIMITED)
+    private val eventChannel = Channel<EventHandlerContext<S>.() -> Unit>(Channel.UNLIMITED)
 
     private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
@@ -91,7 +91,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     // BackendFacade
 
-    override suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): EventDeclaration {
+    override suspend fun onEvent(fn: EventHandlerContext<S>.() -> Unit): EventDeclaration {
         if (coroutineContext[SameEventHandler] != null) {
             fn(this)
         } else {
@@ -111,7 +111,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     // TestEmpressApi
 
-    override fun <T : M> get(modelClass: Class<out T>): T {
+    override fun <T : Any> get(modelClass: Class<out T>): T {
         @Suppress("UNCHECKED_CAST")
         return empress.modelStateFlows.getValue(modelClass).value as T
     }
@@ -121,13 +121,13 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         closeChannels()
     }
 
-    override fun models(): Collection<M> {
+    override fun models(): Collection<Any> {
         return empress.modelStateFlows.values.map { it.value }
     }
 
     // EmpressApi
 
-    override fun <T : M> listen(
+    override fun <T : Any> listen(
         fn: E.() -> ModelDeclaration<T>
     ): StateFlow<T> {
         val modelClass = fn(empress).modelClass
@@ -196,12 +196,12 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         }
     }
 
-    override fun <T : M> ModelDeclaration<T>.get(): T {
+    override fun <T : Any> ModelDeclaration<T>.get(): T {
         @Suppress("UNCHECKED_CAST")
         return empress.modelStateFlows.getValue(modelClass).value as T
     }
 
-    override fun <T : M> ModelDeclaration<T>.update(value: T) {
+    override fun <T : Any> ModelDeclaration<T>.update(value: T) {
         empress.modelStateFlows.getValue(modelClass).value = value
     }
 
@@ -236,8 +236,8 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         }
     }
 
-    private fun loadStoredModels(storedModels: Collection<M>) {
-        val loaded = mutableSetOf<Class<out M>>()
+    private fun loadStoredModels(storedModels: Collection<Any>) {
+        val loaded = mutableSetOf<Class<out Any>>()
         for (m in storedModels) {
             check(loaded.add(m::class.java)) { "Model ${m.javaClass} was already loaded." }
             empress.modelStateFlows.getValue(m::class.java).value = m

@@ -29,7 +29,7 @@ import org.junit.Test
 
 class SampleTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: TestEmpressApi<SampleEmpress, Model, Signal>
+    private lateinit var tested: TestEmpressApi<SampleEmpress, Signal>
 
     @Before
     fun setUp() {

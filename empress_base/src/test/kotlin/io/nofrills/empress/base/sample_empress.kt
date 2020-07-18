@@ -21,7 +21,7 @@ import kotlinx.coroutines.delay
 internal sealed class Model {
     data class Counter(val count: Long) : Model()
 
-    data class Data(val text: String): Model()
+    data class Data(val text: String) : Model()
 
     sealed class Sender : Model() {
         object Idle : Sender()
@@ -34,7 +34,7 @@ internal sealed class Signal {
     object SendingCancelled : Signal()
 }
 
-internal class SampleEmpress : Empress<Model, Signal>() {
+internal class SampleEmpress : Empress<Signal>() {
     val counter = model(Model.Counter(0))
     val data = model(Model.Data(""))
     val sender = model<Model.Sender>(Model.Sender.Idle)
@@ -141,7 +141,7 @@ internal class SampleEmpress : Empress<Model, Signal>() {
     }
 }
 
-internal class DuplicateModelEmpress : Empress<Model, Signal>() {
+internal class DuplicateModelEmpress : Empress<Signal>() {
     val counter = model(Model.Counter(0))
     val anotherCounter = model(Model.Counter(0))
 }
