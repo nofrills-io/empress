@@ -29,7 +29,7 @@ import org.junit.Test
 
 class SampleTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: TestEmpressApi<SampleEmpress, Signal>
+    private lateinit var tested: TestEmpressApi<SampleEmpress>
 
     @Before
     fun setUp() {
@@ -44,7 +44,7 @@ class SampleTest {
 
     @Test
     fun example() = scope.runBlockingTest {
-        val deferredSignals = async { tested.signals().toList() }
+        val deferredSignals = async { tested.signals { counterSignal }.toList() }
 
         tested.post { increment() }
         tested.post { increment() }
@@ -57,6 +57,6 @@ class SampleTest {
 
         assertEquals(Counter(2), counter)
         assertEquals(Sender.Idle, sender)
-        assertEquals(listOf(Signal.CounterSent), signals)
+        assertEquals(listOf(CounterSignal.CounterSent), signals)
     }
 }

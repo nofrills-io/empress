@@ -7,5 +7,5 @@ interface WithEmpress {
     fun enthroneEmpress(
         dispatcher: CoroutineDispatcher,
         retainInstance: Boolean
-    ): TestEmpressApi<SampleEmpress, Signal>
+    ): TestEmpressApi<SampleEmpress>
 }

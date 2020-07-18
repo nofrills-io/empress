@@ -27,6 +27,8 @@ class EventDeclaration internal constructor()
 
 class ModelDeclaration<T> internal constructor(internal val modelClass: Class<out T>)
 
+class SignalDeclaration<T> internal constructor(internal val signalClass: Class<out T>)
+
 /** An ID for a request, which can be used to [cancel][EventHandlerContext.cancelRequest] it. */
 data class RequestId(private val id: Long)
 
@@ -36,7 +38,7 @@ class RequestDeclaration internal constructor()
 /** Context for defining an event handler.
  * @see Empress.onEvent
  */
-abstract class EventHandlerContext<S : Any> {
+abstract class EventHandlerContext {
     /** Cancels a request with given [requestId]. */
     abstract fun cancelRequest(requestId: RequestId): Boolean
 
@@ -45,9 +47,6 @@ abstract class EventHandlerContext<S : Any> {
 
     /** Schedules a request for execution. */
     abstract fun request(fn: suspend () -> RequestDeclaration): RequestId
-
-    /** Pushes a [signal] that can be later obtained in [EmpressApi.signals]. */
-    abstract fun signal(signal: S)
 
     abstract fun <T : Any> ModelDeclaration<T>.get(): T
 
@@ -58,16 +57,16 @@ abstract class EventHandlerContext<S : Any> {
         val newValue = updater(oldValue)
         update(newValue)
     }
+
+    abstract fun <T : Any> SignalDeclaration<T>.push(signal: T)
 }
 
-/** Allows you define your initial models, event and request handlers.
- * @param M Model type.
- * @param S Signal type.
- */
+/** Allows you define your initial models, event and request handlers. */
 @OptIn(ExperimentalCoroutinesApi::class)
-abstract class Empress<S : Any> {
-    internal lateinit var backend: BackendFacade<S>
+abstract class Empress {
+    internal lateinit var backend: BackendFacade
 
+    // TODO could be moved to backend (while initialValue would be part of ModelDeclaration)
     internal val modelStateFlows = mutableMapOf<Class<out Any>, MutableStateFlow<Any>>()
 
     protected fun <T : Any> model(modelClass: Class<out T>, initialValue: T): ModelDeclaration<T> {
@@ -80,10 +79,18 @@ abstract class Empress<S : Any> {
         return model(T::class.java, initialValue)
     }
 
+    protected fun <T : Any> signal(signalClass: Class<out T>): SignalDeclaration<T> {
+        return SignalDeclaration(signalClass)
+    }
+
+    protected inline fun <reified T : Any> signal(): SignalDeclaration<T> {
+        return signal(T::class.java)
+    }
+
     /** Allows to define an event handler.
      * @param fn The definition of the event handler
      */
-    protected suspend fun onEvent(fn: EventHandlerContext<S>.() -> Unit): EventDeclaration =
+    protected suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration =
         backend.onEvent(fn)
 
     /** Allows to define a request handler.
@@ -104,8 +111,9 @@ interface ModelListener<E : Any> {
     fun <T : Any> listen(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
 }
 
-/** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any, S : Any> : EventCommander<E>, ModelListener<E> {
-    /** Allows to listen for signals sent from [Empress]. */
-    fun signals(): Flow<S>
+interface SignalListener<E : Any> {
+    fun <T : Any> signals(fn: E.() -> SignalDeclaration<T>): Flow<T>
 }
+
+/** Allows to communicate with your [Empress] instance. */
+interface EmpressApi<E : Any> : EventCommander<E>, ModelListener<E>, SignalListener<E>

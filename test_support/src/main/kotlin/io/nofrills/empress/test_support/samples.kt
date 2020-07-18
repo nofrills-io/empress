@@ -17,7 +17,7 @@ sealed class Model {
 
 sealed class Signal
 
-class SampleEmpress : Empress<Signal>() {
+class SampleEmpress : Empress() {
     val counter = model(Model.Counter(0))
     val parcelableCounter = model(Model.ParcelableCounter(0))
 

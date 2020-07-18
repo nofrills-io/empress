@@ -9,13 +9,13 @@ class SampleFragment : Fragment(), WithEmpress {
     override fun enthroneEmpress(
         dispatcher: CoroutineDispatcher,
         retainInstance: Boolean
-    ): TestEmpressApi<SampleEmpress, Signal> {
+    ): TestEmpressApi<SampleEmpress> {
         return enthrone(
             "sample_empress",
             SampleEmpress(),
             eventDispatcher = dispatcher,
             requestDispatcher = dispatcher,
             retainInstance = retainInstance
-        ) as TestEmpressApi<SampleEmpress, Signal>
+        ) as TestEmpressApi<SampleEmpress>
     }
 }

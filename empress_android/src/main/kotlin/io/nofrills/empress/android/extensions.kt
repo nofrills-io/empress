@@ -35,13 +35,13 @@ import kotlinx.coroutines.Dispatchers
  * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
  * @return An instance of [EmpressApi] for communicating with [empress].
  */
-fun <E : Empress<S>, S : Any> FragmentActivity.enthrone(
+fun <E : Empress> FragmentActivity.enthrone(
     empressId: String,
     empress: E,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
-): EmpressApi<E, S> {
+): EmpressApi<E> {
     return getEmpressBackendInstance(
         supportFragmentManager,
         retainInstance = retainInstance,
@@ -66,13 +66,13 @@ fun <E : Empress<S>, S : Any> FragmentActivity.enthrone(
  * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
  * @return An instance of [EmpressApi] for communicating with [empress].
  */
-fun <E : Empress<S>, S : Any> Fragment.enthrone(
+fun <E : Empress> Fragment.enthrone(
     empressId: String,
     empress: E,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
-): EmpressApi<E, S> {
+): EmpressApi<E> {
     return getEmpressBackendInstance(
         childFragmentManager,
         retainInstance = retainInstance,
@@ -87,18 +87,18 @@ fun <E : Empress<S>, S : Any> Fragment.enthrone(
     )
 }
 
-private fun <E : Empress<S>, S : Any> getEmpressBackendInstance(
+private fun <E : Empress> getEmpressBackendInstance(
     fragmentManager: FragmentManager,
     retainInstance: Boolean,
-    specFactory: () -> EmpressSpec<E, S>,
+    specFactory: () -> EmpressSpec<E>,
     empressId: String
-): EmpressBackend<E, S> {
+): EmpressBackend<E> {
     val fragmentTag = "io.nofrills.empress.empress-fragment-${empressId}"
 
     @Suppress("UNCHECKED_CAST")
-    val fragment: EmpressFragment<E, S> =
-        fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<E, S>?
-            ?: EmpressFragment<E, S>().also {
+    val fragment: EmpressFragment<E> =
+        fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<E>?
+            ?: EmpressFragment<E>().also {
                 fragmentManager.beginTransaction().add(it, fragmentTag).commitNow()
             }
     fragment.retainInstance = retainInstance
@@ -106,7 +106,7 @@ private fun <E : Empress<S>, S : Any> getEmpressBackendInstance(
     return fragment.backend
 }
 
-internal class EmpressSpec<E : Empress<S>, S : Any>(
+internal class EmpressSpec<E : Empress>(
     val empress: E,
     val eventDispatcher: CoroutineDispatcher,
     val requestDispatcher: CoroutineDispatcher

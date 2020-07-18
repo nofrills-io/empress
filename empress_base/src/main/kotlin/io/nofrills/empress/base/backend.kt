@@ -35,13 +35,13 @@ import kotlin.coroutines.coroutineContext
 private val eventInstance = EventDeclaration()
 private val requestInstance = RequestDeclaration()
 
-internal interface BackendFacade<S : Any> {
-    suspend fun onEvent(fn: EventHandlerContext<S>.() -> Unit): EventDeclaration
+internal interface BackendFacade {
+    suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration
     suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration
 }
 
 /** Extends [EmpressApi] with additional methods useful in unit tests. */
-interface TestEmpressApi<E : Any, S : Any> : EmpressApi<E, S> {
+interface TestEmpressApi<E : Any> : EmpressApi<E> {
     fun <T : Any> get(modelClass: Class<out T>): T
 
     /** Interrupts event processing loop. */
@@ -59,22 +59,22 @@ interface TestEmpressApi<E : Any, S : Any> : EmpressApi<E, S> {
  * @param initialRequestId The number from which to start generating requests IDs.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class EmpressBackend<E : Empress<S>, S : Any> constructor(
+class EmpressBackend<E : Empress> constructor(
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
     storedModels: Collection<Any>? = null,
     initialRequestId: Long? = null
-) : BackendFacade<S>, EmpressApi<E, S>, TestEmpressApi<E, S>, EventHandlerContext<S>() {
+) : BackendFacade, EmpressApi<E>, TestEmpressApi<E>, EventHandlerContext() {
     private val dynamicLatch = DynamicLatch()
 
-    private val eventChannel = Channel<EventHandlerContext<S>.() -> Unit>(Channel.UNLIMITED)
+    private val eventChannel = Channel<EventHandlerContext.() -> Unit>(Channel.UNLIMITED)
 
     private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
-    private val signalChannels = Collections.synchronizedList(arrayListOf<Channel<S>>())
+    private val signalChannelsMap = ConcurrentHashMap<Class<out Any>, MutableList<Channel<Any>>>()
 
     init {
         empress.backend = this
@@ -91,7 +91,7 @@ class EmpressBackend<E : Empress<S>, S : Any> constructor(
 
     // BackendFacade
 
-    override suspend fun onEvent(fn: EventHandlerContext<S>.() -> Unit): EventDeclaration {
+    override suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration {
         if (coroutineContext[SameEventHandler] != null) {
             fn(this)
         } else {
@@ -144,12 +144,26 @@ class EmpressBackend<E : Empress<S>, S : Any> constructor(
         }
     }
 
-    override fun signals(): Flow<S> {
-        val channel = Channel<S>(Channel.UNLIMITED)
+    override fun <T : Any> signals(fn: E.() -> SignalDeclaration<T>): Flow<T> {
+        val signalClass = fn(empress).signalClass
+        val channel = Channel<T>(Channel.UNLIMITED)
         return channel
             .consumeAsFlow()
-            .onStart { signalChannels.add(channel) }
-            .onCompletion { signalChannels.remove(channel) }
+            .onStart {
+                synchronized(signalChannelsMap) {
+                    val list = signalChannelsMap[signalClass] ?: Collections.synchronizedList(
+                        mutableListOf<Channel<Any>>()
+                    ).also {
+                        signalChannelsMap[signalClass] = it
+                    }
+                    @Suppress("UNCHECKED_CAST")
+                    list.add(channel as Channel<Any>)
+                }
+            }
+            .onCompletion {
+                @Suppress("UNCHECKED_CAST")
+                signalChannelsMap.getValue(signalClass).remove(channel as Channel<Any>)
+            }
     }
 
     // EventHandler
@@ -187,15 +201,6 @@ class EmpressBackend<E : Empress<S>, S : Any> constructor(
         return requestId
     }
 
-    override fun signal(signal: S) {
-        synchronized(signalChannels) {
-            for (chan in signalChannels) {
-                val added = chan.offer(signal)
-                check(added)
-            }
-        }
-    }
-
     override fun <T : Any> ModelDeclaration<T>.get(): T {
         @Suppress("UNCHECKED_CAST")
         return empress.modelStateFlows.getValue(modelClass).value as T
@@ -205,18 +210,31 @@ class EmpressBackend<E : Empress<S>, S : Any> constructor(
         empress.modelStateFlows.getValue(modelClass).value = value
     }
 
+    override fun <T : Any> SignalDeclaration<T>.push(signal: T) {
+        synchronized(signalChannelsMap) {
+            signalChannelsMap.values.forEach { channels ->
+                channels.forEach {
+                    val added = it.offer(signal)
+                    check(added)
+                }
+            }
+        }
+    }
+
     // Implementation details
 
     internal fun areChannelsClosedForSend(): Boolean {
-        synchronized(signalChannels) {
-            return signalChannels.all { it.isClosedForSend } && eventChannel.isClosedForSend
+        return synchronized(signalChannelsMap) {
+            signalChannelsMap.values.all { channels ->
+                channels.all { it.isClosedForSend }
+            } && eventChannel.isClosedForSend
         }
     }
 
     private fun closeChannels() {
         eventChannel.close()
-        synchronized(signalChannels) { signalChannels.toList() }.let { channelList ->
-            channelList.forEach { it.close() }
+        synchronized(signalChannelsMap) { signalChannelsMap.values.toList() }.forEach { channels ->
+            synchronized(channels) { channels.toList() }.forEach { it.close() }
         }
     }
 

@@ -30,9 +30,9 @@ sealed class Sender : Model() {
     data class Sending(val requestId: RequestId) : Sender()
 }
 
-sealed class Signal {
-    object CounterSent : Signal()
-    object CounterSendCancelled : Signal()
+sealed class CounterSignal {
+    object CounterSent : CounterSignal()
+    object CounterSendCancelled : CounterSignal()
 }
 
 class OnEventFailure : Throwable()

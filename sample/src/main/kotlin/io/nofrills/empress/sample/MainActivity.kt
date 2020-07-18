@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
-        empressApi.signals()
+        empressApi.signals { counterSignal }
             .onEach { onSignal(it) }
             .launchIn(lifecycle.coroutineScope)
 
@@ -69,10 +69,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onSignal(signal: Signal) {
+    private fun onSignal(signal: CounterSignal) {
         when (signal) {
-            Signal.CounterSent -> showToast(R.string.counter_sent)
-            Signal.CounterSendCancelled -> showToast(R.string.send_counter_cancelled)
+            CounterSignal.CounterSent -> showToast(R.string.counter_sent)
+            CounterSignal.CounterSendCancelled -> showToast(R.string.send_counter_cancelled)
         }
     }
 

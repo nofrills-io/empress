@@ -20,22 +20,23 @@ import io.nofrills.empress.base.Empress
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
-class SampleEmpress : Empress<Signal>() {
+class SampleEmpress : Empress() {
     val counter = model(Counter(0))
     val sender = model<Sender>(Sender.Idle)
+    val counterSignal = signal<CounterSignal>()
 
     suspend fun cancelSendingCounter() = onEvent {
         val state = sender.get()
         if (state is Sender.Sending) {
             cancelRequest(state.requestId)
             sender.update(Sender.Idle)
-            signal(Signal.CounterSendCancelled)
+            counterSignal.push(CounterSignal.CounterSendCancelled)
         }
     }
 
     private suspend fun onCounterSent() = onEvent {
         sender.update(Sender.Idle)
-        signal(Signal.CounterSent)
+        counterSignal.push(CounterSignal.CounterSent)
     }
 
     suspend fun decrement() = onEvent {

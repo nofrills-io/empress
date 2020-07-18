@@ -29,15 +29,17 @@ internal sealed class Model {
     }
 }
 
-internal sealed class Signal {
-    data class CounterSent(val sentValue: Long) : Signal()
-    object SendingCancelled : Signal()
+internal sealed class CounterSignal {
+    data class CounterSent(val sentValue: Long) : CounterSignal()
+    object SendingCancelled : CounterSignal()
 }
 
-internal class SampleEmpress : Empress<Signal>() {
+internal class SampleEmpress : Empress() {
     val counter = model(Model.Counter(0))
     val data = model(Model.Data(""))
     val sender = model<Model.Sender>(Model.Sender.Idle)
+
+    val counterSignal = signal<CounterSignal>()
 
     suspend fun decrement() = onEvent {
         val count = counter.get().count
@@ -89,7 +91,7 @@ internal class SampleEmpress : Empress<Signal>() {
     }
 
     private suspend fun onCounterSent(sentValue: Long) = onEvent {
-        signal(Signal.CounterSent(sentValue))
+        counterSignal.push(CounterSignal.CounterSent(sentValue))
         sender.update(Model.Sender.Idle)
     }
 
@@ -97,7 +99,7 @@ internal class SampleEmpress : Empress<Signal>() {
         val loading = sender.get() as? Model.Sender.Loading ?: return@onEvent
         cancelRequest(loading.requestId)
         sender.update(Model.Sender.Idle)
-        signal(Signal.SendingCancelled)
+        counterSignal.push(CounterSignal.SendingCancelled)
     }
 
     suspend fun generateError() = onEvent {
@@ -141,7 +143,7 @@ internal class SampleEmpress : Empress<Signal>() {
     }
 }
 
-internal class DuplicateModelEmpress : Empress<Signal>() {
+internal class DuplicateModelEmpress : Empress() {
     val counter = model(Model.Counter(0))
     val anotherCounter = model(Model.Counter(0))
 }

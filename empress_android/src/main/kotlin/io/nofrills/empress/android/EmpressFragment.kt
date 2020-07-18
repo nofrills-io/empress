@@ -25,8 +25,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import java.util.ArrayList
 
-internal class EmpressFragment<E : Empress<S>, S : Any> : Fragment() {
-    lateinit var backend: EmpressBackend<E, S>
+internal class EmpressFragment<E : Empress> : Fragment() {
+    lateinit var backend: EmpressBackend<E>
         private set
     private val job = Job()
     private var storedHandlerId: Long? = null
@@ -63,7 +63,7 @@ internal class EmpressFragment<E : Empress<S>, S : Any> : Fragment() {
         super.onDestroy()
     }
 
-    fun initialize(specFactory: () -> EmpressSpec<E, S>) {
+    fun initialize(specFactory: () -> EmpressSpec<E>) {
         if (!this::backend.isInitialized) {
             val result = specFactory()
             val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)
