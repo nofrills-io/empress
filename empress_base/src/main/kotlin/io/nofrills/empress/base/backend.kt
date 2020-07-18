@@ -23,11 +23,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -76,8 +72,6 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
-    private val modelChannels = Collections.synchronizedList(arrayListOf<Channel<M>>())
-
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
     private val signalChannels = Collections.synchronizedList(arrayListOf<Channel<S>>())
@@ -119,7 +113,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     override fun <T : M> get(modelClass: Class<out T>): T {
         @Suppress("UNCHECKED_CAST")
-        return empress.modelValues.getValue(modelClass) as T
+        return empress.modelStateFlows.getValue(modelClass).value as T
     }
 
     override suspend fun interrupt() {
@@ -128,35 +122,17 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
     }
 
     override fun models(): Collection<M> {
-        return empress.modelValues.values.toList()
+        return empress.modelStateFlows.values.map { it.value }
     }
 
     // EmpressApi
 
-    override fun listen(withCurrentValues: Boolean): Flow<M> {
-        val channel = Channel<M>(Channel.UNLIMITED)
-        return channel
-            .consumeAsFlow()
-            .onStart {
-                modelChannels.add(channel)
-                if (withCurrentValues) {
-                    val currentValues =
-                        synchronized(empress.modelValues) { empress.modelValues.values.toList() }
-                    currentValues.forEach { emit(it) }
-                }
-            }
-            .onCompletion {
-                modelChannels.remove(channel)
-            }
-    }
-
     override fun <T : M> listen(
-        withCurrentValues: Boolean,
         fn: E.() -> ModelDeclaration<T>
-    ): Flow<T> {
+    ): StateFlow<T> {
         val modelClass = fn(empress).modelClass
         @Suppress("UNCHECKED_CAST")
-        return listen(withCurrentValues).filter { modelClass.isAssignableFrom(it::class.java) } as Flow<T>
+        return empress.modelStateFlows.getValue(modelClass) as StateFlow<T>
     }
 
     override fun post(fn: suspend E.() -> EventDeclaration) {
@@ -222,33 +198,23 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
 
     override fun <T : M> ModelDeclaration<T>.get(): T {
         @Suppress("UNCHECKED_CAST")
-        return empress.modelValues.getValue(modelClass) as T
+        return empress.modelStateFlows.getValue(modelClass).value as T
     }
 
     override fun <T : M> ModelDeclaration<T>.update(value: T) {
-        empress.modelValues[modelClass] = value
-        synchronized(modelChannels) {
-            modelChannels.forEach {
-                it.offer(value)
-            }
-        }
+        empress.modelStateFlows.getValue(modelClass).value = value
     }
 
     // Implementation details
 
     internal fun areChannelsClosedForSend(): Boolean {
-        synchronized(modelChannels) {
-            synchronized(signalChannels) {
-                return modelChannels.all { it.isClosedForSend } && signalChannels.all { it.isClosedForSend } && eventChannel.isClosedForSend
-            }
+        synchronized(signalChannels) {
+            return signalChannels.all { it.isClosedForSend } && eventChannel.isClosedForSend
         }
     }
 
     private fun closeChannels() {
         eventChannel.close()
-        synchronized(modelChannels) { modelChannels.toList() }.let { channelList ->
-            channelList.forEach { it.close() }
-        }
         synchronized(signalChannels) { signalChannels.toList() }.let { channelList ->
             channelList.forEach { it.close() }
         }
@@ -274,7 +240,7 @@ class EmpressBackend<E : Empress<M, S>, M : Any, S : Any> constructor(
         val loaded = mutableSetOf<Class<out M>>()
         for (m in storedModels) {
             check(loaded.add(m::class.java)) { "Model ${m.javaClass} was already loaded." }
-            empress.modelValues[m::class.java] = m
+            empress.modelStateFlows.getValue(m::class.java).value = m
         }
     }
 

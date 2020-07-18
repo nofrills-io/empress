@@ -17,7 +17,6 @@
 package io.nofrills.empress.base
 
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -38,72 +37,53 @@ class EmpressBackendTest {
     @Test
     fun modelUpdates() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredUpdates = counterAsync(tested)
         tested.post { increment() }
         tested.post { increment() }
         tested.post { delta(2) }
         tested.post { decrement() }
         tested.interrupt()
-
-        val updates = deferredUpdates.await()
-
-        val expected = listOf<Model>(
-            Model.Counter(0),
-            Model.Counter(1),
-            Model.Counter(2),
-            Model.Counter(4),
-            Model.Counter(3)
+        val counter = tested.listen { counter }.value
+        assertEquals(Model.Counter(3), counter)
+        assertEquals(
+            setOf(Model.Sender.Idle, Model.Counter(3), Model.Data("")),
+            tested.models().toSet()
         )
-        assertEquals(expected, updates)
-        assertEquals(setOf(Model.Sender.Idle, Model.Counter(3)), tested.models().toSet())
     }
 
     @Test
     fun updatesWithInitialModels() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredCounters = counterAsync(tested)
-        val deferredSenders = senderAsync(tested)
         tested.post { increment() }
         tested.interrupt()
 
-        val counters = deferredCounters.await()
-        val senders = deferredSenders.await()
+        val counter = tested.listen { counter }.value
+        val sender = tested.listen { sender }.value
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(listOf(Model.Sender.Idle), senders)
+        assertEquals(Model.Counter(1), counter)
+        assertEquals(Model.Sender.Idle, sender)
     }
 
     @Test
     fun signals() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredCounters = counterAsync(tested)
-        val deferredSenders = senderAsync(tested)
         val deferredSignals = signalsAsync(tested)
 
         tested.post { increment() }
         tested.post { sendCounter() }
         tested.interrupt()
 
-        val counters = deferredCounters.await()
-        val senders = deferredSenders.await()
+        val counter = tested.listen { counter }.value
+        val sender = tested.listen { sender }.value
         val signals = deferredSignals.await()
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(
-            listOf(
-                Model.Sender.Idle,
-                Model.Sender.Loading(RequestId(1L)),
-                Model.Sender.Idle
-            ), senders
-        )
+        assertEquals(Model.Counter(1), counter)
+        assertEquals(Model.Sender.Idle, sender)
         assertEquals(listOf(Signal.CounterSent(1)), signals)
     }
 
     @Test
     fun cancellingRequest() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredCounters = counterAsync(tested)
-        val deferredSenders = senderAsync(tested)
         val deferredSignals = signalsAsync(tested)
 
         pauseDispatcher()
@@ -114,18 +94,12 @@ class EmpressBackendTest {
         tested.interrupt()
         resumeDispatcher()
 
-        val counters = deferredCounters.await()
-        val senders = deferredSenders.await()
+        val counter = tested.listen { counter }.value
+        val sender = tested.listen { sender }.value
         val signals = deferredSignals.await()
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(
-            listOf(
-                Model.Sender.Idle,
-                Model.Sender.Loading(RequestId(1L)),
-                Model.Sender.Idle
-            ), senders
-        )
+        assertEquals(Model.Counter(1), counter)
+        assertEquals(Model.Sender.Idle, sender)
         assertEquals(listOf(Signal.SendingCancelled), signals)
     }
 
@@ -133,8 +107,6 @@ class EmpressBackendTest {
     fun cancellingCompletedRequest() = runBlockingTest {
         val testScope = TestCoroutineScope()
         val tested = makeTested(testScope)
-        val deferredCounters = counterAsync(tested)
-        val deferredSenders = senderAsync(tested)
         val deferredSignals = signalsAsync(tested)
 
         testScope.pauseDispatcher()
@@ -147,20 +119,14 @@ class EmpressBackendTest {
         tested.post { cancelSending() }
         tested.interrupt()
 
-        val counters = deferredCounters.await()
-        val senders = deferredSenders.await()
+        val counter = tested.listen { counter }.value
+        val sender = tested.listen { sender }.value
         val signals = deferredSignals.await()
 
         testScope.cleanupTestCoroutines()
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(
-            listOf(
-                Model.Sender.Idle,
-                Model.Sender.Loading(RequestId(1L)),
-                Model.Sender.Idle
-            ), senders
-        )
+        assertEquals(Model.Counter(1), counter)
+        assertEquals(Model.Sender.Idle, sender)
         assertEquals(listOf(Signal.CounterSent(1)), signals)
     }
 
@@ -178,16 +144,10 @@ class EmpressBackendTest {
     @Test
     fun initialRequestId() = runBlockingTest {
         val tested = makeTested(this, initialRequestId = 11)
-        val deferredSenders = senderAsync(tested)
         tested.post { sendCounter() }
         tested.interrupt()
-        val senders = deferredSenders.await()
-        val expected = listOf(
-            Model.Sender.Idle,
-            Model.Sender.Loading(RequestId(12)),
-            Model.Sender.Idle
-        )
-        assertEquals(expected, senders)
+        val sender = tested.listen { sender }.value
+        assertEquals(Model.Sender.Idle, sender)
     }
 
     @Test
@@ -197,15 +157,13 @@ class EmpressBackendTest {
         val tested = makeTested(CoroutineScope(dispatcherA))
 
         runBlocking(dispatcherB) {
-            val deferredUpdates = counterAsync(tested)
             var d = 3
             tested.post { delta(d) }
             d = 7
             tested.post { increment() }
             tested.interrupt()
-
-            val updates = deferredUpdates.await()
-            assertEquals(listOf(Model.Counter(0), Model.Counter(3), Model.Counter(4)), updates)
+            val counter = tested.listen { counter }.value
+            assertEquals(Model.Counter(4), counter)
         }
     }
 
@@ -217,20 +175,15 @@ class EmpressBackendTest {
         val n = 1_000
 
         runBlocking(clientDispatcher) {
-            val deferredCounters = counterAsync(tested)
+            val b = StringBuilder()
             for (i in 1..n) {
-                tested.post { increment() }
+                tested.post { append("$i") }
+                b.append("$i")
             }
             tested.interrupt()
 
-            val counters = deferredCounters.await()
-            assertEquals(n + 1, counters.size)
-
-            var lastValue = 0
-            for (counter in counters) {
-                assertEquals(lastValue, counter.count)
-                lastValue += 1
-            }
+            val data = tested.listen { data }.value
+            assertEquals(b.toString(), data.text)
         }
     }
 
@@ -238,48 +191,57 @@ class EmpressBackendTest {
     fun delayedFirstObserver() = runBlockingTest {
         val tested = makeTested(this)
         tested.post { decrement() }
-        val deferredUpdates = counterAsync(tested)
         tested.post { decrement() }
         tested.interrupt()
 
-        val updates = deferredUpdates.await()
-        assertEquals(listOf(Model.Counter(-1), Model.Counter(-2)), updates)
+        val counter = tested.listen { counter }.value
+        assertEquals(Model.Counter(-2), counter)
     }
 
     @Test
     fun twoUpdateObservers() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredUpdates1 = counterAsync(tested)
-        val deferredUpdates2 = counterAsync(tested)
+        val deferredSignals1 = signalsAsync(tested)
+        val deferredSignals2 = signalsAsync(tested)
 
-        tested.post { decrement() }
-        tested.post { decrement() }
+        tested.post { increment() }
+        tested.post { sendCounter() }
         tested.interrupt()
 
-        val updates1 = deferredUpdates1.await()
-        val updates2 = deferredUpdates2.await()
+        val updates1 = deferredSignals1.await()
+        val updates2 = deferredSignals2.await()
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(-1), Model.Counter(-2)), updates1)
+        val expected = listOf(Signal.CounterSent(1))
+        assertEquals(expected, updates1)
         assertEquals(updates1, updates2)
     }
 
     @Test
     fun delayedSecondObserver() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredUpdates1 = counterAsync(tested)
+        val deferredSignals1 = signalsAsync(tested)
 
-        tested.post { decrement() }
+        tested.post { increment() }
+        tested.post { sendCounter() }
+        tested.post { increment() }
 
-        val deferredUpdates2 = counterAsync(tested)
+        val dl = async {
+            pauseDispatcher()
+            advanceUntilIdle()
 
-        tested.post { decrement() }
-        tested.interrupt()
+            val deferredSignals2 = signalsAsync(tested)
 
-        val updates1 = deferredUpdates1.await()
-        val updates2 = deferredUpdates2.await()
+            resumeDispatcher()
+            tested.post { sendCounter(skipIfLoading = false) }
+            tested.interrupt()
+            deferredSignals2.await()
+        }
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(-1), Model.Counter(-2)), updates1)
-        assertEquals(listOf(Model.Counter(-1), Model.Counter(-2)), updates2)
+        val updates1 = deferredSignals1.await()
+        val updates2 = dl.await()
+
+        assertEquals(listOf(Signal.CounterSent(1), Signal.CounterSent(2)), updates1)
+        assertEquals(listOf(Signal.CounterSent(2)), updates2)
     }
 
     @Test
@@ -290,14 +252,14 @@ class EmpressBackendTest {
 
         try {
             runBlockingTest {
-                val deferredUpdates = senderAsync(tested)
+                val deferredSignals = signalsAsync(tested)
                 launch {
                     tested.post { increment() }
                     tested.post { sendCounter() }
                     delay(10)
                     job.cancel()
                 }
-                deferredUpdates.await()
+                deferredSignals.await()
             }
         } finally {
             assertTrue((tested as EmpressBackend).areChannelsClosedForSend())
@@ -316,34 +278,24 @@ class EmpressBackendTest {
     fun indirectActions() = runBlockingTest {
         val tested = makeTested(this)
         val deferredSignals = signalsAsync(tested)
-        val deferredCounters = counterAsync(tested)
-        val deferredSenders = senderAsync(tested)
 
         tested.post { indirectIncrementAndSend() }
         tested.interrupt()
 
         val signals = deferredSignals.await()
-        val counters = deferredCounters.await()
-        val senders = deferredSenders.await()
+        val counter = tested.listen { counter }.value
+        val sender = tested.listen { sender }.value
 
         val expectedSignals = listOf(Signal.CounterSent(1))
         assertEquals(expectedSignals, signals)
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(
-            listOf(
-                Model.Sender.Idle,
-                Model.Sender.Loading(RequestId(1)),
-                Model.Sender.Idle
-            ), senders
-        )
+        assertEquals(Model.Counter(1), counter)
+        assertEquals(Model.Sender.Idle, sender)
     }
 
     @Test
     fun cancellingIndirectRequest() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredCounters = counterAsync(tested)
-        val deferredSenders = senderAsync(tested)
         val deferredSignals = signalsAsync(tested)
 
         pauseDispatcher()
@@ -354,42 +306,29 @@ class EmpressBackendTest {
         tested.interrupt()
         resumeDispatcher()
 
-        val counters = deferredCounters.await()
-        val senders = deferredSenders.await()
+        val counter = tested.listen { counter }.value
+        val sender = tested.listen { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(listOf(Signal.SendingCancelled), signals)
 
-        assertEquals(listOf(Model.Counter(0), Model.Counter(1)), counters)
-        assertEquals(
-            listOf(
-                Model.Sender.Idle,
-                Model.Sender.Loading(RequestId(1L)),
-                Model.Sender.Idle
-            ), senders
-        )
+        assertEquals(Model.Counter(1), counter)
+        assertEquals(Model.Sender.Idle, sender)
     }
 
     @Test
     fun requestArgumentsAreEvaluatedEagerly() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredSenders = senderAsync(tested)
         val deferredSignals = signalsAsync(tested)
 
         tested.post { sendCounterVariableCount() }
         tested.interrupt()
 
-        val senders = deferredSenders.await()
+        val sender = tested.listen { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(listOf(Signal.CounterSent(0)), signals)
-
-        val expectedSenders = listOf(
-            Model.Sender.Idle,
-            Model.Sender.Loading(RequestId(1L)),
-            Model.Sender.Idle
-        )
-        assertEquals(expectedSenders, senders)
+        assertEquals(Model.Sender.Idle, sender)
     }
 
     @Test(expected = OnEventError::class)
@@ -407,21 +346,17 @@ class EmpressBackendTest {
     @Test(expected = OnRequestError::class)
     fun requestHandlerError() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredUpdates = counterAsync(tested)
         tested.post { errorInRequest() }
         tested.interrupt()
-        val updates = deferredUpdates.await()
-        val expected = listOf(Model.Counter(0), Model.Counter(1), Model.Counter(2))
-        assertEquals(expected, updates)
+        val counter = tested.listen { counter }.value
+        assertEquals(Model.Counter(2), counter)
     }
 
     @Test(expected = OnRequestError::class)
     fun requestHandlerErrorIndirect() = runBlockingTest {
         val tested = makeTested(this)
-        val deferredUpdates = counterAsync(tested)
         tested.post { errorInRequestIndirect() }
         tested.interrupt()
-        deferredUpdates.await()
     }
 
     private fun makeTested(
@@ -454,18 +389,6 @@ class EmpressBackendTest {
             )
         } else {
             EmpressBackend(empress, coroutineScope, coroutineScope)
-        }
-    }
-
-    private fun CoroutineScope.counterAsync(api: EmpressApi<SampleEmpress, Model, Signal>): Deferred<List<Model.Counter>> {
-        return async(start = CoroutineStart.UNDISPATCHED) {
-            api.listen { counter }.toList()
-        }
-    }
-
-    private fun CoroutineScope.senderAsync(api: EmpressApi<SampleEmpress, Model, Signal>): Deferred<List<Model.Sender>> {
-        return async(start = CoroutineStart.UNDISPATCHED) {
-            api.listen { sender }.toList()
         }
     }
 

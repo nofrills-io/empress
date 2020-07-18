@@ -20,16 +20,14 @@ import android.os.Parcelable
 import io.nofrills.empress.base.RequestId
 import kotlinx.android.parcel.Parcelize
 
-sealed class SenderState {
-    object Idle : SenderState()
-    data class Sending(val requestId: RequestId) : SenderState()
-}
+sealed class Model
 
-sealed class Model {
-    @Parcelize
-    data class Counter(val count: Int) : Model(), Parcelable
+@Parcelize
+data class Counter(val count: Int) : Model(), Parcelable
 
-    data class Sender(val state: SenderState) : Model()
+sealed class Sender : Model() {
+    object Idle : Sender()
+    data class Sending(val requestId: RequestId) : Sender()
 }
 
 sealed class Signal {

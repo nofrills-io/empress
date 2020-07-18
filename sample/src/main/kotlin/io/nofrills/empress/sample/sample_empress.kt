@@ -21,20 +21,20 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 class SampleEmpress : Empress<Model, Signal>() {
-    val counter = model(Model.Counter(0))
-    val sender = model(Model.Sender(SenderState.Idle))
+    val counter = model(Counter(0))
+    val sender = model<Sender>(Sender.Idle)
 
     suspend fun cancelSendingCounter() = onEvent {
-        val state = sender.get().state
-        if (state is SenderState.Sending) {
+        val state = sender.get()
+        if (state is Sender.Sending) {
             cancelRequest(state.requestId)
-            sender.update(Model.Sender(SenderState.Idle))
+            sender.update(Sender.Idle)
             signal(Signal.CounterSendCancelled)
         }
     }
 
     private suspend fun onCounterSent() = onEvent {
-        sender.update(Model.Sender(SenderState.Idle))
+        sender.update(Sender.Idle)
         signal(Signal.CounterSent)
     }
 
@@ -55,12 +55,12 @@ class SampleEmpress : Empress<Model, Signal>() {
     }
 
     suspend fun sendCounter() = onEvent {
-        val state = sender.get().state
-        if (state is SenderState.Sending) {
+        val state = sender.get()
+        if (state is Sender.Sending) {
             return@onEvent
         }
         val requestId = request { sendCounter(counter.get().count) }
-        sender.update(Model.Sender(SenderState.Sending(requestId)))
+        sender.update(Sender.Sending(requestId))
     }
 
     private suspend fun failedRequest() = onRequest {

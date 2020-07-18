@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             .launchIn(lifecycle.coroutineScope)
 
         empressApi.listen { sender }
-            .onEach { renderProgress(it.state) }
+            .onEach { renderProgress(it) }
             .launchIn(lifecycle.coroutineScope)
 
         setupButtonListeners()
@@ -76,15 +76,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun render(model: Model) {
-        when (model) {
-            is Model.Counter -> renderCount(model.count)
-            is Model.Sender -> renderProgress(model.state)
-        }
-    }
-
-    private fun renderProgress(senderState: SenderState) {
-        progress_bar.visibility = if (senderState is SenderState.Sending) {
+    private fun renderProgress(sender: Sender) {
+        progress_bar.visibility = if (sender is Sender.Sending) {
             View.VISIBLE
         } else {
             View.GONE

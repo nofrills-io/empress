@@ -17,8 +17,10 @@
 package io.nofrills.empress.base
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import java.util.Collections
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /** Opaque representation for an event handler. */
 class EventDeclaration internal constructor()
@@ -62,13 +64,14 @@ abstract class EventHandlerContext<M : Any, S : Any> {
  * @param M Model type.
  * @param S Signal type.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 abstract class Empress<M : Any, S : Any> {
     internal lateinit var backend: BackendFacade<M, S>
 
-    internal val modelValues = Collections.synchronizedMap(mutableMapOf<Class<out M>, M>())
+    internal val modelStateFlows = mutableMapOf<Class<out M>, MutableStateFlow<M>>()
 
     protected fun <T : M> model(modelClass: Class<out T>, initialValue: T): ModelDeclaration<T> {
-        val wasNotYetAdded = modelValues.put(modelClass, initialValue) == null
+        val wasNotYetAdded = modelStateFlows.put(modelClass, MutableStateFlow(initialValue)) == null
         check(wasNotYetAdded) { "The value for class $modelClass has been already added." }
         return ModelDeclaration(modelClass)
     }
@@ -96,10 +99,9 @@ interface EventCommander<E : Any> {
     fun post(fn: suspend E.() -> EventDeclaration)
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 interface ModelListener<E : Any, M : Any> {
-    fun listen(withCurrentValues: Boolean = true): Flow<M>
-
-    fun <T : M> listen(withCurrentValues: Boolean = true, fn: E.() -> ModelDeclaration<T>): Flow<T>
+    fun <T : M> listen(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
 }
 
 /** Allows to communicate with your [Empress] instance. */

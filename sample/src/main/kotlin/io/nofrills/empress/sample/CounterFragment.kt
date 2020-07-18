@@ -47,7 +47,7 @@ class CounterFragment : Fragment() {
             .launchIn(lifecycle.coroutineScope)
     }
 
-    private fun renderCount(counter: Model.Counter) {
+    private fun renderCount(counter: Counter) {
         counter_text_view.text = counter.count.toString()
     }
 }

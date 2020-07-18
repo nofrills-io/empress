@@ -19,7 +19,9 @@ package io.nofrills.empress.base
 import kotlinx.coroutines.delay
 
 internal sealed class Model {
-    data class Counter(val count: Int) : Model()
+    data class Counter(val count: Long) : Model()
+
+    data class Data(val text: String): Model()
 
     sealed class Sender : Model() {
         object Idle : Sender()
@@ -28,12 +30,13 @@ internal sealed class Model {
 }
 
 internal sealed class Signal {
-    data class CounterSent(val sentValue: Int) : Signal()
+    data class CounterSent(val sentValue: Long) : Signal()
     object SendingCancelled : Signal()
 }
 
 internal class SampleEmpress : Empress<Model, Signal>() {
     val counter = model(Model.Counter(0))
+    val data = model(Model.Data(""))
     val sender = model<Model.Sender>(Model.Sender.Idle)
 
     suspend fun decrement() = onEvent {
@@ -44,6 +47,10 @@ internal class SampleEmpress : Empress<Model, Signal>() {
     suspend fun delta(d: Int) = onEvent {
         val count = counter.get().count
         counter.update(Model.Counter(count + d))
+    }
+
+    suspend fun append(s: String) = onEvent {
+        data.update(Model.Data(data.get().text + s))
     }
 
     suspend fun increment() = onEvent {
@@ -66,8 +73,8 @@ internal class SampleEmpress : Empress<Model, Signal>() {
 
     suspend fun ping() = onEvent {}
 
-    suspend fun sendCounter() = onEvent {
-        if (sender.get() is Model.Sender.Loading) return@onEvent
+    suspend fun sendCounter(skipIfLoading: Boolean = true) = onEvent {
+        if (skipIfLoading && sender.get() is Model.Sender.Loading) return@onEvent
 
         val count = counter.get().count
         val requestId = request { sendCounter(count) }
@@ -81,7 +88,7 @@ internal class SampleEmpress : Empress<Model, Signal>() {
         sender.update(Model.Sender.Loading(requestId))
     }
 
-    private suspend fun onCounterSent(sentValue: Int) = onEvent {
+    private suspend fun onCounterSent(sentValue: Long) = onEvent {
         signal(Signal.CounterSent(sentValue))
         sender.update(Model.Sender.Idle)
     }
@@ -116,11 +123,11 @@ internal class SampleEmpress : Empress<Model, Signal>() {
         event { increment() }
     }
 
-    private suspend fun indirectSendCounter(count: Int) = onRequest {
+    private suspend fun indirectSendCounter(count: Long) = onRequest {
         sendCounter(count)
     }
 
-    private suspend fun sendCounter(count: Int) = onRequest {
+    private suspend fun sendCounter(count: Long) = onRequest {
         delay(count * 1000L)
         onCounterSent(count)
     }
