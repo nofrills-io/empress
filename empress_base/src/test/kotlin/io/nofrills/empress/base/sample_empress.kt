@@ -35,11 +35,11 @@ internal sealed class CounterSignal {
 }
 
 internal class SampleEmpress : Empress() {
-    val counter = model(Model.Counter(0))
-    val data = model(Model.Data(""))
-    val sender = model<Model.Sender>(Model.Sender.Idle)
+    val counter by model(Model.Counter(0))
+    val data by model(Model.Data(""))
+    val sender by model<Model.Sender>(Model.Sender.Idle)
 
-    val counterSignal = signal<CounterSignal>()
+    val counterSignal by signal<CounterSignal>()
 
     suspend fun decrement() = onEvent {
         val count = counter.get().count
@@ -144,8 +144,13 @@ internal class SampleEmpress : Empress() {
 }
 
 internal class DuplicateModelEmpress : Empress() {
-    val counter = model(Model.Counter(0))
-    val anotherCounter = model(Model.Counter(0))
+    val counter by model(Model.Counter(5))
+    val anotherCounter by model(Model.Counter(3))
+
+    suspend fun evaluateCounters() = onEvent {
+        counter.get()
+        anotherCounter.get()
+    }
 }
 
 internal class OnEventError : Throwable()

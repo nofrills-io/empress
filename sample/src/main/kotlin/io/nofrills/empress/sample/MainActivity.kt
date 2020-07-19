@@ -39,15 +39,15 @@ class MainActivity : AppCompatActivity() {
         allowDiskReads { super.onCreate(savedInstanceState) }
         setContentView(R.layout.activity_main)
 
-        empressApi.signals { counterSignal }
+        empressApi.signal { counterSignal }
             .onEach { onSignal(it) }
             .launchIn(lifecycle.coroutineScope)
 
-        empressApi.listen { counter }
+        empressApi.model { counter }
             .onEach { renderCount(it.count) }
             .launchIn(lifecycle.coroutineScope)
 
-        empressApi.listen { sender }
+        empressApi.model { sender }
             .onEach { renderProgress(it) }
             .launchIn(lifecycle.coroutineScope)
 

@@ -19,15 +19,30 @@ package io.nofrills.empress.base
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlin.reflect.KProperty
 
 /** Opaque representation for an event handler. */
 class EventDeclaration internal constructor()
 
-class ModelDeclaration<T> internal constructor(internal val modelClass: Class<out T>)
+class ModelDelegate<T : Any> internal constructor(private val initialValue: T) {
+    operator fun getValue(thisRef: Any, property: KProperty<*>): ModelDeclaration<T> {
+        return ModelDeclaration(property.name, initialValue)
+    }
+}
 
-class SignalDeclaration<T> internal constructor(internal val signalClass: Class<out T>)
+class ModelDeclaration<T> internal constructor(
+    internal val key: String,
+    internal val initialValue: T
+)
+
+class SignalDelegate<T : Any> internal constructor() {
+    operator fun getValue(thisRef: Any, property: KProperty<*>): SignalDeclaration<T> {
+        return SignalDeclaration(property.name)
+    }
+}
+
+class SignalDeclaration<T> internal constructor(internal val key: String)
 
 /** An ID for a request, which can be used to [cancel][EventHandlerContext.cancelRequest] it. */
 data class RequestId(private val id: Long)
@@ -66,25 +81,12 @@ abstract class EventHandlerContext {
 abstract class Empress {
     internal lateinit var backend: BackendFacade
 
-    // TODO could be moved to backend (while initialValue would be part of ModelDeclaration)
-    internal val modelStateFlows = mutableMapOf<Class<out Any>, MutableStateFlow<Any>>()
-
-    protected fun <T : Any> model(modelClass: Class<out T>, initialValue: T): ModelDeclaration<T> {
-        val wasNotYetAdded = modelStateFlows.put(modelClass, MutableStateFlow(initialValue)) == null
-        check(wasNotYetAdded) { "The value for class $modelClass has been already added." }
-        return ModelDeclaration(modelClass)
+    protected fun <T : Any> model(initialValue: T): ModelDelegate<T> {
+        return ModelDelegate(initialValue)
     }
 
-    protected inline fun <reified T : Any> model(initialValue: T): ModelDeclaration<T> {
-        return model(T::class.java, initialValue)
-    }
-
-    protected fun <T : Any> signal(signalClass: Class<out T>): SignalDeclaration<T> {
-        return SignalDeclaration(signalClass)
-    }
-
-    protected inline fun <reified T : Any> signal(): SignalDeclaration<T> {
-        return signal(T::class.java)
+    protected fun <T : Any> signal(): SignalDelegate<T> {
+        return SignalDelegate()
     }
 
     /** Allows to define an event handler.
@@ -108,11 +110,11 @@ interface EventCommander<E : Any> {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 interface ModelListener<E : Any> {
-    fun <T : Any> listen(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
+    fun <T : Any> model(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
 }
 
 interface SignalListener<E : Any> {
-    fun <T : Any> signals(fn: E.() -> SignalDeclaration<T>): Flow<T>
+    fun <T : Any> signal(fn: E.() -> SignalDeclaration<T>): Flow<T>
 }
 
 /** Allows to communicate with your [Empress] instance. */

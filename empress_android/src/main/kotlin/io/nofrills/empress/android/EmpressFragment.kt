@@ -23,39 +23,37 @@ import io.nofrills.empress.base.Empress
 import io.nofrills.empress.base.EmpressBackend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import java.util.ArrayList
 
 internal class EmpressFragment<E : Empress> : Fragment() {
     lateinit var backend: EmpressBackend<E>
         private set
     private val job = Job()
     private var storedHandlerId: Long? = null
-    private var storedModels: ArrayList<Any>? = null
+    private var storedModels: Map<String, Any>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        savedInstanceState?.let {
-            require(it.containsKey(REQUEST_ID_KEY))
-            require(it.containsKey(MODELS_KEY))
+        savedInstanceState?.let { bundle ->
+            require(bundle.containsKey(REQUEST_ID_KEY))
 
-            storedHandlerId = it.getLong(REQUEST_ID_KEY)
-            @Suppress("UNCHECKED_CAST")
-            storedModels = it.getParcelableArrayList<Parcelable>(MODELS_KEY) as ArrayList<Any>?
+            storedHandlerId = bundle.getLong(REQUEST_ID_KEY)
+            storedModels = bundle.keySet()
+                .filter { it.startsWith(MODELS_KEY) }
+                .map { it.removePrefix(MODELS_KEY) to bundle.get(it) }
+                .toMap()
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        val parcelablePatches = arrayListOf<Parcelable>()
-        val models = backend.models()
-        for (model in models) {
+        val modelsMap = backend.loadedModels()
+        for ((key, model) in modelsMap) {
             if (model is Parcelable) {
-                parcelablePatches.add(model)
+                outState.putParcelable("$MODELS_KEY$key", model)
             }
         }
         outState.putLong(REQUEST_ID_KEY, backend.lastRequestId())
-        outState.putParcelableArrayList(MODELS_KEY, parcelablePatches)
     }
 
     override fun onDestroy() {
@@ -80,6 +78,6 @@ internal class EmpressFragment<E : Empress> : Fragment() {
 
     companion object {
         private const val REQUEST_ID_KEY = "io.nofrills.empress.android.request_id"
-        private const val MODELS_KEY = "io.nofrills.empress.android.models"
+        private const val MODELS_KEY = "io.nofrills.empress.android.model."
     }
 }

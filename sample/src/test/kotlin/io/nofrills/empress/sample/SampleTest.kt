@@ -44,15 +44,15 @@ class SampleTest {
 
     @Test
     fun example() = scope.runBlockingTest {
-        val deferredSignals = async { tested.signals { counterSignal }.toList() }
+        val deferredSignals = async { tested.signal { counterSignal }.toList() }
 
         tested.post { increment() }
         tested.post { increment() }
         tested.post { sendCounter() }
         tested.interrupt()
 
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(Counter(2), counter)

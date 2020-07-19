@@ -42,13 +42,11 @@ internal interface BackendFacade {
 
 /** Extends [EmpressApi] with additional methods useful in unit tests. */
 interface TestEmpressApi<E : Any> : EmpressApi<E> {
-    fun <T : Any> get(modelClass: Class<out T>): T
+    /** Returns any models that have been used by [E]. */
+    fun loadedModels(): Map<String, Any>
 
     /** Interrupts event processing loop. */
     suspend fun interrupt()
-
-    /** Returns current models. */
-    fun models(): Collection<Any>
 }
 
 /** Runs and manages an Empress instance.
@@ -63,7 +61,7 @@ class EmpressBackend<E : Empress> constructor(
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
-    storedModels: Collection<Any>? = null,
+    storedModels: Map<String, Any>? = null,
     initialRequestId: Long? = null
 ) : BackendFacade, EmpressApi<E>, TestEmpressApi<E>, EventHandlerContext() {
     private val dynamicLatch = DynamicLatch()
@@ -72,9 +70,11 @@ class EmpressBackend<E : Empress> constructor(
 
     private var lastRequestId = AtomicLong(initialRequestId ?: 0)
 
+    private val modelStateFlowsMap = ConcurrentHashMap<String, MutableStateFlow<Any>>()
+
     private val requestJobMap = ConcurrentHashMap<RequestId, Job>()
 
-    private val signalChannelsMap = ConcurrentHashMap<Class<out Any>, MutableList<Channel<Any>>>()
+    private val signalChannelsMap = ConcurrentHashMap<String, MutableList<Channel<Any>>>()
 
     init {
         empress.backend = this
@@ -111,9 +111,10 @@ class EmpressBackend<E : Empress> constructor(
 
     // TestEmpressApi
 
-    override fun <T : Any> get(modelClass: Class<out T>): T {
-        @Suppress("UNCHECKED_CAST")
-        return empress.modelStateFlows.getValue(modelClass).value as T
+    override fun loadedModels(): Map<String, Any> {
+        return modelStateFlowsMap.mapValues {
+            it.value.value
+        }
     }
 
     override suspend fun interrupt() {
@@ -121,18 +122,13 @@ class EmpressBackend<E : Empress> constructor(
         closeChannels()
     }
 
-    override fun models(): Collection<Any> {
-        return empress.modelStateFlows.values.map { it.value }
-    }
-
     // EmpressApi
 
-    override fun <T : Any> listen(
+    override fun <T : Any> model(
         fn: E.() -> ModelDeclaration<T>
     ): StateFlow<T> {
-        val modelClass = fn(empress).modelClass
-        @Suppress("UNCHECKED_CAST")
-        return empress.modelStateFlows.getValue(modelClass) as StateFlow<T>
+        val modelDeclaration = fn(empress)
+        return stateFlowForModel(modelDeclaration)
     }
 
     override fun post(fn: suspend E.() -> EventDeclaration) {
@@ -144,25 +140,20 @@ class EmpressBackend<E : Empress> constructor(
         }
     }
 
-    override fun <T : Any> signals(fn: E.() -> SignalDeclaration<T>): Flow<T> {
-        val signalClass = fn(empress).signalClass
+    override fun <T : Any> signal(fn: E.() -> SignalDeclaration<T>): Flow<T> {
+        val signalKey = fn(empress).key
         val channel = Channel<T>(Channel.UNLIMITED)
         return channel
             .consumeAsFlow()
             .onStart {
-                synchronized(signalChannelsMap) {
-                    val list = signalChannelsMap[signalClass] ?: Collections.synchronizedList(
-                        mutableListOf<Channel<Any>>()
-                    ).also {
-                        signalChannelsMap[signalClass] = it
-                    }
-                    @Suppress("UNCHECKED_CAST")
-                    list.add(channel as Channel<Any>)
-                }
+                val newList = Collections.synchronizedList(mutableListOf<Channel<Any>>())
+                val list = signalChannelsMap.putIfAbsent(signalKey, newList) ?: newList
+                @Suppress("UNCHECKED_CAST")
+                list.add(channel as Channel<Any>)
             }
             .onCompletion {
                 @Suppress("UNCHECKED_CAST")
-                signalChannelsMap.getValue(signalClass).remove(channel as Channel<Any>)
+                signalChannelsMap.getValue(signalKey).remove(channel as Channel<Any>)
             }
     }
 
@@ -202,21 +193,18 @@ class EmpressBackend<E : Empress> constructor(
     }
 
     override fun <T : Any> ModelDeclaration<T>.get(): T {
-        @Suppress("UNCHECKED_CAST")
-        return empress.modelStateFlows.getValue(modelClass).value as T
+        return stateFlowForModel(this).value
     }
 
     override fun <T : Any> ModelDeclaration<T>.update(value: T) {
-        empress.modelStateFlows.getValue(modelClass).value = value
+        stateFlowForModel(this).value = value
     }
 
     override fun <T : Any> SignalDeclaration<T>.push(signal: T) {
-        synchronized(signalChannelsMap) {
-            signalChannelsMap.values.forEach { channels ->
-                channels.forEach {
-                    val added = it.offer(signal)
-                    check(added)
-                }
+        signalChannelsMap.values.forEach { channels ->
+            synchronized(channels) { channels.toList() }.forEach {
+                val added = it.offer(signal)
+                check(added)
             }
         }
     }
@@ -224,16 +212,14 @@ class EmpressBackend<E : Empress> constructor(
     // Implementation details
 
     internal fun areChannelsClosedForSend(): Boolean {
-        return synchronized(signalChannelsMap) {
-            signalChannelsMap.values.all { channels ->
-                channels.all { it.isClosedForSend }
-            } && eventChannel.isClosedForSend
-        }
+        return signalChannelsMap.values.all { channels ->
+            synchronized(channels) { channels.toList() }.all { it.isClosedForSend }
+        } && eventChannel.isClosedForSend
     }
 
     private fun closeChannels() {
         eventChannel.close()
-        synchronized(signalChannelsMap) { signalChannelsMap.values.toList() }.forEach { channels ->
+        signalChannelsMap.values.forEach { channels ->
             synchronized(channels) { channels.toList() }.forEach { it.close() }
         }
     }
@@ -254,12 +240,19 @@ class EmpressBackend<E : Empress> constructor(
         }
     }
 
-    private fun loadStoredModels(storedModels: Collection<Any>) {
-        val loaded = mutableSetOf<Class<out Any>>()
-        for (m in storedModels) {
-            check(loaded.add(m::class.java)) { "Model ${m.javaClass} was already loaded." }
-            empress.modelStateFlows.getValue(m::class.java).value = m
+    private fun loadStoredModels(storedModels: Map<String, Any>) {
+        for ((key, model) in storedModels) {
+            stateFlowForModel(ModelDeclaration(key, model))
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> stateFlowForModel(modelDeclaration: ModelDeclaration<T>): MutableStateFlow<T> {
+        val stateFlow = MutableStateFlow(modelDeclaration.initialValue)
+        return (modelStateFlowsMap.putIfAbsent(
+            modelDeclaration.key,
+            stateFlow as MutableStateFlow<Any>
+        ) ?: stateFlow) as MutableStateFlow<T>
     }
 
     private class SameEventHandler : AbstractCoroutineContextElement(SameEventHandler) {

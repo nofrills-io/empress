@@ -42,11 +42,11 @@ class EmpressBackendTest {
         tested.post { delta(2) }
         tested.post { decrement() }
         tested.interrupt()
-        val counter = tested.listen { counter }.value
+        val counter = tested.model { counter }.value
         assertEquals(Model.Counter(3), counter)
         assertEquals(
-            setOf(Model.Sender.Idle, Model.Counter(3), Model.Data("")),
-            tested.models().toSet()
+            setOf(Model.Counter(3)),
+            tested.loadedModels().values.toSet()
         )
     }
 
@@ -56,8 +56,8 @@ class EmpressBackendTest {
         tested.post { increment() }
         tested.interrupt()
 
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
 
         assertEquals(Model.Counter(1), counter)
         assertEquals(Model.Sender.Idle, sender)
@@ -72,8 +72,8 @@ class EmpressBackendTest {
         tested.post { sendCounter() }
         tested.interrupt()
 
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(Model.Counter(1), counter)
@@ -94,8 +94,8 @@ class EmpressBackendTest {
         tested.interrupt()
         resumeDispatcher()
 
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(Model.Counter(1), counter)
@@ -119,8 +119,8 @@ class EmpressBackendTest {
         tested.post { cancelSending() }
         tested.interrupt()
 
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
         val signals = deferredSignals.await()
 
         testScope.cleanupTestCoroutines()
@@ -130,15 +130,25 @@ class EmpressBackendTest {
         assertEquals(listOf(CounterSignal.CounterSent(1)), signals)
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun duplicateInitialModels() {
-        DuplicateModelEmpress()
+    @Test
+    fun duplicateInitialModels() = runBlockingTest {
+        val tested = EmpressBackend(DuplicateModelEmpress(), this, this)
+        tested.post { evaluateCounters() }
+        tested.interrupt()
+
+        val expectedModels = setOf(Model.Counter(5), Model.Counter(3))
+        val actualModels = tested.loadedModels().values.toSet()
+        assertEquals(expectedModels, actualModels)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun duplicateStoredModels() = runBlockingTest {
-        val models = listOf(Model.Counter(0), Model.Counter(1), Model.Sender.Idle)
-        makeTested(this, storedModels = models)
+        val models = mapOf(
+            "c1" to Model.Counter(0),
+            "c2" to Model.Counter(1),
+            "s" to Model.Sender.Idle
+        )
+        makeTested(this, storedModels = models).interrupt()
     }
 
     @Test
@@ -146,7 +156,7 @@ class EmpressBackendTest {
         val tested = makeTested(this, initialRequestId = 11)
         tested.post { sendCounter() }
         tested.interrupt()
-        val sender = tested.listen { sender }.value
+        val sender = tested.model { sender }.value
         assertEquals(Model.Sender.Idle, sender)
     }
 
@@ -162,7 +172,7 @@ class EmpressBackendTest {
             d = 7
             tested.post { increment() }
             tested.interrupt()
-            val counter = tested.listen { counter }.value
+            val counter = tested.model { counter }.value
             assertEquals(Model.Counter(4), counter)
         }
     }
@@ -182,7 +192,7 @@ class EmpressBackendTest {
             }
             tested.interrupt()
 
-            val data = tested.listen { data }.value
+            val data = tested.model { data }.value
             assertEquals(b.toString(), data.text)
         }
     }
@@ -194,7 +204,7 @@ class EmpressBackendTest {
         tested.post { decrement() }
         tested.interrupt()
 
-        val counter = tested.listen { counter }.value
+        val counter = tested.model { counter }.value
         assertEquals(Model.Counter(-2), counter)
     }
 
@@ -283,8 +293,8 @@ class EmpressBackendTest {
         tested.interrupt()
 
         val signals = deferredSignals.await()
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
 
         val expectedSignals = listOf(CounterSignal.CounterSent(1))
         assertEquals(expectedSignals, signals)
@@ -306,8 +316,8 @@ class EmpressBackendTest {
         tested.interrupt()
         resumeDispatcher()
 
-        val counter = tested.listen { counter }.value
-        val sender = tested.listen { sender }.value
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(listOf(CounterSignal.SendingCancelled), signals)
@@ -324,7 +334,7 @@ class EmpressBackendTest {
         tested.post { sendCounterVariableCount() }
         tested.interrupt()
 
-        val sender = tested.listen { sender }.value
+        val sender = tested.model { sender }.value
         val signals = deferredSignals.await()
 
         assertEquals(listOf(CounterSignal.CounterSent(0)), signals)
@@ -348,7 +358,7 @@ class EmpressBackendTest {
         val tested = makeTested(this)
         tested.post { errorInRequest() }
         tested.interrupt()
-        val counter = tested.listen { counter }.value
+        val counter = tested.model { counter }.value
         assertEquals(Model.Counter(2), counter)
     }
 
@@ -362,7 +372,7 @@ class EmpressBackendTest {
     private fun makeTested(
         coroutineScope: CoroutineScope,
         empress: SampleEmpress = SampleEmpress(),
-        storedModels: Collection<Model>? = null,
+        storedModels: Map<String, Model>? = null,
         initialRequestId: Long? = null
     ): TestEmpressApi<SampleEmpress> {
         return if (storedModels != null && initialRequestId != null) {
@@ -394,7 +404,7 @@ class EmpressBackendTest {
 
     private fun CoroutineScope.signalsAsync(api: EmpressApi<SampleEmpress>): Deferred<List<CounterSignal>> {
         return async(start = CoroutineStart.UNDISPATCHED) {
-            api.signals { counterSignal }.toList()
+            api.signal { counterSignal }.toList()
         }
     }
 }

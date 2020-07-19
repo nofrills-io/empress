@@ -21,9 +21,9 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 class SampleEmpress : Empress() {
-    val counter = model(Counter(0))
-    val sender = model<Sender>(Sender.Idle)
-    val counterSignal = signal<CounterSignal>()
+    val counter by model(Counter(0))
+    val sender by model<Sender>(Sender.Idle)
+    val counterSignal by signal<CounterSignal>()
 
     suspend fun cancelSendingCounter() = onEvent {
         val state = sender.get()

@@ -18,8 +18,8 @@ sealed class Model {
 sealed class Signal
 
 class SampleEmpress : Empress() {
-    val counter = model(Model.Counter(0))
-    val parcelableCounter = model(Model.ParcelableCounter(0))
+    val counter by model(Model.Counter(0))
+    val parcelableCounter by model(Model.ParcelableCounter(0))
 
     suspend fun increment() = onEvent {
         counter.updateWith { it.copy(count = it.count + 1) }
