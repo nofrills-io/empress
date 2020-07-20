@@ -16,9 +16,7 @@
 
 package io.nofrills.empress.android
 
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.*
 import io.nofrills.empress.base.Empress
 import io.nofrills.empress.base.EmpressApi
 import io.nofrills.empress.base.EmpressBackend
@@ -56,6 +54,10 @@ fun <E : Empress> FragmentActivity.enthrone(
     )
 }
 
+fun FragmentActivity.dethrone(empressApi: EmpressApi<*>) {
+    dethroneEmpress(empressApi, supportFragmentManager)
+}
+
 fun FragmentActivity.dethrone(empressId: String) {
     dethroneEmpress(empressId, supportFragmentManager)
 }
@@ -91,6 +93,10 @@ fun <E : Empress> Fragment.enthrone(
     )
 }
 
+fun Fragment.dethrone(empressApi: EmpressApi<*>) {
+    dethroneEmpress(empressApi, childFragmentManager)
+}
+
 fun Fragment.dethrone(empressId: String) {
     dethroneEmpress(empressId, childFragmentManager)
 }
@@ -120,6 +126,16 @@ private fun dethroneEmpress(empressId: String, fragmentManager: FragmentManager)
     fragmentManager.beginTransaction()
         .remove(fragment)
         .commitNow()
+}
+
+private fun dethroneEmpress(empressApi: EmpressApi<*>, fragmentManager: FragmentManager) {
+    fragmentManager.commitNow {
+        fragmentManager.fragments
+            .filter { it is EmpressFragment<*> && it.backend == empressApi }
+            .forEach {
+                remove(it)
+            }
+    }
 }
 
 private fun getEmpressFragmentTag(empressId: String): String {
