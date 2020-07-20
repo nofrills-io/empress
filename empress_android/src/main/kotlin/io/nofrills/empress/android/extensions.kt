@@ -56,6 +56,10 @@ fun <E : Empress> FragmentActivity.enthrone(
     )
 }
 
+fun FragmentActivity.dethrone(empressId: String) {
+    dethroneEmpress(empressId, supportFragmentManager)
+}
+
 /** Installs an empress instance into the [fragment][this].
  * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
@@ -87,13 +91,17 @@ fun <E : Empress> Fragment.enthrone(
     )
 }
 
+fun Fragment.dethrone(empressId: String) {
+    dethroneEmpress(empressId, childFragmentManager)
+}
+
 private fun <E : Empress> getEmpressBackendInstance(
     fragmentManager: FragmentManager,
     retainInstance: Boolean,
     specFactory: () -> EmpressSpec<E>,
     empressId: String
 ): EmpressBackend<E> {
-    val fragmentTag = "io.nofrills.empress.empress-fragment-${empressId}"
+    val fragmentTag = getEmpressFragmentTag(empressId)
 
     @Suppress("UNCHECKED_CAST")
     val fragment: EmpressFragment<E> =
@@ -104,6 +112,18 @@ private fun <E : Empress> getEmpressBackendInstance(
     fragment.retainInstance = retainInstance
     fragment.initialize(specFactory)
     return fragment.backend
+}
+
+private fun dethroneEmpress(empressId: String, fragmentManager: FragmentManager) {
+    val fragmentTag = getEmpressFragmentTag(empressId)
+    val fragment = fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<*>? ?: return
+    fragmentManager.beginTransaction()
+        .remove(fragment)
+        .commitNow()
+}
+
+private fun getEmpressFragmentTag(empressId: String): String {
+    return "io.nofrills.empress.empress-fragment-${empressId}"
 }
 
 internal class EmpressSpec<E : Empress>(
