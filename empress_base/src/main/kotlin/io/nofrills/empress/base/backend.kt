@@ -201,11 +201,10 @@ class EmpressBackend<E : Empress> constructor(
     }
 
     override fun <T : Any> SignalDeclaration<T>.push(signal: T) {
-        signalChannelsMap.values.forEach { channels ->
-            synchronized(channels) { channels.toList() }.forEach {
-                val added = it.offer(signal)
-                check(added)
-            }
+        val channels = signalChannelsMap[key] ?: return
+        synchronized(channels) { channels.toList() }.forEach {
+            val added = it.offer(signal)
+            check(added)
         }
     }
 
