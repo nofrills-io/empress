@@ -45,6 +45,7 @@ fun <E : Empress> FragmentActivity.enthrone(
         retainInstance = retainInstance,
         specFactory = {
             EmpressSpec(
+                empressId,
                 empress,
                 eventDispatcher = eventDispatcher,
                 requestDispatcher = requestDispatcher
@@ -84,6 +85,7 @@ fun <E : Empress> Fragment.enthrone(
         retainInstance = retainInstance,
         specFactory = {
             EmpressSpec(
+                empressId,
                 empress,
                 eventDispatcher = eventDispatcher,
                 requestDispatcher = requestDispatcher
@@ -143,6 +145,7 @@ private fun getEmpressFragmentTag(empressId: String): String {
 }
 
 internal class EmpressSpec<E : Empress>(
+    val id: String,
     val empress: E,
     val eventDispatcher: CoroutineDispatcher,
     val requestDispatcher: CoroutineDispatcher

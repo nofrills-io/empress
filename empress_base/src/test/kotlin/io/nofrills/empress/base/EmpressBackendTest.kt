@@ -132,7 +132,7 @@ class EmpressBackendTest {
 
     @Test
     fun duplicateInitialModels() = runBlockingTest {
-        val tested = EmpressBackend(DuplicateModelEmpress(), this, this)
+        val tested = EmpressBackend("test", DuplicateModelEmpress(), this, this)
         tested.post { evaluateCounters() }
         tested.interrupt()
 
@@ -375,31 +375,21 @@ class EmpressBackendTest {
         storedModels: Map<String, Model>? = null,
         initialRequestId: Long? = null
     ): TestEmpressApi<SampleEmpress> {
-        return if (storedModels != null && initialRequestId != null) {
-            EmpressBackend(
-                empress,
-                coroutineScope,
-                coroutineScope,
-                storedModels,
-                initialRequestId
-            )
-        } else if (storedModels != null) {
-            EmpressBackend(
-                empress,
-                coroutineScope,
-                coroutineScope,
-                storedModels
-            )
-        } else if (initialRequestId != null) {
-            EmpressBackend(
-                empress,
-                coroutineScope,
-                coroutineScope,
-                initialRequestId = initialRequestId
-            )
-        } else {
-            EmpressBackend(empress, coroutineScope, coroutineScope)
-        }
+        return EmpressBackend(
+            "test",
+            empress,
+            coroutineScope,
+            coroutineScope,
+            object : StoredDataLoader {
+                override fun loadStoredModels(empressBackendId: String): Map<String, Any>? {
+                    return storedModels
+                }
+
+                override fun loadStoredRequestId(empressBackendId: String): Long? {
+                    return initialRequestId
+                }
+            }
+        )
     }
 
     private fun CoroutineScope.signalsAsync(api: EmpressApi<SampleEmpress>): Deferred<List<CounterSignal>> {

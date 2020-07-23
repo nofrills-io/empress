@@ -21,39 +21,47 @@ import android.os.Parcelable
 import androidx.fragment.app.Fragment
 import io.nofrills.empress.base.Empress
 import io.nofrills.empress.base.EmpressBackend
+import io.nofrills.empress.base.StoredDataLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
-internal class EmpressFragment<E : Empress> : Fragment() {
+internal class EmpressFragment<E : Empress> : Fragment(), StoredDataLoader {
     lateinit var backend: EmpressBackend<E>
         private set
+
     private val job = Job()
-    private var storedHandlerId: Long? = null
-    private var storedModels: Map<String, Any>? = null
+
+    private var state: Bundle? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        savedInstanceState?.let { bundle ->
-            require(bundle.containsKey(REQUEST_ID_KEY))
-
-            storedHandlerId = bundle.getLong(REQUEST_ID_KEY)
-            storedModels = bundle.keySet()
-                .filter { it.startsWith(MODELS_KEY) }
-                .map { it.removePrefix(MODELS_KEY) to bundle.get(it) }
-                .toMap()
-        }
+        state = savedInstanceState
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        storeEmpress(backend, outState)
+    }
 
-        val modelsMap = backend.loadedModels()
+    private fun storeEmpress(empressBackend: EmpressBackend<*>, outState: Bundle) {
+        val bundle = bundleEmpressData(empressBackend)
+        outState.putBundle("$STATE_KEY${empressBackend.id}", bundle)
+
+        for ((_, b) in empressBackend.getChildEmpressBackends()) {
+            storeEmpress(b, outState)
+        }
+    }
+
+    private fun bundleEmpressData(empressBackend: EmpressBackend<*>): Bundle {
+        val bundle = Bundle()
+        val modelsMap = empressBackend.loadedModels()
         for ((key, model) in modelsMap) {
             if (model is Parcelable) {
-                outState.putParcelable("$MODELS_KEY$key", model)
+                bundle.putParcelable("$MODELS_KEY$key", model)
             }
         }
-        outState.putLong(REQUEST_ID_KEY, backend.lastRequestId())
+        bundle.putLong(REQUEST_ID_KEY, empressBackend.lastRequestId())
+        return bundle
     }
 
     override fun onDestroy() {
@@ -67,17 +75,50 @@ internal class EmpressFragment<E : Empress> : Fragment() {
             val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)
             val requestHandlerScope = CoroutineScope(result.requestDispatcher + job)
             backend = EmpressBackend(
+                result.id,
                 result.empress,
                 eventHandlerScope,
                 requestHandlerScope,
-                storedModels,
-                storedHandlerId
+                this
             )
         }
     }
 
+    // StoredDataLoader
+
+    override fun loadStoredModels(empressBackendId: String): Map<String, Any>? {
+        val state = state ?: return null
+        val bundleKey = "$STATE_KEY$empressBackendId"
+        val bundle = state.getBundle(bundleKey) ?: return null
+        val modelsMap = bundle.keySet()
+            .filter { it.startsWith(MODELS_KEY) }
+            .map { it to bundle.get(it) }
+            .onEach { bundle.remove(it.first) }
+            .map { it.first.removePrefix(MODELS_KEY) to it.second }
+            .toMap()
+        if (bundle.isEmpty) {
+            state.remove(bundleKey)
+        }
+        return modelsMap
+    }
+
+    override fun loadStoredRequestId(empressBackendId: String): Long? {
+        val state = state ?: return null
+        val bundleKey = "$STATE_KEY$empressBackendId"
+        val bundle = state.getBundle(bundleKey) ?: return null
+        return if (bundle.containsKey(REQUEST_ID_KEY)) {
+            val requestId = bundle.getLong(REQUEST_ID_KEY)
+            bundle.remove(REQUEST_ID_KEY)
+            if (bundle.isEmpty) {
+                state.remove(bundleKey)
+            }
+            requestId
+        } else null
+    }
+
     companion object {
-        private const val REQUEST_ID_KEY = "io.nofrills.empress.android.request_id"
         private const val MODELS_KEY = "io.nofrills.empress.android.model."
+        private const val REQUEST_ID_KEY = "io.nofrills.empress.android.request_id"
+        private const val STATE_KEY = "io.nofrills.empress.android.state."
     }
 }

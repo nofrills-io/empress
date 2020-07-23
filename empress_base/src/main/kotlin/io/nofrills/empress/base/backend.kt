@@ -40,6 +40,11 @@ internal interface BackendFacade {
     suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration
 }
 
+interface StoredDataLoader {
+    fun loadStoredModels(empressBackendId: String): Map<String, Any>?
+    fun loadStoredRequestId(empressBackendId: String): Long?
+}
+
 /** Extends [EmpressApi] with additional methods useful in unit tests. */
 interface TestEmpressApi<E : Any> : EmpressApi<E> {
     /** Returns any models that have been used by [E]. */
@@ -50,25 +55,27 @@ interface TestEmpressApi<E : Any> : EmpressApi<E> {
 }
 
 /** Runs and manages an Empress instance.
+ * @param id Unique ID for this backend.
  * @param empress Empress instance that we want to run.
  * @param eventHandlerScope A coroutine scope where events will be processed.
  * @param requestHandlerScope A coroutine scope where requests will be processed.
- * @param storedModels Models that were previously stored, which will be used instead of the initial values.
- * @param initialRequestId The number from which to start generating requests IDs.
+ * @param storedDataLoader Allows to load any stored models and request id.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class EmpressBackend<E : Empress> constructor(
+    val id: String,
     private val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
-    storedModels: Map<String, Any>? = null,
-    initialRequestId: Long? = null
+    private val storedDataLoader: StoredDataLoader? = null
 ) : BackendFacade, EmpressApi<E>, TestEmpressApi<E>, EventHandlerContext() {
+    private val childEmpressMap = mutableMapOf<String, EmpressBackend<*>>()
+
     private val dynamicLatch = DynamicLatch()
 
     private val eventChannel = Channel<EventHandlerContext.() -> Unit>(Channel.UNLIMITED)
 
-    private var lastRequestId = AtomicLong(initialRequestId ?: 0)
+    private var lastRequestId = AtomicLong(0)
 
     private val modelStateFlowsMap = ConcurrentHashMap<String, MutableStateFlow<Any>>()
 
@@ -78,11 +85,16 @@ class EmpressBackend<E : Empress> constructor(
 
     init {
         empress.backend = this
-        storedModels?.let { loadStoredModels(it) }
+        storedDataLoader?.loadStoredModels(id)?.let { loadStoredModels(it) }
+        storedDataLoader?.loadStoredRequestId(id)?.let { lastRequestId.set(it) }
         launchHandlerProcessing()
         eventHandlerScope.coroutineContext[Job]?.invokeOnCompletion {
             closeChannels()
         }
+    }
+
+    fun getChildEmpressBackends(): Map<String, EmpressBackend<*>> {
+        return childEmpressMap
     }
 
     fun lastRequestId(): Long {
@@ -122,7 +134,33 @@ class EmpressBackend<E : Empress> constructor(
         closeChannels()
     }
 
-    // EmpressApi
+    override fun <T : Empress> destroy(fn: E.() -> ChildEmpressDeclaration<T>) {
+        val childId = getChildId(fn(empress))
+        childEmpressMap.remove(childId)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Empress> provide(fn: E.() -> ChildEmpressDeclaration<T>): EmpressApi<T> {
+        val childEmpressDeclaration = fn(empress)
+        val childId = getChildId(childEmpressDeclaration)
+        childEmpressMap[childId]?.let { return it as EmpressApi<T> }
+
+        val childEmpress = childEmpressDeclaration.provider()
+        val childBackend = EmpressBackend(
+            childId,
+            childEmpress,
+            eventHandlerScope,
+            requestHandlerScope,
+            storedDataLoader
+        )
+        childEmpressMap[childId] = childBackend
+
+        return childBackend
+    }
+
+    private fun getChildId(childEmpressDeclaration: ChildEmpressDeclaration<*>): String {
+        return "$id.${childEmpressDeclaration.key}"
+    }
 
     override fun <T : Any> model(
         fn: E.() -> ModelDeclaration<T>

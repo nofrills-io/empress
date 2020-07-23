@@ -22,6 +22,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KProperty
 
+class ChildEmpressDelegate<E : Empress> internal constructor(private val provider: () -> E) {
+    operator fun getValue(thisRef: Any, property: KProperty<*>): ChildEmpressDeclaration<E> {
+        return ChildEmpressDeclaration(property.name, provider)
+    }
+}
+
+class ChildEmpressDeclaration<E : Empress> internal constructor(
+    internal val key: String,
+    internal val provider: () -> E
+)
+
 /** Opaque representation for an event handler. */
 class EventDeclaration internal constructor()
 
@@ -81,6 +92,10 @@ abstract class EventHandlerContext {
 abstract class Empress {
     internal lateinit var backend: BackendFacade
 
+    protected fun <E : Empress> child(provider: () -> E): ChildEmpressDelegate<E> {
+        return ChildEmpressDelegate(provider)
+    }
+
     protected fun <T : Any> model(initialValue: T): ModelDelegate<T> {
         return ModelDelegate(initialValue)
     }
@@ -117,5 +132,11 @@ interface SignalListener<E : Any> {
     fun <T : Any> signal(fn: E.() -> SignalDeclaration<T>): Flow<T>
 }
 
+interface ChildEmpressProvider<E : Any> {
+    fun <T : Empress> destroy(fn: E.() -> ChildEmpressDeclaration<T>)
+    fun <T : Empress> provide(fn: E.() -> ChildEmpressDeclaration<T>): EmpressApi<T>
+}
+
 /** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any> : EventCommander<E>, ModelListener<E>, SignalListener<E>
+interface EmpressApi<E : Any> : ChildEmpressProvider<E>, EventCommander<E>, ModelListener<E>,
+    SignalListener<E>

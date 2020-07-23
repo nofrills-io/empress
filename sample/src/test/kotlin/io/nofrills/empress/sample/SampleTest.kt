@@ -34,7 +34,7 @@ class SampleTest {
     @Before
     fun setUp() {
         scope = TestCoroutineScope()
-        tested = EmpressBackend(SampleEmpress(), scope, scope)
+        tested = EmpressBackend("test", SampleEmpress(), scope, scope)
     }
 
     @After
