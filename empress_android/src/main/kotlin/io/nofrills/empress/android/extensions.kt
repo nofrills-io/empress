@@ -41,17 +41,14 @@ fun <E : Empress> FragmentActivity.enthrone(
     retainInstance: Boolean = true
 ): EmpressApi<E> {
     return getEmpressBackendInstance(
+        EmpressSpec(
+            empressId,
+            empress,
+            eventDispatcher = eventDispatcher,
+            requestDispatcher = requestDispatcher
+        ),
         supportFragmentManager,
-        retainInstance = retainInstance,
-        specFactory = {
-            EmpressSpec(
-                empressId,
-                empress,
-                eventDispatcher = eventDispatcher,
-                requestDispatcher = requestDispatcher
-            )
-        },
-        empressId = empressId
+        retainInstance = retainInstance
     )
 }
 
@@ -81,17 +78,14 @@ fun <E : Empress> Fragment.enthrone(
     retainInstance: Boolean = true
 ): EmpressApi<E> {
     return getEmpressBackendInstance(
+        EmpressSpec(
+            empressId,
+            empress,
+            eventDispatcher = eventDispatcher,
+            requestDispatcher = requestDispatcher
+        ),
         childFragmentManager,
-        retainInstance = retainInstance,
-        specFactory = {
-            EmpressSpec(
-                empressId,
-                empress,
-                eventDispatcher = eventDispatcher,
-                requestDispatcher = requestDispatcher
-            )
-        },
-        empressId = empressId
+        retainInstance = retainInstance
     )
 }
 
@@ -104,12 +98,11 @@ fun Fragment.dethrone(empressId: String) {
 }
 
 private fun <E : Empress> getEmpressBackendInstance(
+    empressSpec: EmpressSpec<E>,
     fragmentManager: FragmentManager,
-    retainInstance: Boolean,
-    specFactory: () -> EmpressSpec<E>,
-    empressId: String
+    retainInstance: Boolean
 ): EmpressBackend<E> {
-    val fragmentTag = getEmpressFragmentTag(empressId)
+    val fragmentTag = getEmpressFragmentTag(empressSpec.id)
 
     @Suppress("UNCHECKED_CAST")
     val fragment: EmpressFragment<E> =
@@ -118,7 +111,7 @@ private fun <E : Empress> getEmpressBackendInstance(
                 fragmentManager.beginTransaction().add(it, fragmentTag).commitNow()
             }
     fragment.retainInstance = retainInstance
-    fragment.initialize(specFactory)
+    fragment.initialize(empressSpec)
     return fragment.backend
 }
 

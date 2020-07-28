@@ -69,14 +69,13 @@ internal class EmpressFragment<E : Empress> : Fragment(), StoredDataLoader {
         super.onDestroy()
     }
 
-    fun initialize(specFactory: () -> EmpressSpec<E>) {
+    fun initialize(empressSpec: EmpressSpec<E>) {
         if (!this::backend.isInitialized) {
-            val result = specFactory()
-            val eventHandlerScope = CoroutineScope(result.eventDispatcher + job)
-            val requestHandlerScope = CoroutineScope(result.requestDispatcher + job)
+            val eventHandlerScope = CoroutineScope(empressSpec.eventDispatcher + job)
+            val requestHandlerScope = CoroutineScope(empressSpec.requestDispatcher + job)
             backend = EmpressBackend(
-                result.id,
-                result.empress,
+                empressSpec.id,
+                empressSpec.empress,
                 eventHandlerScope,
                 requestHandlerScope,
                 this
