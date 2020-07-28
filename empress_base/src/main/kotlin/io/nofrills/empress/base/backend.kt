@@ -134,32 +134,11 @@ class EmpressBackend<E : Empress> constructor(
         closeChannels()
     }
 
-    override fun <T : Empress> destroy(fn: E.() -> ChildEmpressDeclaration<T>) {
-        val childId = getChildId(fn(empress))
-        childEmpressMap.remove(childId)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : Empress> provide(fn: E.() -> ChildEmpressDeclaration<T>): EmpressApi<T> {
-        val childEmpressDeclaration = fn(empress)
-        val childId = getChildId(childEmpressDeclaration)
-        childEmpressMap[childId]?.let { return it as EmpressApi<T> }
-
-        val childEmpress = childEmpressDeclaration.provider()
-        val childBackend = EmpressBackend(
-            childId,
-            childEmpress,
-            eventHandlerScope,
-            requestHandlerScope,
-            storedDataLoader
-        )
-        childEmpressMap[childId] = childBackend
-
-        return childBackend
-    }
-
-    private fun getChildId(childEmpressDeclaration: ChildEmpressDeclaration<*>): String {
-        return "$id.${childEmpressDeclaration.key}"
+    private fun getChildId(
+        childEmpressDeclaration: ChildEmpressDeclaration<*>,
+        instanceId: String
+    ): String {
+        return "$id.${childEmpressDeclaration.key}.$instanceId"
     }
 
     override fun <T : Any> model(
@@ -228,6 +207,29 @@ class EmpressBackend<E : Empress> constructor(
         dynamicLatch.countUp()
         job.start()
         return requestId
+    }
+
+    override fun <T : Empress> ChildEmpressDeclaration<T>.destroy(instanceId: String) {
+        val childId = getChildId(this, instanceId)
+        childEmpressMap.remove(childId)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Empress> ChildEmpressDeclaration<T>.provide(instanceId: String): EmpressApi<T> {
+        val childId = getChildId(this, instanceId)
+        childEmpressMap[childId]?.let { return it as EmpressApi<T> }
+
+        val childEmpress = provider()
+        val childBackend = EmpressBackend(
+            childId,
+            childEmpress,
+            eventHandlerScope,
+            requestHandlerScope,
+            storedDataLoader
+        )
+        childEmpressMap[childId] = childBackend
+
+        return childBackend
     }
 
     override fun <T : Any> ModelDeclaration<T>.get(): T {

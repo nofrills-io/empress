@@ -74,6 +74,10 @@ abstract class EventHandlerContext {
     /** Schedules a request for execution. */
     abstract fun request(fn: suspend () -> RequestDeclaration): RequestId
 
+    abstract fun <T : Empress> ChildEmpressDeclaration<T>.destroy(instanceId: String)
+
+    abstract fun <T : Empress> ChildEmpressDeclaration<T>.provide(instanceId: String): EmpressApi<T>
+
     abstract fun <T : Any> ModelDeclaration<T>.get(): T
 
     abstract fun <T : Any> ModelDeclaration<T>.update(value: T)
@@ -132,11 +136,5 @@ interface SignalListener<E : Any> {
     fun <T : Any> signal(fn: E.() -> SignalDeclaration<T>): Flow<T>
 }
 
-interface ChildEmpressProvider<E : Any> {
-    fun <T : Empress> destroy(fn: E.() -> ChildEmpressDeclaration<T>)
-    fun <T : Empress> provide(fn: E.() -> ChildEmpressDeclaration<T>): EmpressApi<T>
-}
-
 /** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any> : ChildEmpressProvider<E>, EventCommander<E>, ModelListener<E>,
-    SignalListener<E>
+interface EmpressApi<E : Any> : EventCommander<E>, ModelListener<E>, SignalListener<E>
