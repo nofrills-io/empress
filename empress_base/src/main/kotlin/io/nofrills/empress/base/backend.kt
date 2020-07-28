@@ -36,6 +36,13 @@ private val eventInstance = EventDeclaration()
 private val requestInstance = RequestDeclaration()
 
 internal interface BackendFacade {
+    fun destroyChild(childEmpressDeclaration: ChildEmpressDeclaration<*>, instanceId: String)
+    fun destroyChild(empressApi: EmpressApi<*>)
+    fun <E : Empress> provideChild(
+        childEmpressDeclaration: ChildEmpressDeclaration<E>,
+        instanceId: String
+    ): EmpressApi<E>
+
     suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration
     suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration
 }
@@ -102,6 +109,41 @@ class EmpressBackend<E : Empress> constructor(
     }
 
     // BackendFacade
+
+    override fun destroyChild(
+        childEmpressDeclaration: ChildEmpressDeclaration<*>,
+        instanceId: String
+    ) {
+        val childId = getChildId(childEmpressDeclaration, instanceId)
+        childEmpressMap.remove(childId)
+    }
+
+    override fun destroyChild(empressApi: EmpressApi<*>) {
+        childEmpressMap.entries
+            .find { it.value == empressApi }
+            ?.key?.let { childEmpressMap.remove(it) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <E : Empress> provideChild(
+        childEmpressDeclaration: ChildEmpressDeclaration<E>,
+        instanceId: String
+    ): EmpressApi<E> {
+        val childId = getChildId(childEmpressDeclaration, instanceId)
+        childEmpressMap[childId]?.let { return it as EmpressApi<E> }
+
+        val childEmpress = childEmpressDeclaration.provider()
+        val childBackend = EmpressBackend(
+            childId,
+            childEmpress,
+            eventHandlerScope,
+            requestHandlerScope,
+            storedDataLoader
+        )
+        childEmpressMap[childId] = childBackend
+
+        return childBackend
+    }
 
     override suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration {
         if (coroutineContext[SameEventHandler] != null) {
@@ -207,29 +249,6 @@ class EmpressBackend<E : Empress> constructor(
         dynamicLatch.countUp()
         job.start()
         return requestId
-    }
-
-    override fun <T : Empress> ChildEmpressDeclaration<T>.destroy(instanceId: String) {
-        val childId = getChildId(this, instanceId)
-        childEmpressMap.remove(childId)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : Empress> ChildEmpressDeclaration<T>.provide(instanceId: String): EmpressApi<T> {
-        val childId = getChildId(this, instanceId)
-        childEmpressMap[childId]?.let { return it as EmpressApi<T> }
-
-        val childEmpress = provider()
-        val childBackend = EmpressBackend(
-            childId,
-            childEmpress,
-            eventHandlerScope,
-            requestHandlerScope,
-            storedDataLoader
-        )
-        childEmpressMap[childId] = childBackend
-
-        return childBackend
     }
 
     override fun <T : Any> ModelDeclaration<T>.get(): T {

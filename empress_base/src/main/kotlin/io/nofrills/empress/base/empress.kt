@@ -74,10 +74,6 @@ abstract class EventHandlerContext {
     /** Schedules a request for execution. */
     abstract fun request(fn: suspend () -> RequestDeclaration): RequestId
 
-    abstract fun <T : Empress> ChildEmpressDeclaration<T>.destroy(instanceId: String)
-
-    abstract fun <T : Empress> ChildEmpressDeclaration<T>.provide(instanceId: String): EmpressApi<T>
-
     abstract fun <T : Any> ModelDeclaration<T>.get(): T
 
     abstract fun <T : Any> ModelDeclaration<T>.update(value: T)
@@ -100,6 +96,8 @@ abstract class Empress {
         return ChildEmpressDelegate(provider)
     }
 
+    protected fun destroyChild(empressApi: EmpressApi<*>) = backend.destroyChild(empressApi)
+
     protected fun <T : Any> model(initialValue: T): ModelDelegate<T> {
         return ModelDelegate(initialValue)
     }
@@ -119,6 +117,12 @@ abstract class Empress {
      */
     protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration =
         backend.onRequest(fn)
+
+    protected fun <T : Empress> ChildEmpressDeclaration<T>.destroy(instanceId: String) =
+        backend.destroyChild(this, instanceId)
+
+    protected fun <T : Empress> ChildEmpressDeclaration<T>.provide(instanceId: String): EmpressApi<T> =
+        backend.provideChild(this, instanceId)
 }
 
 /** Allows to execute an event handler. */
