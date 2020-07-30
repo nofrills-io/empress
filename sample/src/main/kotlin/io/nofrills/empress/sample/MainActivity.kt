@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class MainActivity : AppCompatActivity() {
-    private val empressApi by lazy { enthrone(EMPRESS_ID, SampleEmpress()) }
+    private val empressApi by lazy { enthrone(EMPRESS_ID, ::SampleEmpress) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }

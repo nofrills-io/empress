@@ -12,7 +12,7 @@ class SampleFragment : Fragment(), WithEmpress {
     ): TestEmpressApi<SampleEmpress> {
         return enthrone(
             "sample_empress",
-            SampleEmpress(),
+            ::SampleEmpress,
             eventDispatcher = dispatcher,
             requestDispatcher = dispatcher,
             retainInstance = retainInstance

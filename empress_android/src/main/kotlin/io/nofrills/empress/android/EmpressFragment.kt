@@ -46,10 +46,6 @@ internal class EmpressFragment<E : Empress> : Fragment(), StoredDataLoader {
     private fun storeEmpress(empressBackend: EmpressBackend<*>, outState: Bundle) {
         val bundle = bundleEmpressData(empressBackend)
         outState.putBundle("$STATE_KEY${empressBackend.id}", bundle)
-
-        for ((_, b) in empressBackend.getChildEmpressBackends()) {
-            storeEmpress(b, outState)
-        }
     }
 
     private fun bundleEmpressData(empressBackend: EmpressBackend<*>): Bundle {
@@ -75,7 +71,7 @@ internal class EmpressFragment<E : Empress> : Fragment(), StoredDataLoader {
             val requestHandlerScope = CoroutineScope(empressSpec.requestDispatcher + job)
             backend = EmpressBackend(
                 empressSpec.id,
-                empressSpec.empress,
+                empressSpec.empressFactory(),
                 eventHandlerScope,
                 requestHandlerScope,
                 this

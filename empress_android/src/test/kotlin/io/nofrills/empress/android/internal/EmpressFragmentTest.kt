@@ -61,8 +61,8 @@ class EmpressFragmentTest {
     fun doubleEnthrone() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val backend = fragment.enthrone("test", SampleEmpress())
-            assertSame(backend, fragment.enthrone("test", SampleEmpress()))
+            val backend = fragment.enthrone("test", ::SampleEmpress)
+            assertSame(backend, fragment.enthrone("test", ::SampleEmpress))
         }
     }
 
@@ -70,8 +70,8 @@ class EmpressFragmentTest {
     fun distinctEmpressIds() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val api1 = fragment.enthrone("empress1", SampleEmpress())
-            val api2 = fragment.enthrone("empress2", SampleEmpress())
+            val api1 = fragment.enthrone("empress1", ::SampleEmpress)
+            val api2 = fragment.enthrone("empress2", ::SampleEmpress)
             assertNotSame(api1, api2)
         }
     }

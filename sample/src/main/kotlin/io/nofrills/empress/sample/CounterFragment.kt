@@ -40,7 +40,7 @@ class CounterFragment : Fragment() {
 
         // we call `enthrone` on activity,
         // since we want to share the Empress instance
-        val empressApi = requireActivity().enthrone(MainActivity.EMPRESS_ID, SampleEmpress())
+        val empressApi = requireActivity().enthrone(MainActivity.EMPRESS_ID, ::SampleEmpress)
 
         empressApi.model { counter }
             .onEach { renderCount(it) }

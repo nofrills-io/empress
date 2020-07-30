@@ -27,15 +27,15 @@ import kotlinx.coroutines.Dispatchers
  * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
  * @param empressId Id used to identify an [EmpressApi] instance.
- * @param empress Instance of [Empress] to install.
- * @param eventDispatcher A dispatcher to use for handling events in [empress].
- * @param requestDispatcher A dispatcher to use for handling requests in [empress].
- * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
- * @return An instance of [EmpressApi] for communicating with [empress].
+ * @param empressFactory Factory for your [Empress] instance.
+ * @param eventDispatcher A dispatcher to use for handling events in [Empress].
+ * @param requestDispatcher A dispatcher to use for handling requests in [Empress].
+ * @param retainInstance If true, the [Empress] instance will be retained during configuration changes.
+ * @return An instance of [EmpressApi] for communicating with [Empress].
  */
 fun <E : Empress> FragmentActivity.enthrone(
     empressId: String,
-    empress: E,
+    empressFactory: () -> E,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
@@ -43,7 +43,7 @@ fun <E : Empress> FragmentActivity.enthrone(
     return getEmpressBackendInstance(
         EmpressSpec(
             empressId,
-            empress,
+            empressFactory,
             eventDispatcher = eventDispatcher,
             requestDispatcher = requestDispatcher
         ),
@@ -64,15 +64,15 @@ fun FragmentActivity.dethrone(empressId: String) {
  * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
  * @param empressId Id used to identify an [EmpressApi] instance.
- * @param empress Instance of [Empress] to install.
- * @param eventDispatcher A dispatcher to use for handling events in [empress].
- * @param requestDispatcher A dispatcher to use for handling requests in [empress].
- * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
- * @return An instance of [EmpressApi] for communicating with [empress].
+ * @param empressFactory Factory for your [Empress] instance.
+ * @param eventDispatcher A dispatcher to use for handling events in [Empress].
+ * @param requestDispatcher A dispatcher to use for handling requests in [Empress].
+ * @param retainInstance If true, the [Empress] instance will be retained during configuration changes.
+ * @return An instance of [EmpressApi] for communicating with [Empress].
  */
 fun <E : Empress> Fragment.enthrone(
     empressId: String,
-    empress: E,
+    empressFactory: () -> E,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
@@ -80,7 +80,7 @@ fun <E : Empress> Fragment.enthrone(
     return getEmpressBackendInstance(
         EmpressSpec(
             empressId,
-            empress,
+            empressFactory,
             eventDispatcher = eventDispatcher,
             requestDispatcher = requestDispatcher
         ),
@@ -139,7 +139,7 @@ private fun getEmpressFragmentTag(empressId: String): String {
 
 internal class EmpressSpec<E : Empress>(
     val id: String,
-    val empress: E,
+    val empressFactory: () -> E,
     val eventDispatcher: CoroutineDispatcher,
     val requestDispatcher: CoroutineDispatcher
 )

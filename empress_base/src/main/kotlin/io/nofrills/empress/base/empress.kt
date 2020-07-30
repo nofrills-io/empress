@@ -22,17 +22,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KProperty
 
-class ChildEmpressDelegate<E : Empress> internal constructor(private val provider: () -> E) {
-    operator fun getValue(thisRef: Any, property: KProperty<*>): ChildEmpressDeclaration<E> {
-        return ChildEmpressDeclaration(property.name, provider)
-    }
-}
-
-class ChildEmpressDeclaration<E : Empress> internal constructor(
-    internal val key: String,
-    internal val provider: () -> E
-)
-
 /** Opaque representation for an event handler. */
 class EventDeclaration internal constructor()
 
@@ -92,12 +81,6 @@ abstract class EventHandlerContext {
 abstract class Empress {
     internal lateinit var backend: BackendFacade
 
-    protected fun <E : Empress> child(provider: () -> E): ChildEmpressDelegate<E> {
-        return ChildEmpressDelegate(provider)
-    }
-
-    protected fun destroyChild(empressApi: EmpressApi<*>) = backend.destroyChild(empressApi)
-
     protected fun <T : Any> model(initialValue: T): ModelDelegate<T> {
         return ModelDelegate(initialValue)
     }
@@ -117,12 +100,6 @@ abstract class Empress {
      */
     protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration =
         backend.onRequest(fn)
-
-    protected fun <T : Empress> ChildEmpressDeclaration<T>.destroy(instanceId: String) =
-        backend.destroyChild(this, instanceId)
-
-    protected fun <T : Empress> ChildEmpressDeclaration<T>.provide(instanceId: String): EmpressApi<T> =
-        backend.provideChild(this, instanceId)
 }
 
 /** Allows to execute an event handler. */

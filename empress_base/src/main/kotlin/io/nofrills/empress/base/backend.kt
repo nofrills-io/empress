@@ -36,13 +36,6 @@ private val eventInstance = EventDeclaration()
 private val requestInstance = RequestDeclaration()
 
 internal interface BackendFacade {
-    fun destroyChild(childEmpressDeclaration: ChildEmpressDeclaration<*>, instanceId: String)
-    fun destroyChild(empressApi: EmpressApi<*>)
-    fun <E : Empress> provideChild(
-        childEmpressDeclaration: ChildEmpressDeclaration<E>,
-        instanceId: String
-    ): EmpressApi<E>
-
     suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration
     suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration
 }
@@ -76,8 +69,6 @@ class EmpressBackend<E : Empress> constructor(
     private val requestHandlerScope: CoroutineScope,
     private val storedDataLoader: StoredDataLoader? = null
 ) : BackendFacade, EmpressApi<E>, TestEmpressApi<E>, EventHandlerContext() {
-    private val childEmpressMap = mutableMapOf<String, EmpressBackend<*>>()
-
     private val dynamicLatch = DynamicLatch()
 
     private val eventChannel = Channel<EventHandlerContext.() -> Unit>(Channel.UNLIMITED)
@@ -100,50 +91,11 @@ class EmpressBackend<E : Empress> constructor(
         }
     }
 
-    fun getChildEmpressBackends(): Map<String, EmpressBackend<*>> {
-        return childEmpressMap
-    }
-
     fun lastRequestId(): Long {
         return lastRequestId.get()
     }
 
     // BackendFacade
-
-    override fun destroyChild(
-        childEmpressDeclaration: ChildEmpressDeclaration<*>,
-        instanceId: String
-    ) {
-        val childId = getChildId(childEmpressDeclaration, instanceId)
-        childEmpressMap.remove(childId)
-    }
-
-    override fun destroyChild(empressApi: EmpressApi<*>) {
-        childEmpressMap.entries
-            .find { it.value == empressApi }
-            ?.key?.let { childEmpressMap.remove(it) }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <E : Empress> provideChild(
-        childEmpressDeclaration: ChildEmpressDeclaration<E>,
-        instanceId: String
-    ): EmpressApi<E> {
-        val childId = getChildId(childEmpressDeclaration, instanceId)
-        childEmpressMap[childId]?.let { return it as EmpressApi<E> }
-
-        val childEmpress = childEmpressDeclaration.provider()
-        val childBackend = EmpressBackend(
-            childId,
-            childEmpress,
-            eventHandlerScope,
-            requestHandlerScope,
-            storedDataLoader
-        )
-        childEmpressMap[childId] = childBackend
-
-        return childBackend
-    }
 
     override suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration {
         if (coroutineContext[SameEventHandler] != null) {
@@ -174,13 +126,6 @@ class EmpressBackend<E : Empress> constructor(
     override suspend fun interrupt() {
         dynamicLatch.close()
         closeChannels()
-    }
-
-    private fun getChildId(
-        childEmpressDeclaration: ChildEmpressDeclaration<*>,
-        instanceId: String
-    ): String {
-        return "$id.${childEmpressDeclaration.key}.$instanceId"
     }
 
     override fun <T : Any> model(
