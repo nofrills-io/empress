@@ -178,9 +178,10 @@ class EmpressBackend<E : Empress> constructor(
         }
     }
 
-    override fun request(fn: suspend () -> RequestDeclaration): RequestId {
+    override fun request(scope: CoroutineScope?, fn: suspend () -> RequestDeclaration): RequestId {
         val requestId = getNextRequestId()
-        val job = requestHandlerScope.launch(
+        val launchScope = scope ?: requestHandlerScope
+        val job = launchScope.launch(
             CoroutineName("empress-request-$requestId"),
             start = CoroutineStart.LAZY
         ) {

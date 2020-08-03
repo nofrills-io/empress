@@ -60,8 +60,14 @@ abstract class EventHandlerContext {
     /** Executes an event in current context. */
     abstract fun event(fn: suspend () -> EventDeclaration)
 
-    /** Schedules a request for execution. */
-    abstract fun request(fn: suspend () -> RequestDeclaration): RequestId
+    /** Schedules a request for execution.
+     * @param scope The coroutine scope where the request will execute; if null, a scope will be provided by the backend.
+     * @param fn The request handler to execute.
+     */
+    abstract fun request(
+        scope: CoroutineScope? = null,
+        fn: suspend () -> RequestDeclaration
+    ): RequestId
 
     abstract fun <T : Any> ModelDeclaration<T>.get(): T
 
