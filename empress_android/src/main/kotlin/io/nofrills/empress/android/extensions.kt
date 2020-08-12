@@ -120,7 +120,7 @@ private fun dethroneEmpress(empressId: String, fragmentManager: FragmentManager)
     val fragment = fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<*>? ?: return
     fragmentManager.beginTransaction()
         .remove(fragment)
-        .commitNow()
+        .commitNowAllowingStateLoss()
 }
 
 private fun dethroneEmpress(empressApi: EmpressApi<*>, fragmentManager: FragmentManager) {
@@ -129,7 +129,7 @@ private fun dethroneEmpress(empressApi: EmpressApi<*>, fragmentManager: Fragment
     if (fragments.isNotEmpty()) {
         val tx = fragmentManager.beginTransaction()
         fragments.forEach { tx.remove(it) }
-        tx.commitNow()
+        tx.commitNowAllowingStateLoss()
     }
 }
 
