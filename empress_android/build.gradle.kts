@@ -11,6 +11,7 @@ android {
 
 dependencies {
     api(project(":empress_base"))
+    api(Deps.composeRuntime)
     api(Deps.coroutinesCore)
 
     implementation(Deps.fragment)
@@ -21,6 +22,16 @@ dependencies {
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
     testImplementation(Deps.robolectric)
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-Xallow-jvm-ir-dependencies", "-Xskip-prerelease-check"
+        )
+    }
 }
 
 gradle.taskGraph.beforeTask {

@@ -17,8 +17,8 @@
 package io.nofrills.empress.base
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KProperty
 
@@ -43,6 +43,14 @@ class SignalDelegate<T : Any> internal constructor() {
 }
 
 class SignalDeclaration<T> internal constructor(internal val key: String)
+
+class StateDelegate<T : Any> internal constructor(private val initialValue: T) {
+    operator fun getValue(thisRef: Any, property: KProperty<*>): StateDeclaration<T> {
+        return StateDeclaration(MutableStateFlow(initialValue))
+    }
+}
+
+class StateDeclaration<T> internal constructor(val flow: MutableStateFlow<T>)
 
 /** An ID for a request, which can be used to [cancel][EventHandlerContext.cancelRequest] it. */
 data class RequestId(private val id: Long)
@@ -83,7 +91,6 @@ abstract class EventHandlerContext {
 }
 
 /** Allows you define your initial models, event and request handlers. */
-@OptIn(ExperimentalCoroutinesApi::class)
 abstract class Empress {
     internal lateinit var backend: BackendFacade
 
@@ -93,6 +100,10 @@ abstract class Empress {
 
     protected fun <T : Any> signal(): SignalDelegate<T> {
         return SignalDelegate()
+    }
+
+    protected fun <T : Any> state(initialValue: T): StateDelegate<T> {
+        return StateDelegate(initialValue)
     }
 
     /** Allows to define an event handler.
@@ -108,20 +119,26 @@ abstract class Empress {
         backend.onRequest(fn)
 }
 
+interface EmpressOwner<E : Any> {
+    val empress: E
+}
+
 /** Allows to execute an event handler. */
 interface EventCommander<E : Any> {
     /** Schedules a call to an event handler defined in [E]. */
     fun post(fn: suspend E.() -> EventDeclaration)
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 interface ModelListener<E : Any> {
     fun <T : Any> model(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
 }
+
+interface StateListener<E : Any> : EmpressOwner<E>
 
 interface SignalListener<E : Any> {
     fun <T : Any> signal(fn: E.() -> SignalDeclaration<T>): Flow<T>
 }
 
 /** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any> : EventCommander<E>, ModelListener<E>, SignalListener<E>
+interface EmpressApi<E : Any> : EventCommander<E>, ModelListener<E>, SignalListener<E>,
+    StateListener<E>

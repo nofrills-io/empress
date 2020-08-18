@@ -23,7 +23,6 @@ import java.lang.IllegalStateException
 import java.util.concurrent.Executors
 import kotlin.random.Random
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class DynamicLatchTest {
     @Test
     fun baseCase() = runBlockingTest {

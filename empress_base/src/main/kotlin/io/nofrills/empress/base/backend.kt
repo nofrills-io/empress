@@ -19,7 +19,6 @@ package io.nofrills.empress.base
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -61,10 +60,9 @@ interface TestEmpressApi<E : Any> : EmpressApi<E> {
  * @param requestHandlerScope A coroutine scope where requests will be processed.
  * @param storedDataLoader Allows to load any stored models and request id.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class EmpressBackend<E : Empress> constructor(
     val id: String,
-    private val empress: E,
+    override val empress: E,
     private val eventHandlerScope: CoroutineScope,
     private val requestHandlerScope: CoroutineScope,
     private val storedDataLoader: StoredDataLoader? = null

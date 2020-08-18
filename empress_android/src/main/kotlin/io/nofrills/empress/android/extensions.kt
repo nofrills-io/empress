@@ -16,12 +16,13 @@
 
 package io.nofrills.empress.android
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.state
 import androidx.fragment.app.*
-import io.nofrills.empress.base.Empress
-import io.nofrills.empress.base.EmpressApi
-import io.nofrills.empress.base.EmpressBackend
+import io.nofrills.empress.base.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Installs an empress instance into the [activity][this].
  * If an empress with the same [id][empressId] was already installed,
@@ -143,3 +144,20 @@ internal class EmpressSpec<E : Empress>(
     val eventDispatcher: CoroutineDispatcher,
     val requestDispatcher: CoroutineDispatcher
 )
+
+private class ObservableMutableState<T>(
+    private val flow: MutableStateFlow<T>,
+    private val state: MutableState<T>
+) : MutableState<T> by state {
+    override var value: T
+        get() = state.value
+        set(value) {
+            flow.value = value
+            state.value = value
+        }
+}
+
+fun <E : Any, T : Any> StateListener<E>.mutableState(fn: E.() -> StateDeclaration<T>): MutableState<T> {
+    val flow = fn(empress).flow
+    return ObservableMutableState(flow, state { flow.value })
+}

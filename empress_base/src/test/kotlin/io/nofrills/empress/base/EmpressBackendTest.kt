@@ -25,7 +25,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.Executors
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class EmpressBackendTest {
     @Test
     fun noModelUpdatesUpdates() = runBlockingTest {

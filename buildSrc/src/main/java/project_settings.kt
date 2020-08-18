@@ -34,10 +34,10 @@ object EmpressLib {
 }
 
 object Vers {
-    val androidBuildTools = Ver(preferred = "4.0.1", required = "3.6.0")
-    val coroutines = Ver(preferred = "1.3.7", required = "1.3.7")
+    val androidBuildTools = Ver(preferred = "4.0.1", required = "4.0.0")
+    val coroutines = Ver(preferred = "1.3.9", required = "1.3.9")
     val dokka = Ver(preferred = "0.10.1", required = "0.10.1")
-    val kotlin = Ver(preferred = "1.3.72", required = "1.3.70")
+    val kotlin = Ver(preferred = "1.4.0", required = "1.4.0")
 }
 
 object Deps {
@@ -46,6 +46,7 @@ object Deps {
     private val kotlin = DepGroup("org.jetbrains.kotlin", Vers.kotlin)
 
     const val appCompat = "androidx.appcompat:appcompat:1.1.0"
+    const val composeRuntime = "androidx.compose.runtime:runtime:0.1.0-dev16"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:1.1.3"
     const val lifecycleRuntimeKts = "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
 
@@ -76,8 +77,8 @@ class Dep(
 }
 
 class Ver(
-    private val preferred: String?,
-    private val required: String
+    val preferred: String?,
+    val required: String
 ) : Action<MutableVersionConstraint> {
     override fun execute(t: MutableVersionConstraint) {
         t.require(required)
