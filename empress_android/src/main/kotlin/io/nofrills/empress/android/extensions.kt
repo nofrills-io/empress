@@ -16,8 +16,7 @@
 
 package io.nofrills.empress.android
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.state
+import androidx.compose.runtime.*
 import androidx.fragment.app.*
 import io.nofrills.empress.base.*
 import kotlinx.coroutines.CoroutineDispatcher
@@ -157,7 +156,10 @@ private class ObservableMutableState<T>(
         }
 }
 
-fun <E : Any, T : Any> StateListener<E>.mutableState(fn: E.() -> StateDeclaration<T>): MutableState<T> {
+fun <E : Any, T : Any> StateListener<E>.state(
+    policy: SnapshotMutationPolicy<T> = structuralEqualityPolicy(),
+    fn: E.() -> StateDeclaration<T>
+): MutableState<T> {
     val flow = fn(empress).flow
-    return ObservableMutableState(flow, state { flow.value })
+    return ObservableMutableState(flow, mutableStateOf(flow.value, policy))
 }
