@@ -21,6 +21,12 @@ allprojects {
     }
 }
 
+tasks.dokkaHtmlMultiModule.configure {
+    moduleName.set("empress")
+    removeChildTasks(project(":sample"))
+    removeChildTasks(project(":test_support"))
+}
+
 multimodule {
     android {
         compileSdkVersion(EmpressLib.compileSdkVersion)
@@ -48,15 +54,15 @@ multimodule {
     }
 
     dokka {
-        moduleName.set("empress")
-        this.dokkaSourceSets.all {
+        dokkaSourceSets.all {
             externalDocumentationLink {
                 url.set(java.net.URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/"))
             }
-            includes.setFrom(
-                "${rootProject.projectDir}/empress_base/module_doc.md",
-                "${rootProject.projectDir}/empress_android/module_doc.md"
-            )
+            project.file("${project.projectDir}/module_doc.md").also {
+                if (it.exists()) {
+                    includes.from(it)
+                }
+            }
         }
     }
 
@@ -116,8 +122,8 @@ tasks.register("clean", Delete::class.java) {
 }
 
 tasks.register("publishDokka", Copy::class) {
-    dependsOn(":dokka")
-    from(File(project.buildDir, "dokka"))
+    dependsOn(":dokkaHtmlMultiModule")
+    from(File(project.buildDir, "dokka/htmlMultiModule"))
     destinationDir = rootProject.file("docs/dokka")
 
     doFirst {
