@@ -17,10 +17,9 @@
 package io.nofrills.empress.sample
 
 import io.nofrills.empress.base.EmpressBackend
-import io.nofrills.empress.base.RequestId
 import io.nofrills.empress.base.TestEmpressApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.toCollection
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
@@ -30,12 +29,12 @@ import org.junit.Test
 
 class SampleTest {
     private lateinit var scope: TestCoroutineScope
-    private lateinit var tested: TestEmpressApi<SampleEmpress, Model, Signal>
+    private lateinit var tested: TestEmpressApi<SampleEmpress>
 
     @Before
     fun setUp() {
         scope = TestCoroutineScope()
-        tested = EmpressBackend(SampleEmpress(), scope, scope)
+        tested = EmpressBackend("test", SampleEmpress(), scope, scope)
     }
 
     @After
@@ -45,21 +44,19 @@ class SampleTest {
 
     @Test
     fun example() = scope.runBlockingTest {
-        val deferredUpdates =
-            async { tested.updates(withCurrentModels = false).toCollection(mutableListOf()) }
+        val deferredSignals = async { tested.signal { counterSignal }.toList() }
 
         tested.post { increment() }
         tested.post { increment() }
         tested.post { sendCounter() }
         tested.interrupt()
 
-        val updates = deferredUpdates.await()
-        val expected = listOf(
-            Model.Counter(1),
-            Model.Counter(2),
-            Model.Sender(SenderState.Sending(RequestId(1))),
-            Model.Sender(SenderState.Idle)
-        )
-        assertEquals(expected, updates)
+        val counter = tested.model { counter }.value
+        val sender = tested.model { sender }.value
+        val signals = deferredSignals.await()
+
+        assertEquals(Counter(2), counter)
+        assertEquals(Sender.Idle, sender)
+        assertEquals(listOf(CounterSignal.CounterSent), signals)
     }
 }

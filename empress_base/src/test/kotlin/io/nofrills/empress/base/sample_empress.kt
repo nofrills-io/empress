@@ -19,81 +19,91 @@ package io.nofrills.empress.base
 import kotlinx.coroutines.delay
 
 internal sealed class Model {
-    data class Counter(val count: Int) : Model()
-    data class Sender(val requestId: RequestId? = null) : Model()
-}
+    data class Counter(val count: Long) : Model()
 
-internal sealed class Signal {
-    data class CounterSent(val sentValue: Int) : Signal()
-    object SendingCancelled : Signal()
-}
+    data class Data(val text: String) : Model()
 
-internal class SampleEmpress(private val models: Collection<Model>? = null) :
-    Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return models ?: listOf(Model.Counter(0), Model.Sender())
+    sealed class Sender : Model() {
+        object Idle : Sender()
+        data class Loading(val requestId: RequestId) : Sender()
     }
+}
+
+internal sealed class CounterSignal {
+    data class CounterSent(val sentValue: Long) : CounterSignal()
+    object SendingCancelled : CounterSignal()
+}
+
+internal class SampleEmpress : Empress() {
+    val counter by model(Model.Counter(0))
+    val data by model(Model.Data(""))
+    val sender by model<Model.Sender>(Model.Sender.Idle)
+
+    val counterSignal by signal<CounterSignal>()
 
     suspend fun decrement() = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count - 1))
+        val count = counter.get().count
+        counter.update(Model.Counter(count - 1))
     }
 
     suspend fun delta(d: Int) = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + d))
+        val count = counter.get().count
+        counter.update(Model.Counter(count + d))
+    }
+
+    suspend fun append(s: String) = onEvent {
+        data.update(Model.Data(data.get().text + s))
     }
 
     suspend fun increment() = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + 1))
+        val count = counter.get().count
+        counter.update(Model.Counter(count + 1))
     }
 
     suspend fun indirectIncrementAndSend() = onEvent {
         event { increment() }
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { indirectSendCounter(count) }
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     suspend fun indirectSend() = onEvent {
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { indirectSendCounter(count) }
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     suspend fun ping() = onEvent {}
 
-    suspend fun sendCounter() = onEvent {
-        if (get<Model.Sender>().requestId != null) return@onEvent
+    suspend fun sendCounter(skipIfLoading: Boolean = true) = onEvent {
+        if (skipIfLoading && sender.get() is Model.Sender.Loading) return@onEvent
 
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { sendCounter(count) }
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
     suspend fun sendCounterVariableCount() = onEvent {
-        var count = get<Model.Counter>().count
+        var count = counter.get().count
         val requestId = request { sendCounter(count) }
         count += 3
-        update(Model.Sender(requestId))
+        sender.update(Model.Sender.Loading(requestId))
     }
 
-    private suspend fun onCounterSent(sentValue: Int) = onEvent {
-        signal(Signal.CounterSent(sentValue))
-        update(Model.Sender(null))
+    private suspend fun onCounterSent(sentValue: Long) = onEvent {
+        counterSignal.push(CounterSignal.CounterSent(sentValue))
+        sender.update(Model.Sender.Idle)
     }
 
     suspend fun cancelSending() = onEvent {
-        val requestId = get<Model.Sender>().requestId ?: return@onEvent
-        cancelRequest(requestId)
-        update(Model.Sender(null))
-        signal(Signal.SendingCancelled)
+        val loading = sender.get() as? Model.Sender.Loading ?: return@onEvent
+        cancelRequest(loading.requestId)
+        sender.update(Model.Sender.Idle)
+        counterSignal.push(CounterSignal.SendingCancelled)
     }
 
     suspend fun generateError() = onEvent {
-        val counter = get<Model.Counter>()
-        update(Model.Counter(counter.count + 1))
+        counter.updateWith { it.copy(count = it.count + 1) }
         throw OnEventError()
     }
 
@@ -115,11 +125,11 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) :
         event { increment() }
     }
 
-    private suspend fun indirectSendCounter(count: Int) = onRequest {
+    private suspend fun indirectSendCounter(count: Long) = onRequest {
         sendCounter(count)
     }
 
-    private suspend fun sendCounter(count: Int) = onRequest {
+    private suspend fun sendCounter(count: Long) = onRequest {
         delay(count * 1000L)
         onCounterSent(count)
     }
@@ -130,6 +140,16 @@ internal class SampleEmpress(private val models: Collection<Model>? = null) :
 
     private suspend fun onRequestErrorIndirect() = onRequest {
         onRequestError()
+    }
+}
+
+internal class DuplicateModelEmpress : Empress() {
+    val counter by model(Model.Counter(5))
+    val anotherCounter by model(Model.Counter(3))
+
+    suspend fun evaluateCounters() = onEvent {
+        counter.get()
+        anotherCounter.get()
     }
 }
 

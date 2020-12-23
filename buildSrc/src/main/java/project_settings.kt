@@ -34,10 +34,10 @@ object EmpressLib {
 }
 
 object Vers {
-    val androidBuildTools = Ver(preferred = "4.0.0", required = "3.6.0")
-    val coroutines = Ver(preferred = "1.3.7", required = "1.3.3")
-    val dokka = Ver(preferred = "0.10.1", required = "0.10.1")
-    val kotlin = Ver(preferred = "1.3.72", required = "1.3.70")
+    val androidBuildTools = Ver(preferred = "4.1.1", required = "4.1.0")
+    val coroutines = Ver(preferred = "1.4.2", required = "1.4.0")
+    val dokka = Ver(preferred = "1.4.20", required = "1.4.10")
+    val kotlin = Ver(preferred = "1.4.20", required = "1.4.10")
 }
 
 object Deps {
@@ -58,7 +58,7 @@ object Deps {
     val fragmentTesting = Dep(androidXFragment, "fragment-testing")
 
     const val junit = "junit:junit:4.13"
-    const val robolectric = "org.robolectric:robolectric:4.3.1"
+    const val robolectric = "org.robolectric:robolectric:4.4"
 }
 
 class DepGroup(val name: String, val version: Ver) {

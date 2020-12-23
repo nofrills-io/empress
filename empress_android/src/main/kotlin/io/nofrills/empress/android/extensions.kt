@@ -29,85 +29,119 @@ import kotlinx.coroutines.Dispatchers
  * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
  * @param empressId Id used to identify an [EmpressApi] instance.
- * @param empress Instance of [Empress] to install.
- * @param eventDispatcher A dispatcher to use for handling events in [empress].
- * @param requestDispatcher A dispatcher to use for handling requests in [empress].
- * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
- * @return An instance of [EmpressApi] for communicating with [empress].
+ * @param empressFactory Factory for your [Empress] instance.
+ * @param eventDispatcher A dispatcher to use for handling events in [Empress].
+ * @param requestDispatcher A dispatcher to use for handling requests in [Empress].
+ * @param retainInstance If true, the [Empress] instance will be retained during configuration changes.
+ * @return An instance of [EmpressApi] for communicating with [Empress].
  */
-fun <E : Empress<M, S>, M : Any, S : Any> FragmentActivity.enthrone(
+fun <E : Empress> FragmentActivity.enthrone(
     empressId: String,
-    empress: E,
+    empressFactory: () -> E,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
-): EmpressApi<E, M, S> {
+): EmpressApi<E> {
     return getEmpressBackendInstance(
+        EmpressSpec(
+            empressId,
+            empressFactory,
+            eventDispatcher = eventDispatcher,
+            requestDispatcher = requestDispatcher
+        ),
         supportFragmentManager,
-        retainInstance = retainInstance,
-        specFactory = {
-            EmpressSpec(
-                empress,
-                eventDispatcher = eventDispatcher,
-                requestDispatcher = requestDispatcher
-            )
-        },
-        empressId = empressId
+        retainInstance = retainInstance
     )
+}
+
+fun FragmentActivity.dethrone(empressApi: EmpressApi<*>) {
+    dethroneEmpress(empressApi, supportFragmentManager)
+}
+
+fun FragmentActivity.dethrone(empressId: String) {
+    dethroneEmpress(empressId, supportFragmentManager)
 }
 
 /** Installs an empress instance into the [fragment][this].
  * If an empress with the same [id][empressId] was already installed,
  * this method will return an existing instance.
  * @param empressId Id used to identify an [EmpressApi] instance.
- * @param empress Instance of [Empress] to install.
- * @param eventDispatcher A dispatcher to use for handling events in [empress].
- * @param requestDispatcher A dispatcher to use for handling requests in [empress].
- * @param retainInstance If true, the [empress] instance will be retained during configuration changes.
- * @return An instance of [EmpressApi] for communicating with [empress].
+ * @param empressFactory Factory for your [Empress] instance.
+ * @param eventDispatcher A dispatcher to use for handling events in [Empress].
+ * @param requestDispatcher A dispatcher to use for handling requests in [Empress].
+ * @param retainInstance If true, the [Empress] instance will be retained during configuration changes.
+ * @return An instance of [EmpressApi] for communicating with [Empress].
  */
-fun <E : Empress<M, S>, M : Any, S : Any> Fragment.enthrone(
+fun <E : Empress> Fragment.enthrone(
     empressId: String,
-    empress: E,
+    empressFactory: () -> E,
     eventDispatcher: CoroutineDispatcher = Dispatchers.Main,
     requestDispatcher: CoroutineDispatcher = Dispatchers.Default,
     retainInstance: Boolean = true
-): EmpressApi<E, M, S> {
+): EmpressApi<E> {
     return getEmpressBackendInstance(
+        EmpressSpec(
+            empressId,
+            empressFactory,
+            eventDispatcher = eventDispatcher,
+            requestDispatcher = requestDispatcher
+        ),
         childFragmentManager,
-        retainInstance = retainInstance,
-        specFactory = {
-            EmpressSpec(
-                empress,
-                eventDispatcher = eventDispatcher,
-                requestDispatcher = requestDispatcher
-            )
-        },
-        empressId = empressId
+        retainInstance = retainInstance
     )
 }
 
-private fun <E : Empress<M, S>, M : Any, S : Any> getEmpressBackendInstance(
+fun Fragment.dethrone(empressApi: EmpressApi<*>) {
+    dethroneEmpress(empressApi, childFragmentManager)
+}
+
+fun Fragment.dethrone(empressId: String) {
+    dethroneEmpress(empressId, childFragmentManager)
+}
+
+private fun <E : Empress> getEmpressBackendInstance(
+    empressSpec: EmpressSpec<E>,
     fragmentManager: FragmentManager,
-    retainInstance: Boolean,
-    specFactory: () -> EmpressSpec<E, M, S>,
-    empressId: String
-): EmpressBackend<E, M, S> {
-    val fragmentTag = "io.nofrills.empress.empress-fragment-${empressId}"
+    retainInstance: Boolean
+): EmpressBackend<E> {
+    val fragmentTag = getEmpressFragmentTag(empressSpec.id)
 
     @Suppress("UNCHECKED_CAST")
-    val fragment: EmpressFragment<E, M, S> =
-        fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<E, M, S>?
-            ?: EmpressFragment<E, M, S>().also {
+    val fragment: EmpressFragment<E> =
+        fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<E>?
+            ?: EmpressFragment<E>().also {
                 fragmentManager.beginTransaction().add(it, fragmentTag).commitNow()
             }
     fragment.retainInstance = retainInstance
-    fragment.initialize(specFactory)
+    fragment.initialize(empressSpec)
     return fragment.backend
 }
 
-internal class EmpressSpec<E : Empress<M, S>, M : Any, S : Any>(
-    val empress: E,
+private fun dethroneEmpress(empressId: String, fragmentManager: FragmentManager) {
+    val fragmentTag = getEmpressFragmentTag(empressId)
+    val fragment = fragmentManager.findFragmentByTag(fragmentTag) as EmpressFragment<*>? ?: return
+    fragmentManager.beginTransaction()
+        .remove(fragment)
+        .commitNowAllowingStateLoss()
+}
+
+private fun dethroneEmpress(empressApi: EmpressApi<*>, fragmentManager: FragmentManager) {
+    val fragments = fragmentManager.fragments
+        .filter { it is EmpressFragment<*> && it.backend == empressApi }
+    if (fragments.isNotEmpty()) {
+        val tx = fragmentManager.beginTransaction()
+        fragments.forEach { tx.remove(it) }
+        tx.commitNowAllowingStateLoss()
+    }
+}
+
+private fun getEmpressFragmentTag(empressId: String): String {
+    return "io.nofrills.empress.empress-fragment-${empressId}"
+}
+
+internal class EmpressSpec<E : Empress>(
+    val id: String,
+    val empressFactory: () -> E,
     val eventDispatcher: CoroutineDispatcher,
     val requestDispatcher: CoroutineDispatcher
 )

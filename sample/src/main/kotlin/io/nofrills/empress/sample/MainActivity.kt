@@ -23,60 +23,59 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
-import kotlinx.android.synthetic.main.activity_main.*
+import io.nofrills.empress.sample.databinding.ActivityMainBinding
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 
 class MainActivity : AppCompatActivity() {
-    private val empressApi by lazy { enthrone(EMPRESS_ID, SampleEmpress()) }
+    private lateinit var binding: ActivityMainBinding
+    private val empressApi by lazy { enthrone(EMPRESS_ID, ::SampleEmpress) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         allowDiskReads { super.onCreate(savedInstanceState) }
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        empressApi.signals()
+        empressApi.signal { counterSignal }
             .onEach { onSignal(it) }
             .launchIn(lifecycle.coroutineScope)
 
-        empressApi.updates()
-            .onEach { render(it) }
+        empressApi.model { counter }
+            .onEach { renderCount(it.count) }
+            .launchIn(lifecycle.coroutineScope)
+
+        empressApi.model { sender }
+            .onEach { renderProgress(it) }
             .launchIn(lifecycle.coroutineScope)
 
         setupButtonListeners()
     }
 
     private fun setupButtonListeners() {
-        decrement_button.setOnClickListener {
+        binding.decrementButton.setOnClickListener {
             empressApi.post { decrement() }
         }
-        increment_button.setOnClickListener {
+        binding.incrementButton.setOnClickListener {
             empressApi.post { increment() }
         }
-        send_button.setOnClickListener {
+        binding.sendButton.setOnClickListener {
             empressApi.post { sendCounter() }
         }
-        cancel_button.setOnClickListener {
+        binding.cancelButton.setOnClickListener {
             empressApi.post { cancelSendingCounter() }
         }
     }
 
-    private fun onSignal(signal: Signal) {
+    private fun onSignal(signal: CounterSignal) {
         when (signal) {
-            Signal.CounterSent -> showToast(R.string.counter_sent)
-            Signal.CounterSendCancelled -> showToast(R.string.send_counter_cancelled)
+            CounterSignal.CounterSent -> showToast(R.string.counter_sent)
+            CounterSignal.CounterSendCancelled -> showToast(R.string.send_counter_cancelled)
         }
     }
 
-    private fun render(model: Model) {
-        when (model) {
-            is Model.Counter -> renderCount(model.count)
-            is Model.Sender -> renderProgress(model.state)
-        }
-    }
-
-    private fun renderProgress(senderState: SenderState) {
-        progress_bar.visibility = if (senderState is SenderState.Sending) {
+    private fun renderProgress(sender: Sender) {
+        binding.progressBar.visibility = if (sender is Sender.Sending) {
             View.VISIBLE
         } else {
             View.GONE
@@ -90,7 +89,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderCount(count: Int) {
-        counter_value.text = count.toString()
+        binding.counterValue.text = count.toString()
     }
 
     companion object {

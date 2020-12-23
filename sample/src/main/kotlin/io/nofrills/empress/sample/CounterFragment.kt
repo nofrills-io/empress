@@ -23,16 +23,19 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import io.nofrills.empress.android.enthrone
-import kotlinx.android.synthetic.main.fragment_counter.*
+import io.nofrills.empress.sample.databinding.FragmentCounterBinding
 import kotlinx.coroutines.flow.*
 
 class CounterFragment : Fragment() {
+    private var binding: FragmentCounterBinding? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_counter, container, false)
+    ): View {
+        binding = FragmentCounterBinding.inflate(inflater, container, false)
+        return binding!!.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -40,16 +43,19 @@ class CounterFragment : Fragment() {
 
         // we call `enthrone` on activity,
         // since we want to share the Empress instance
-        val empressApi = requireActivity().enthrone(MainActivity.EMPRESS_ID, SampleEmpress())
+        val empressApi = requireActivity().enthrone(MainActivity.EMPRESS_ID, ::SampleEmpress)
 
-        empressApi.updates()
-            .filter { it is Model.Counter }
-            .map { it as Model.Counter }
+        empressApi.model { counter }
             .onEach { renderCount(it) }
             .launchIn(lifecycle.coroutineScope)
     }
 
-    private fun renderCount(counter: Model.Counter) {
-        counter_text_view.text = counter.count.toString()
+    override fun onDestroyView() {
+        binding = null
+        super.onDestroyView()
+    }
+
+    private fun renderCount(counter: Counter) {
+        binding?.counterTextView?.text = counter.count.toString()
     }
 }

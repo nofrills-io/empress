@@ -1,6 +1,5 @@
 plugins {
     id("io.nofrills.multimodule.aar")
-    kotlin("android.extensions")
 }
 
 android {
@@ -10,6 +9,7 @@ android {
 }
 
 dependencies {
+    api(platform("org.jetbrains.kotlin:kotlin-bom"))
     api(project(":empress_base"))
     api(Deps.coroutinesCore)
 
@@ -21,6 +21,14 @@ dependencies {
     testImplementation(Deps.coroutinesTest)
     testImplementation(Deps.junit)
     testImplementation(Deps.robolectric)
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).configureEach {
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+        )
+    }
 }
 
 gradle.taskGraph.beforeTask {

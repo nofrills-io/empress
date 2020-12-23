@@ -1,31 +1,24 @@
 package io.nofrills.empress.test_support
 
+import android.annotation.SuppressLint
 import android.os.Parcelable
 import io.nofrills.empress.base.Empress
-import kotlinx.android.parcel.Parcelize
-
-sealed class Event {
-    object Increment : Event()
-}
+import kotlinx.parcelize.Parcelize
 
 sealed class Model {
     data class Counter(var count: Int) : Model()
 
     @Parcelize
+    @SuppressLint("ParcelCreator")
     data class ParcelableCounter(var count: Int) : Model(), Parcelable
 }
 
-sealed class Signal
-
-class SampleEmpress : Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.ParcelableCounter(0))
-    }
+class SampleEmpress : Empress() {
+    val counter by model(Model.Counter(0))
+    val parcelableCounter by model(Model.ParcelableCounter(0))
 
     suspend fun increment() = onEvent {
-        val counter = get<Model.Counter>()
-        val parcelableCounter = get<Model.ParcelableCounter>()
-        update(counter.copy(count = counter.count + 1))
-        update(parcelableCounter.copy(count = parcelableCounter.count + 1))
+        counter.updateWith { it.copy(count = it.count + 1) }
+        parcelableCounter.updateWith { it.copy(count = it.count + 1) }
     }
 }

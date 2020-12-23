@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("io.nofrills.multimodule.apk")
-    kotlin("android.extensions")
 }
 
 submodule {
@@ -15,10 +14,10 @@ android {
     defaultConfig {
         applicationId = "io.nofrills.empress.sample"
     }
-}
 
-androidExtensions {
-    isExperimental = true // for `@Parcelize` annotation
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {

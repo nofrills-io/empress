@@ -22,5 +22,4 @@
     <string name="send">Send</string>
     <string name="cancel">Cancel</string>
     <string name="send_counter_cancelled">Sending counter cancelled</string>
-    <string name="toggle_active_ruler">Toggle active ruler</string>
 </resources>

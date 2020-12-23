@@ -9,13 +9,13 @@ class SampleActivity : FragmentActivity(), WithEmpress {
     override fun enthroneEmpress(
         dispatcher: CoroutineDispatcher,
         retainInstance: Boolean
-    ): TestEmpressApi<SampleEmpress, Model, Signal> {
+    ): TestEmpressApi<SampleEmpress> {
         return enthrone(
             "sample_empress",
-            SampleEmpress(),
+            ::SampleEmpress,
             eventDispatcher = dispatcher,
             requestDispatcher = dispatcher,
             retainInstance = retainInstance
-        ) as TestEmpressApi<SampleEmpress, Model, Signal>
+        ) as TestEmpressApi<SampleEmpress>
     }
 }

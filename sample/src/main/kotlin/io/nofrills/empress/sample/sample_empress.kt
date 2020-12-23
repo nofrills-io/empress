@@ -20,29 +20,27 @@ import io.nofrills.empress.base.Empress
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
-class SampleEmpress : Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.Sender(SenderState.Idle))
-    }
+class SampleEmpress : Empress() {
+    val counter by model(Counter(0))
+    val sender by model<Sender>(Sender.Idle)
+    val counterSignal by signal<CounterSignal>()
 
     suspend fun cancelSendingCounter() = onEvent {
-        val sender = get<Model.Sender>()
-        val state = sender.state
-        if (state is SenderState.Sending) {
+        val state = sender.get()
+        if (state is Sender.Sending) {
             cancelRequest(state.requestId)
-            update(Model.Sender(SenderState.Idle))
-            signal(Signal.CounterSendCancelled)
+            sender.update(Sender.Idle)
+            counterSignal.push(CounterSignal.CounterSendCancelled)
         }
     }
 
     private suspend fun onCounterSent() = onEvent {
-        update(Model.Sender(SenderState.Idle))
-        signal(Signal.CounterSent)
+        sender.update(Sender.Idle)
+        counterSignal.push(CounterSignal.CounterSent)
     }
 
     suspend fun decrement() = onEvent {
-        val counter = get<Model.Counter>()
-        update(counter.copy(count = counter.count - 1))
+        counter.updateWith { it.copy(count = it.count - 1) }
     }
 
     suspend fun failure() = onEvent {
@@ -54,18 +52,16 @@ class SampleEmpress : Empress<Model, Signal>() {
     }
 
     suspend fun increment() = onEvent {
-        val counter = get<Model.Counter>()
-        update(counter.copy(count = counter.count + 1))
+        counter.updateWith { it.copy(count = it.count + 1) }
     }
 
     suspend fun sendCounter() = onEvent {
-        val state = get<Model.Sender>().state
-        if (state is SenderState.Sending) {
+        val state = sender.get()
+        if (state is Sender.Sending) {
             return@onEvent
         }
-        val counter = get<Model.Counter>()
-        val requestId = request { sendCounter(counter.count) }
-        update(Model.Sender(SenderState.Sending(requestId)))
+        val requestId = request { sendCounter(counter.get().count) }
+        sender.update(Sender.Sending(requestId))
     }
 
     private suspend fun failedRequest() = onRequest {

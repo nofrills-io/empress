@@ -15,7 +15,10 @@ First, you need to define two (usually `sealed`) classes: `Model` and `Signal`
 Next, implement an [io.nofrills.empress.base.Empress] interface:
 
 ```kotlin
-class MyEmpress : Empress<Model, Signal> {
+class MyEmpress : Empress {
+    val myCounter by model(0)
+    val mySignal by signal<Any>()
+
     override fun initialModels(): Collection<Model> {
         // return a collection of initial values for all of your model classes
         return listOf()
@@ -49,7 +52,7 @@ you should use [io.nofrills.empress.base.EmpressBackend] like below:
 ```kotlin
 val empress = MyEmpress()
 val coroutineScope = ... // e.g. `TestCoroutineScope` or a scope of your activity/fragment
-val api: EmpressApi<MyEmpress, Model, Signal> = EmpressBackend(empress, scope, scope)
+val api: EmpressApi<MyEmpress> = EmpressBackend(empress, scope, scope)
 ```
 
 Finally you can send events and listen for updates using [EmpressApi]

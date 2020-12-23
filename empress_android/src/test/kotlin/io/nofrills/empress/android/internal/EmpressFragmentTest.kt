@@ -42,7 +42,7 @@ class EmpressFragmentTest {
     @Test
     fun unretainedActivity() {
         val scenario = activityScenario()
-        recreationTest(scenario, false, 0)
+        recreationTest(scenario, false, null)
     }
 
     @Test
@@ -54,15 +54,15 @@ class EmpressFragmentTest {
     @Test
     fun unretainedFragment() {
         val scenario = fragmentScenario()
-        recreationTest(scenario, false, 0)
+        recreationTest(scenario, false, null)
     }
 
     @Test
     fun doubleEnthrone() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val backend = fragment.enthrone("test", SampleEmpress())
-            assertSame(backend, fragment.enthrone("test", SampleEmpress()))
+            val backend = fragment.enthrone("test", ::SampleEmpress)
+            assertSame(backend, fragment.enthrone("test", ::SampleEmpress))
         }
     }
 
@@ -70,8 +70,8 @@ class EmpressFragmentTest {
     fun distinctEmpressIds() {
         val scenario = launchFragment<Fragment>()
         scenario.onFragment { fragment ->
-            val api1 = fragment.enthrone("empress1", SampleEmpress())
-            val api2 = fragment.enthrone("empress2", SampleEmpress())
+            val api1 = fragment.enthrone("empress1", ::SampleEmpress)
+            val api2 = fragment.enthrone("empress2", ::SampleEmpress)
             assertNotSame(api1, api2)
         }
     }
@@ -79,7 +79,7 @@ class EmpressFragmentTest {
     private fun <T : WithEmpress> recreationTest(
         scenario: CommonScenario<T>,
         retainInstance: Boolean,
-        finalCounterValue: Int
+        finalCounterValue: Int?
     ) {
         val dispatcher = TestCoroutineDispatcher()
 
@@ -87,16 +87,25 @@ class EmpressFragmentTest {
             val empressApi = s.enthroneEmpress(dispatcher, retainInstance)
             empressApi.post { increment() }
 
-            assertEquals(Model.Counter(1), empressApi.get(Model.Counter::class))
-            assertEquals(Model.ParcelableCounter(1), empressApi.get(Model.ParcelableCounter::class))
+            assertEquals(Model.Counter(1), empressApi.loadedModels()[SampleEmpress::counter.name])
+            assertEquals(
+                Model.ParcelableCounter(1),
+                empressApi.loadedModels()[SampleEmpress::parcelableCounter.name]
+            )
         }
 
         scenario.recreate()
 
         scenario.onScenario { s ->
             val empressApi = s.enthroneEmpress(dispatcher, retainInstance)
-            assertEquals(Model.Counter(finalCounterValue), empressApi.get(Model.Counter::class))
-            assertEquals(Model.ParcelableCounter(1), empressApi.get(Model.ParcelableCounter::class))
+            assertEquals(
+                finalCounterValue?.let { Model.Counter(finalCounterValue) },
+                empressApi.loadedModels()[SampleEmpress::counter.name]
+            )
+            assertEquals(
+                Model.ParcelableCounter(1),
+                empressApi.loadedModels()[SampleEmpress::parcelableCounter.name]
+            )
         }
     }
 

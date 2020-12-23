@@ -18,85 +18,110 @@ package io.nofrills.empress.base
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlin.reflect.KClass
+import kotlinx.coroutines.flow.StateFlow
+import kotlin.reflect.KProperty
 
 /** Opaque representation for an event handler. */
-class Event internal constructor()
+class EventDeclaration internal constructor()
+
+class ModelDelegate<T : Any> internal constructor(private val initialValue: T) {
+    operator fun getValue(thisRef: Any, property: KProperty<*>): ModelDeclaration<T> {
+        return ModelDeclaration(property.name, initialValue)
+    }
+}
+
+class ModelDeclaration<T> internal constructor(
+    internal val key: String,
+    internal val initialValue: T
+)
+
+class SignalDelegate<T : Any> internal constructor() {
+    operator fun getValue(thisRef: Any, property: KProperty<*>): SignalDeclaration<T> {
+        return SignalDeclaration(property.name)
+    }
+}
+
+class SignalDeclaration<T> internal constructor(internal val key: String) {
+    @Suppress("unused")
+    private val unused: T? = null
+}
 
 /** An ID for a request, which can be used to [cancel][EventHandlerContext.cancelRequest] it. */
 data class RequestId(private val id: Long)
 
 /** Representation for a request handler. */
-class Request internal constructor()
-
-/** Provides access to the models. */
-interface ModelRepository<M : Any> {
-    /** Returns a model with given [modelClass]. */
-    fun <T : M> get(modelClass: Class<T>): T
-
-    /** Returns a model with given [modelClass]. */
-    fun <T : M> get(modelClass: KClass<T>): T = get(modelClass.java)
-}
+class RequestDeclaration internal constructor()
 
 /** Context for defining an event handler.
  * @see Empress.onEvent
  */
-abstract class EventHandlerContext<M : Any, S : Any> : ModelRepository<M> {
+abstract class EventHandlerContext {
     /** Cancels a request with given [requestId]. */
     abstract fun cancelRequest(requestId: RequestId): Boolean
 
     /** Executes an event in current context. */
-    abstract fun event(fn: suspend () -> Event)
+    abstract fun event(fn: suspend () -> EventDeclaration)
 
-    /** Schedules a request for execution. */
-    abstract fun request(fn: suspend () -> Request): RequestId
+    /** Schedules a request for execution.
+     * @param scope The coroutine scope where the request will execute; if null, a scope will be provided by the backend.
+     * @param fn The request handler to execute.
+     */
+    abstract fun request(
+        scope: CoroutineScope? = null,
+        fn: suspend () -> RequestDeclaration
+    ): RequestId
 
-    /** Pushes a [signal] that can be later obtained in [EmpressApi.signals]. */
-    abstract fun signal(signal: S)
+    abstract fun <T : Any> ModelDeclaration<T>.get(): T
 
-    /** Pushes an updated [model] that can be later obtained in [EmpressApi.updates]. */
-    abstract fun update(model: M)
+    abstract fun <T : Any> ModelDeclaration<T>.update(value: T)
 
-    /** Returns a model with given [type][T]. */
-    inline fun <reified T : M> get() = get(T::class.java)
+    fun <T : Any> ModelDeclaration<T>.updateWith(updater: (T) -> T) {
+        val oldValue = get()
+        val newValue = updater(oldValue)
+        update(newValue)
+    }
+
+    abstract fun <T : Any> SignalDeclaration<T>.push(signal: T)
 }
 
-/** Allows you define your initial models, event and request handlers.
- * @param M Model type.
- * @param S Signal type.
- */
-abstract class Empress<M : Any, S : Any> {
-    internal lateinit var backend: BackendFacade<M, S>
+/** Allows you define your initial models, event and request handlers. */
+abstract class Empress {
+    internal lateinit var backend: BackendFacade
 
-    /** Initializer should return a collection of all possible models. */
-    abstract fun initialModels(): Collection<M>
+    protected fun <T : Any> model(initialValue: T): ModelDelegate<T> {
+        return ModelDelegate(initialValue)
+    }
+
+    protected fun <T : Any> signal(): SignalDelegate<T> {
+        return SignalDelegate()
+    }
 
     /** Allows to define an event handler.
      * @param fn The definition of the event handler
      */
-    protected suspend fun onEvent(fn: EventHandlerContext<M, S>.() -> Unit): Event =
+    protected suspend fun onEvent(fn: EventHandlerContext.() -> Unit): EventDeclaration =
         backend.onEvent(fn)
 
     /** Allows to define a request handler.
      * @param fn The definition of the request handler.
      */
-    protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): Request =
+    protected suspend fun onRequest(fn: suspend CoroutineScope.() -> Unit): RequestDeclaration =
         backend.onRequest(fn)
 }
 
 /** Allows to execute an event handler. */
 interface EventCommander<E : Any> {
     /** Schedules a call to an event handler defined in [E]. */
-    fun post(fn: suspend E.() -> Event)
+    fun post(fn: suspend E.() -> EventDeclaration)
+}
+
+interface ModelListener<E : Any> {
+    fun <T : Any> model(fn: E.() -> ModelDeclaration<T>): StateFlow<T>
+}
+
+interface SignalListener<E : Any> {
+    fun <T : Any> signal(fn: E.() -> SignalDeclaration<T>): Flow<T>
 }
 
 /** Allows to communicate with your [Empress] instance. */
-interface EmpressApi<E : Any, M : Any, S : Any> : EventCommander<E>, ModelRepository<M> {
-    /** Allows to listen for signals sent from [Empress]. */
-    fun signals(): Flow<S>
-
-    /** Allows to listen for model updates sent from [Empress].
-     * @param withCurrentModels If `true`, you will also receive current state of your models.
-     */
-    fun updates(withCurrentModels: Boolean = true): Flow<M>
-}
+interface EmpressApi<E : Any> : EventCommander<E>, ModelListener<E>, SignalListener<E>

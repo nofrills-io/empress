@@ -16,25 +16,25 @@
 
 package io.nofrills.empress.sample
 
+import android.annotation.SuppressLint
 import android.os.Parcelable
 import io.nofrills.empress.base.RequestId
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
-sealed class SenderState {
-    object Idle : SenderState()
-    data class Sending(val requestId: RequestId) : SenderState()
+sealed class Model
+
+@Parcelize
+@SuppressLint("ParcelCreator")
+data class Counter(val count: Int) : Model(), Parcelable
+
+sealed class Sender : Model() {
+    object Idle : Sender()
+    data class Sending(val requestId: RequestId) : Sender()
 }
 
-sealed class Model {
-    @Parcelize
-    data class Counter(val count: Int) : Model(), Parcelable
-
-    data class Sender(val state: SenderState) : Model()
-}
-
-sealed class Signal {
-    object CounterSent : Signal()
-    object CounterSendCancelled : Signal()
+sealed class CounterSignal {
+    object CounterSent : CounterSignal()
+    object CounterSendCancelled : CounterSignal()
 }
 
 class OnEventFailure : Throwable()

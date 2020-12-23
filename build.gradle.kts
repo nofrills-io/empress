@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    id("io.nofrills.multimodule") version "0.5.2"
+    id("io.nofrills.multimodule") version "0.7.0"
 }
 
 allprojects {
@@ -48,16 +48,15 @@ multimodule {
     }
 
     dokka {
-        configuration {
+        moduleName.set("empress")
+        this.dokkaSourceSets.all {
             externalDocumentationLink {
-                url =
-                    java.net.URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/")
+                url.set(java.net.URL("https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/"))
             }
-            includes = listOf(
+            includes.setFrom(
                 "${rootProject.projectDir}/empress_base/module_doc.md",
                 "${rootProject.projectDir}/empress_android/module_doc.md"
             )
-            moduleName = "empress"
         }
     }
 
@@ -72,7 +71,7 @@ multimodule {
         allWarningsAsErrors = true
         coroutines = true
         coroutinesVersion = Vers.coroutines
-        stdLib = true
+        parcelizePlugin = true
     }
 
     publish {

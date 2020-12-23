@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    api(platform("org.jetbrains.kotlin:kotlin-bom"))
     api(Deps.coroutinesCore)
     api(Deps.kotlinStdLib)
     testImplementation(Deps.junit)
@@ -14,7 +15,7 @@ dependencies {
 tasks.withType(KotlinCompile::class).configureEach {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + listOf(
-                "-Xopt-in=kotlin.RequiresOptIn"
+            "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi,kotlin.RequiresOptIn"
         )
     }
 }

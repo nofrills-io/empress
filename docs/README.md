@@ -43,26 +43,23 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class).configure
 Let's say you need to build an app to count things, and send the final value to a server
 (full example in `sample` app module).
 
-1. First, define your events, model and requests:
+1. First, define your model and signal classes:
 
 ```kotlin
-// In Empress, your model can be defined as a set of subclasses,
-// where each subclass is responsible for single aspect of application state.
-// Your model should be either fully immutable, or fully mutable.
-sealed class Model {
-    // In case our process is temporarily killed by the OS, we can make sure
-    // our state will be brought back, by implementing `android.os.Parcelable`
-    @Parcelize
-    data class Counter(val count: Int) : Model(), Parcelable
+// In Empress, your models can be defined as a set of classes,
+// where each class is responsible for single aspect of application state.
 
-    // In this case it doesn't make sense to implement `Parcelable`,
-    // because if our process gets killed, our async request will also die
-    data class Sender(val requestId: RequestId?) : Model()
-}
+// In case our process is temporarily killed by the OS, we can make sure
+// our state will be brought back, by implementing `android.os.Parcelable`
+@Parcelize
+data class Counter(val count: Int) : Parcelable
 
-sealed class Signal {
-    object CounterSent : Signal()
-}
+// In this case it doesn't make sense to implement `Parcelable`,
+// because if our process gets killed, our async request will also die
+data class Sender(val requestId: RequestId?)
+
+// A signal raised when the counter has been successfully sent.
+object CounterSentSignal
 ```
 
 2. Next, define your empress.
@@ -71,23 +68,23 @@ Implement [Empress](https://nofrills.io/empress/dokka/empress/io.nofrills.empres
 interface:
 
 ```kotlin
-class SampleEmpress : Empress<Model, Signal>() {
-    override fun initialModels(): Collection<Model> {
-        return listOf(Model.Counter(0), Model.Sender(null))
-    }
+class SampleEmpress : Empress() {
+    val counter by model(Counter(0))
+    val sender by model<Sender>(Sender(null))
+    val counterSignal by signal<CounterSentSignal>()
 
     suspend fun increment() = onEvent {
-        val count = get<Model.Counter>().count
-        update(Model.Counter(count + 1))
+        val count = counter.get().count
+        counter.update(Counter(count + 1))
     }
 
     suspend fun sendCounter() = onEvent {
         // If request is already in progress, return early.
-        if (get<Model.Sender>().requestId != null) return@onEvent
+        if (sender.get().requestId != null) return@onEvent
     
-        val count = get<Model.Counter>().count
+        val count = counter.get().count
         val requestId = request { sendCounter(count) } // schedule a request
-        update(Model.Sender(requestId))
+        sender.update(Sender(requestId))
     }
 
     private suspend fun sendCounter(count: Int) = onRequest {
@@ -96,8 +93,8 @@ class SampleEmpress : Empress<Model, Signal>() {
     }
 
     private suspend fun onCounterSent() = onEvent {
-        signal(Signal.CounterSent)
-        update(Model.Sender(null))
+        counterSignal.push(CounterSentSignal)
+        update(Sender(null))
     }
 }
 ```
@@ -105,13 +102,13 @@ class SampleEmpress : Empress<Model, Signal>() {
 3. In your `Activity` or `Fragment`, attach your empress, send events and listen for updates:
 
 ```kotlin
-private lateinit var api: EmpressApi<SampleEmpress, Model, Signal>
+private lateinit var api: EmpressApi<SampleEmpress>
 
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
     // install our empress
-    api = enthrone(SampleEmpress())
+    api = enthrone("sampleApi", ::SampleEmpress)
     
     // pass events to empress
     increment_button.setOnClickListener {
@@ -123,21 +120,15 @@ override fun onCreate(savedInstanceState: Bundle?) {
 
     // Listen for updated models and signals:
     lifecycle.coroutineScope.launch {
-        api.updates().collect { model ->
-            render(model)
+        api.model { counter }.collect {
+            text_view.text = it.count.toString()
         }
-        api.signals().collect { signal ->
-            if (signal is Signal.CounterSent) {
-                Toast.makeText(context, "Counter has been sent!", Toast.LENGTH_LONG).show()
-            }
+        api.model { sender }.collect {
+            text_view.text = loader_view.visibility = if (it.requestId != null) View.VISIBLE else View.GONE
         }
-    }
-}
-
-private fun render(model: Model) {
-    when (model) {
-        is Model.Counter -> text_view.text = model.count.toString()
-        is Model.Sender -> loader_view.visibility = if (model.requestId != null) View.VISIBLE else View.GONE
+        api.signal { counterSignal }.collect {
+            Toast.makeText(context, "Counter has been sent!", Toast.LENGTH_LONG).show()
+        }
     }
 }
 ```
